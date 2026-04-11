@@ -1986,26 +1986,32 @@ const activeOrders = activeRequests.filter(item => item.type === 'Commande');
 const activeReservations = activeRequests.filter(item => item.type === 'Réservation');
 
 function getElapsedLabel(item) {
-const now = new Date();
- const [day, month] = item.date.split('/');
-const currentYear = new Date().getFullYear();
-const requestDate = new Date(`${currentYear}-${month}-${day}T${item.time}:00`);
-  const diffMs = Math.max(0, now - requestDate);
-  const diffMinutes = Math.floor(diffMs / 60000);
+  const now = new Date();
+  const [day, month] = item.date.split('/');
+  const currentYear = now.getFullYear();
+  const requestDate = new Date(`${currentYear}-${month}-${day}T${item.time}:00`);
 
-  if (diffMinutes < 1) return 'reçue il y a 30 sec';
-  if (diffMinutes % 60 === 0) return `reçue il y a ${diffMinutes} min`;
-  if (diffMinutes < 60) {
-    const rounded = Math.max(1, Math.round(diffMinutes / 0.5) * 0.5);
-    const whole = Math.floor(rounded);
-    const half = rounded % 1 !== 0;
-    return half ? `reçue il y a ${whole} min 30` : `reçue il y a ${whole} min`;
+  const diffMs = Math.max(0, now - requestDate);
+  const diffSeconds = Math.floor(diffMs / 1000);
+
+  if (diffSeconds < 30) return 'reçue à l’instant';
+  if (diffSeconds < 60) return 'reçue il y a 30 sec';
+
+  const roundedSeconds = Math.floor(diffSeconds / 30) * 30;
+
+  const hours = Math.floor(roundedSeconds / 3600);
+  const remainingSecondsAfterHours = roundedSeconds % 3600;
+  const minutes = Math.floor(remainingSecondsAfterHours / 60);
+  const seconds = remainingSecondsAfterHours % 60;
+
+  if (hours > 0) {
+    if (minutes === 0 && seconds === 0) return `reçue il y a ${hours} h`;
+    if (seconds === 0) return `reçue il y a ${hours} h ${minutes} min`;
+    return `reçue il y a ${hours} h ${minutes} min 30`;
   }
 
-  const hours = Math.floor(diffMinutes / 60);
-  const minutes = diffMinutes % 60;
-  if (minutes === 0) return `reçue il y a ${hours} h`;
-  return `reçue il y a ${hours} h ${minutes}`;
+  if (seconds === 0) return `reçue il y a ${minutes} min`;
+  return `reçue il y a ${minutes} min 30`;
 }
 
   function getStatusClass(status) {
