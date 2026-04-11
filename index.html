@@ -1960,31 +1960,11 @@ function updateOrderFormTimePart(part, value) {
   const wrapper = document.getElementById('app-wrapper');
   document.documentElement.lang = currentLang;
 
-const now = new Date();
-
-function getRelativeRequestDate(minutesAgo) {
-  const date = new Date(now.getTime() - minutesAgo * 60000);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-
-  return {
-    date: `${day}/${month}`,
-    time: `${hours}:${minutes}`
-  };
-}
-
-const req1 = getRelativeRequestDate(2);
-const req2 = getRelativeRequestDate(4.5);
-const req3 = getRelativeRequestDate(12);
-const req4 = getRelativeRequestDate(1.5);
-
 const requestsData = [
-  { id: 1, type: 'Commande', client: 'Marc Dupont', date: req1.date, time: req1.time, status: 'Nouveau', treated: false },
-  { id: 2, type: 'Réservation', client: 'Ana Lopez', date: req2.date, time: req2.time, status: 'En attente', treated: false },
-  { id: 3, type: 'Commande', client: 'Julie Martin', date: req3.date, time: req3.time, status: 'Traitée', treated: true },
-  { id: 4, type: 'Réservation', client: 'Tom Vermeer', date: req4.date, time: req4.time, status: 'Nouveau', treated: false }
+  { id: 1, type: 'Commande', client: 'Marc Dupont', createdAt: Date.now() - (2 * 60000), status: 'Nouveau', treated: false },
+  { id: 2, type: 'Réservation', client: 'Ana Lopez', createdAt: Date.now() - (4.5 * 60000), status: 'En attente', treated: false },
+  { id: 3, type: 'Commande', client: 'Julie Martin', createdAt: Date.now() - (12 * 60000), status: 'Traitée', treated: true },
+  { id: 4, type: 'Réservation', client: 'Tom Vermeer', createdAt: Date.now() - (1.5 * 60000), status: 'Nouveau', treated: false }
 ];
 
   const googleReviewsData = {
@@ -2006,12 +1986,7 @@ const activeOrders = activeRequests.filter(item => item.type === 'Commande');
 const activeReservations = activeRequests.filter(item => item.type === 'Réservation');
 
 function getElapsedLabel(item) {
-  const now = new Date();
-  const [day, month] = item.date.split('/');
-  const currentYear = now.getFullYear();
-  const requestDate = new Date(`${currentYear}-${month}-${day}T${item.time}:00`);
-
-  const diffMs = Math.max(0, now - requestDate);
+  const diffMs = Math.max(0, Date.now() - item.createdAt);
   const diffSeconds = Math.floor(diffMs / 1000);
 
   if (diffSeconds < 30) return 'reçue à l’instant';
@@ -2055,7 +2030,7 @@ function getElapsedLabel(item) {
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${getStatusClass(item.status)}">${item.status}</span>
           </div>
           <div class="text-sm font-semibold text-cream">${item.client}</div>
-  <div class="text-xs text-cream/60 mt-1">${item.date} · ${item.time}</div>
+<div class="text-xs text-cream/60 mt-1">${new Date(item.createdAt).toLocaleDateString('fr-BE')} · ${new Date(item.createdAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</div>
 <div class="text-xs text-gold/80 mt-1">${getElapsedLabel(item)}</div>
         </div>
 
