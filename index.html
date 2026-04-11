@@ -14,7 +14,7 @@
     }
 
     const BASE_PATH = getBasePath();
-    const MANIFEST_URL = `${BASE_PATH}/manifest.webmanifest?v=${APP_VERSION}`;
+    const MANIFEST_URL = `${BASE_PATH}/manifest.webmanifest?v=${APP_VERSION}`; 
     const ICON_192_URL = `${BASE_PATH}/icon-192.png`;
     const SW_URL = `${BASE_PATH}/sw.js?v=${APP_VERSION}`;
   </script>
@@ -1987,7 +1987,9 @@ const activeReservations = activeRequests.filter(item => item.type === 'Réserva
 
 function getElapsedLabel(item) {
 const now = new Date();
-  const requestDate = new Date(`2026-04-${item.date.split('/')[0]}T${item.time}:00`);
+ const [day, month] = item.date.split('/');
+const currentYear = new Date().getFullYear();
+const requestDate = new Date(`${currentYear}-${month}-${day}T${item.time}:00`);
   const diffMs = Math.max(0, now - requestDate);
   const diffMinutes = Math.floor(diffMs / 60000);
 
