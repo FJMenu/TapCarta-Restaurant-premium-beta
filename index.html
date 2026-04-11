@@ -1960,12 +1960,12 @@ function updateOrderFormTimePart(part, value) {
   const wrapper = document.getElementById('app-wrapper');
   document.documentElement.lang = currentLang;
 
-  const requestsData = [
-    { id: 1, type: 'Commande', client: 'Marc Dupont', date: '11/04', time: '12:40', status: 'Nouveau', treated: false },
-    { id: 2, type: 'Réservation', client: 'Ana Lopez', date: '11/04', time: '20:00', status: 'En attente', treated: false },
-    { id: 3, type: 'Commande', client: 'Julie Martin', date: '11/04', time: '13:15', status: 'Traitée', treated: true },
-    { id: 4, type: 'Réservation', client: 'Tom Vermeer', date: '12/04', time: '21:00', status: 'Nouveau', treated: false }
-  ];
+const requestsData = [
+  { id: 1, type: 'Commande', client: 'Marc Dupont', date: '11/04', time: '09:40', status: 'Nouveau', treated: false },
+  { id: 2, type: 'Réservation', client: 'Ana Lopez', date: '11/04', time: '09:30', status: 'En attente', treated: false },
+  { id: 3, type: 'Commande', client: 'Julie Martin', date: '11/04', time: '09:15', status: 'Traitée', treated: true },
+  { id: 4, type: 'Réservation', client: 'Tom Vermeer', date: '11/04', time: '09:00', status: 'Nouveau', treated: false }
+];
 
   const googleReviewsData = {
     rating: '4,6',
