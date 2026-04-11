@@ -6,7 +6,7 @@
   <title>La Bonne Fourchette</title>
 
   <script>
-    const APP_VERSION = '1.0.2';
+    const APP_VERSION = '1.0.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1979,8 +1979,32 @@ function updateOrderFormTimePart(part, value) {
     status: 'Actif'
   };
 
-  const activeRequests = requestsData.filter(item => !item.treated);
-  const treatedRequests = requestsData.filter(item => item.treated);
+ const activeRequests = requestsData.filter(item => !item.treated);
+const treatedRequests = requestsData.filter(item => item.treated);
+
+const activeOrders = activeRequests.filter(item => item.type === 'Commande');
+const activeReservations = activeRequests.filter(item => item.type === 'Réservation');
+
+function getElapsedLabel(item) {
+  const now = new Date('2026-04-11T12:00:00');
+  const requestDate = new Date(`2026-04-${item.date.split('/')[0]}T${item.time}:00`);
+  const diffMs = Math.max(0, now - requestDate);
+  const diffMinutes = Math.floor(diffMs / 60000);
+
+  if (diffMinutes < 1) return 'reçue il y a 30 sec';
+  if (diffMinutes % 60 === 0) return `reçue il y a ${diffMinutes} min`;
+  if (diffMinutes < 60) {
+    const rounded = Math.max(1, Math.round(diffMinutes / 0.5) * 0.5);
+    const whole = Math.floor(rounded);
+    const half = rounded % 1 !== 0;
+    return half ? `reçue il y a ${whole} min 30` : `reçue il y a ${whole} min`;
+  }
+
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+  if (minutes === 0) return `reçue il y a ${hours} h`;
+  return `reçue il y a ${hours} h ${minutes}`;
+}
 
   function getStatusClass(status) {
     if (status === 'Nouveau') return 'bg-red-500/15 text-red-300 border-red-400/30';
@@ -2003,7 +2027,8 @@ function updateOrderFormTimePart(part, value) {
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${getStatusClass(item.status)}">${item.status}</span>
           </div>
           <div class="text-sm font-semibold text-cream">${item.client}</div>
-          <div class="text-xs text-cream/60 mt-1">${item.date} · ${item.time}</div>
+  <div class="text-xs text-cream/60 mt-1">${item.date} · ${item.time}</div>
+<div class="text-xs text-gold/80 mt-1">${getElapsedLabel(item)}</div>
         </div>
 
         <div class="flex items-center gap-2">
@@ -2092,8 +2117,32 @@ ${!item.treated ? `
             </div>
           </div>
 
-          <div class="space-y-3">
-            ${activeRequests.map(renderRequestRow).join('')}
+  <div class="space-y-6">
+            <div>
+              <div class="flex items-center justify-between gap-3 mb-3">
+                <h3 class="text-sm font-semibold text-cream/88">Commandes</h3>
+                <span class="text-xs text-cream/50">${activeOrders.length}</span>
+              </div>
+
+              <div class="space-y-3">
+                ${activeOrders.length
+                  ? activeOrders.map(renderRequestRow).join('')
+                  : `<div class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 text-sm text-cream/55">Aucune commande en attente.</div>`}
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center justify-between gap-3 mb-3">
+                <h3 class="text-sm font-semibold text-cream/88">Réservations</h3>
+                <span class="text-xs text-cream/50">${activeReservations.length}</span>
+              </div>
+
+              <div class="space-y-3">
+                ${activeReservations.length
+                  ? activeReservations.map(renderRequestRow).join('')
+                  : `<div class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 text-sm text-cream/55">Aucune réservation en attente.</div>`}
+              </div>
+            </div>
           </div>
 
           <div class="mt-6 pt-5 border-t border-white/8">
@@ -2101,6 +2150,11 @@ ${!item.treated ? `
               <h3 class="text-sm font-semibold text-cream/88">Demandes traitées</h3>
               <span class="text-xs text-cream/50">${treatedRequests.length}</span>
             </div>
+
+            <div class="space-y-3">
+              ${treatedRequests.map(renderRequestRow).join('')}
+            </div>
+          </div>
 
             <div class="space-y-3">
               ${treatedRequests.map(renderRequestRow).join('')}
