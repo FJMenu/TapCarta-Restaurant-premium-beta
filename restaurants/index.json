@@ -1,1 +1,13 @@
-
+{
+  "restaurants": [
+    {
+      "id": "bistro-belga",
+      "slug": "bistrobelga",
+      "name": "Bistro Belga",
+      "file": "restaurants/bistrobelga.json",
+      "status": "active",
+      "publicListingEnabled": true,
+      "clientAccessEnabled": true
+    }
+  ]
+}
