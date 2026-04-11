@@ -6,7 +6,7 @@
   <title>La Bonne Fourchette</title>
 
   <script>
-    const APP_VERSION = '1.0.6';
+    const APP_VERSION = '1.0.7';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -157,10 +157,10 @@
       background: rgba(242, 199, 68, 0.08);
     }
 
-    .language-selector {
+  .language-selector {
       position: fixed;
-      top: 16px;
-      right: 20px;
+      top: 24px;
+      right: 24px;
       display: flex;
       gap: 8px;
       z-index: 50;
@@ -649,7 +649,7 @@
   </div>
 
   <script>
-    const siteConfig = {
+const siteConfig = {
   appLogoUrl: "./logo-app-web-sans-fond.png",
   faviconUrl: "./favicon.png",
   productName: "TapCarta",
@@ -659,7 +659,9 @@
   reviewUrl: "https://search.google.com/local/writereview?placeid=ChIJ3b0pGDb7wEcRs2VnXGk2mmE",
   clientMenuUrl: "#",
   qrMenuUrl: "#",
-  experienceUrl: "#"
+  experienceUrl: "#",
+  orderReservationOptionEnabled: true,
+  activationRequestUrl: "#"
 };
 
     const menuData = {
@@ -2055,7 +2057,7 @@ ${!item.treated ? `
   }
 
   wrapper.innerHTML = `
-    <header class="relative overflow-hidden pt-12 pb-8 px-4 md:px-6 animate-fade-up">
+ <header class="relative overflow-hidden pt-16 pb-8 px-4 md:px-6 animate-fade-up">
       <div class="max-w-6xl mx-auto">
         <div class="rounded-[28px] border border-gold/20 bg-gradient-to-br from-white/[0.05] to-white/[0.015] shadow-[0_24px_70px_rgba(0,0,0,0.38)] px-5 py-6 md:px-8 md:py-8">
           <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
