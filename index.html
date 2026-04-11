@@ -2156,14 +2156,18 @@ ${!item.treated ? `
             </div>
           </div>
 
-          <div class="mt-6 pt-5 border-t border-white/8">
-            <div class="flex items-center justify-between gap-3 mb-3">
+  <div class="mt-8 pt-6 border-t border-white/8">
+            <div class="flex items-center justify-between gap-3 mb-4">
               <h3 class="text-sm font-semibold text-cream/88">Demandes traitées</h3>
               <span class="text-xs text-cream/50">${treatedRequests.length}</span>
             </div>
 
-            <div class="space-y-5">
-              ${treatedRequests.map(renderRequestRow).join('')}
+            <div class="space-y-4">
+              ${treatedRequests.map(item => `
+                <div class="pt-1">
+                  ${renderRequestRow(item)}
+                </div>
+              `).join('')}
             </div>
           </div>
 
