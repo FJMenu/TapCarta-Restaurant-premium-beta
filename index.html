@@ -6,7 +6,7 @@
   <title>La Bonne Fourchette</title>
 
   <script>
-    const APP_VERSION = '1.0.13';
+    const APP_VERSION = '1.0.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -650,13 +650,17 @@
 
   <script>
     const siteConfig = {
-      logoUrl: "https://i.postimg.cc/bN0b11bS/logo-sans-fond.png",
-      brandLogoUrl: "https://i.postimg.cc/sX7n1G14/Chat-GPT-Image-14-fevr-2026-15-23-38.png",
-      productName: "TapCarta",
-      productSignature: "Created by FJ",
-      reviewUrl: "https://search.google.com/local/writereview?placeid=ChIJ3b0pGDb7wEcRs2VnXGk2mmE",
-      desktopCollageUrl: "liege-collage.jpg"
-    };
+  appLogoUrl: "./logo-app-web-sans-fond.png",
+  faviconUrl: "./favicon.png",
+  productName: "TapCarta",
+  productSignature: "Interface restaurant",
+  restaurantName: "La Bonne Fourchette",
+  restaurantStatusLabel: "Interface restaurant premium",
+  reviewUrl: "https://search.google.com/local/writereview?placeid=ChIJ3b0pGDb7wEcRs2VnXGk2mmE",
+  clientMenuUrl: "#",
+  qrMenuUrl: "#",
+  experienceUrl: "#"
+};
 
     const menuData = {
       snacks: [
@@ -1951,434 +1955,270 @@ function updateOrderFormTimePart(part, value) {
       `;
     }
 
-    function renderMenu() {
-      const t = translations[currentLang];
-   const wrapper = document.getElementById('app-wrapper');
-document.documentElement.lang = currentLang;
+  function renderMenu() {
+  const t = translations[currentLang];
+  const wrapper = document.getElementById('app-wrapper');
+  document.documentElement.lang = currentLang;
 
-      const menuHTML = `
-        ${renderCategory('snacks', t.snacks, t)}
-        ${renderCategory('entrees', t.entrees, t)}
-        ${renderCategory('plats', t.plats, t)}
-        ${renderCategory('moules', t.moules, t)}
-        ${renderCategory('desserts', t.desserts, t)}
-        ${renderCategory('crepes', t.crepes, t)}
-        ${renderCategory('suggestions', t.suggestions, t)}
-        ${renderCategory('supplements', t.supplements, t)}
-        ${renderCategory('boissons', t.boissons, t)}
-      `;
+  const requestsData = [
+    { id: 1, type: 'Commande', client: 'Marc Dupont', date: '11/04', time: '12:40', status: 'Nouveau', treated: false },
+    { id: 2, type: 'Réservation', client: 'Ana Lopez', date: '11/04', time: '20:00', status: 'En attente', treated: false },
+    { id: 3, type: 'Commande', client: 'Julie Martin', date: '11/04', time: '13:15', status: 'Traitée', treated: true },
+    { id: 4, type: 'Réservation', client: 'Tom Vermeer', date: '12/04', time: '21:00', status: 'Nouveau', treated: false }
+  ];
 
-      wrapper.innerHTML = `
-      <header class="relative overflow-hidden pt-28 pb-16 px-4 text-center animate-fade-up">
-  <div id="logo-container" class="mx-auto w-full max-w-4xl flex items-center justify-center">
-    ${siteConfig.logoUrl
-      ? `<img src="${siteConfig.logoUrl}" alt="La Bonne Fourchette" class="w-auto h-auto max-w-md mx-auto" loading="eager" fetchpriority="high" decoding="async" style="object-fit:contain; max-height:260px; display:block;">`
-      : `<div class="text-center px-6">
-          <p class="font-display text-3xl md:text-4xl font-bold text-gold mb-2">La Bonne Fourchette</p>
-          <p class="text-xs text-cream/40">${t.logoPlaceholder}</p>
-        </div>`
-    }
-  </div>
+  const googleReviewsData = {
+    rating: '4,6',
+    count: 128
+  };
 
-  ${orderMode ? `
-  <div class="mt-6 flex justify-center">
-    <div class="w-full max-w-xl rounded-2xl border border-gold/40 bg-darkCard px-4 py-4 shadow-lg">
-      <div class="flex items-start justify-between gap-3">
-        <div class="text-left">
-      <div class="text-sm font-semibold text-gold tracking-wide uppercase">${t.orderModeTitle}</div>
-   <div class="text-sm text-cream/75 mt-1">
-  ${t.orderModeText}
-</div>
-        </div>
-      <button onclick="deactivateOrderMode()" class="btn-action px-3 py-1.5 rounded-lg border border-gold/35 text-xs font-semibold text-cream/85 hover:bg-gold/10 transition-all">
-  ${t.closeButton}
-</button>
-      </div>
-      ${''}
-    </div>
-  </div>
-      ` : ''}
-</header>
+  const restaurantData = {
+    name: siteConfig.restaurantName,
+    plan: 'Standard',
+    languages: 'FR · ES · EN · NL',
+    status: 'Actif'
+  };
 
-    ${!orderMode ? renderDesktopStorySection(t) : ''}
+  const activeRequests = requestsData.filter(item => !item.treated);
+  const treatedRequests = requestsData.filter(item => item.treated);
 
-        <div class="desktop-lux-divider">
-          <div class="desktop-lux-divider-line"></div>
-          <div class="desktop-lux-divider-dots"><span></span><span></span><span></span></div>
-          <div class="desktop-lux-divider-line"></div>
+  function getStatusClass(status) {
+    if (status === 'Nouveau') return 'bg-red-500/15 text-red-300 border-red-400/30';
+    if (status === 'En attente') return 'bg-amber-500/15 text-amber-200 border-amber-400/30';
+    return 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30';
+  }
+
+  function getTypeClass(type) {
+    return type === 'Commande'
+      ? 'bg-gold/15 text-gold border-gold/30'
+      : 'bg-sky-500/15 text-sky-200 border-sky-400/30';
+  }
+
+  function renderRequestRow(item) {
+    return `
+      <div class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-2">
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${getTypeClass(item.type)}">${item.type}</span>
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${getStatusClass(item.status)}">${item.status}</span>
+          </div>
+          <div class="text-sm font-semibold text-cream">${item.client}</div>
+          <div class="text-xs text-cream/60 mt-1">${item.date} · ${item.time}</div>
         </div>
 
-        ${!orderMode ? `
-  <div class="diamond-divider lg:hidden">
-    <span></span><span></span><span></span>
-  </div>
-` : ''}
-
- ${!orderMode ? `
-  <section class="px-6 py-6 animate-fade-up delay-1">
-    <div class="flex justify-center gap-4 flex-wrap">
-      <button onclick="activateOrderMode()" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold hover:border-gold hover:from-gold/30 hover:to-gold/15 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
-        <i data-lucide="shopping-bag" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
-        <span class="text-sm font-semibold text-cream tracking-wide">${t.orderButton}</span>
-      </button>
-
-      <a href="tel:0034672486699" class="btn-action group flex lg:hidden items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
-        <i data-lucide="phone" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
-        <span class="text-sm font-semibold text-cream tracking-wide">${t.call}</span>
-      </a>
-
-      <button onclick="scrollToAddress()" class="btn-action group hidden lg:flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
-        <i data-lucide="map" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
-        <span class="text-sm font-semibold text-cream tracking-wide">${t.addressButton}</span>
-      </button>
-
-      <a href="https://wa.me/34672486699" target="_blank" rel="noopener noreferrer" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
-        <i data-lucide="message-circle" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
-        <span class="text-sm font-semibold text-cream tracking-wide">${t.whatsapp}</span>
-      </a>
-
-      <a href="https://maps.app.goo.gl/w1YhWUqoJ6qp8KDF9" target="_blank" rel="noopener noreferrer" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/15 to-gold/5 border-2 border-gold/50 hover:border-gold hover:from-gold/25 hover:to-gold/10 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20">
-        <i data-lucide="map-pin" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
-        <span class="text-sm font-semibold text-cream tracking-wide">${t.directions}</span>
-      </a>
-    </div>
-
-    <div class="mt-4 flex justify-center gap-3 flex-wrap">
-      <button id="install-app-btn" hidden onclick="handleInstallClick()" class="btn-action group flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-darkCard/90 border border-gold/25 text-cream/85 hover:border-gold/45 hover:bg-darkCard transition-all shadow-sm">
-        <i data-lucide="download" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
-        <span class="text-xs font-medium tracking-wide">${t.installApp}</span>
-      </button>
-    </div>
-
-    <div id="ios-install-help" hidden class="mt-3 p-4 rounded-lg bg-darkCard border border-gold/20 text-sm text-cream/80">
-      ${t.iosInstallHelp}
-    </div>
-  </section>
-` : ''}
-
-${orderMode && !cartPanelOpen ? `
-  <div class="fixed right-4 bottom-4 z-40">
-    <button onclick="toggleCartPanel()" class="btn-action group flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-darkCard border-2 border-gold/50 text-cream hover:border-gold hover:bg-gold/10 transition-all shadow-xl">
-      <i data-lucide="shopping-cart" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
-      <span class="text-xs font-semibold tracking-wide">${t.cartButton} (${cart.reduce((total, item) => total + item.quantity, 0)})</span>
-    </button>
-  </div>
-` : ''}
-
-   ${!orderMode ? renderReviewCTA(t) : ''}
-
-${!orderMode ? `
-  <section class="px-6 py-6 animate-fade-up delay-2">
-    <div class="space-y-3">
-      <div class="flex items-start gap-3 p-4 rounded-lg bg-darkCard border border-gold/20">
-        <i data-lucide="info" class="w-5 h-5 text-gold flex-shrink-0 mt-0.5"></i>
-        <p class="text-sm text-cream/80">${t.noticeAllFries}</p>
-      </div>
-      <div class="flex items-start gap-3 p-4 rounded-lg bg-darkCard border border-gold/20">
-        <i data-lucide="shopping-bag" class="w-5 h-5 text-gold flex-shrink-0 mt-0.5"></i>
-        <p class="text-sm text-cream/80">${t.noticeTakeaway}</p>
-      </div>
-      <div class="flex items-start gap-3 p-4 rounded-lg bg-darkCard border border-gold/20">
-        <i data-lucide="flame" class="w-5 h-5 text-gold flex-shrink-0 mt-0.5"></i>
-        <p class="text-sm text-cream/80">${t.friesInfo}</p>
-      </div>
-    </div>
-  </section>
-` : ''}
-
-    ${!orderMode ? `
-  <section class="px-6 py-4 animate-fade-up delay-2 flex justify-center">
-    <button class="group flex items-center justify-center gap-3 px-5 py-2.5 rounded-lg border-2 border-gold/40 text-sm font-medium text-gold hover:border-gold hover:bg-gold/5 transition-all" onclick="document.getElementById('menu-allergenes').scrollIntoView({behavior:'smooth', block:'start'})">
-      <i data-lucide="alert-triangle" class="w-4 h-4 text-gold group-hover:scale-110 transition-transform"></i>
-      <span class="tracking-wide">${t.allergenes}</span>
-    </button>
-  </section>
-` : ''}
-
-<section class="px-6 py-6 animate-fade-up delay-3" id="menu-start">
-  ${!orderMode ? `
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-      <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-snacks').scrollIntoView({behavior:'smooth', block:'start'})">${t.snacks}</button>
-      <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-entrees').scrollIntoView({behavior:'smooth', block:'start'})">${t.entrees}</button>
-      <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-plats').scrollIntoView({behavior:'smooth', block:'start'})">${t.plats}</button>
-      <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-moules').scrollIntoView({behavior:'smooth', block:'start'})">${t.moules}</button>
-      <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-desserts').scrollIntoView({behavior:'smooth', block:'start'})">${t.desserts}</button>
-      <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-crepes').scrollIntoView({behavior:'smooth', block:'start'})">${t.crepes}</button>
-      <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-suggestions').scrollIntoView({behavior:'smooth', block:'start'})">${t.suggestions}</button>
-      <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-supplements').scrollIntoView({behavior:'smooth', block:'start'})">${t.supplements}</button>
-      <button class="btn-action px-4 py-2.5 rounded-lg border-2 border-gold/60 text-xs font-medium text-cream hover:border-gold hover:bg-gold/10 active:bg-gold/15 transition-all" onclick="document.getElementById('menu-boissons').scrollIntoView({behavior:'smooth', block:'start'})">${t.boissons}</button>
-    </div>
-  ` : ''}
-
-  ${orderMode && !cartPanelOpen ? `
-    <div class="w-full max-w-3xl mx-auto mt-6">
-      ${menuHTML}
-    </div>
-  ` : ''}
-
-  ${orderMode && cartPanelOpen ? `
-    <div class="w-full max-w-3xl mx-auto mt-2 rounded-2xl border border-gold/40 bg-darkCard px-4 py-4 shadow-lg">
-           <div class="mb-4">
-        <div class="text-sm font-semibold text-gold tracking-wide uppercase text-center mb-4">${t.cartTitle}</div>
-
-        <div class="flex justify-center">
-          <button onclick="toggleCartPanel()" class="btn-action group flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold hover:border-gold hover:from-gold/30 hover:to-gold/15 transition-all shadow-lg hover:shadow-xl hover:shadow-gold/20 w-full sm:w-auto min-w-[260px]">
-            <i data-lucide="plus-circle" class="w-5 h-5 text-gold group-hover:scale-110 transition-transform"></i>
-            <span class="text-sm font-semibold text-cream tracking-wide">${t.continueAddingButton}</span>
-          </button>
+        <div class="flex items-center gap-2">
+          ${!item.treated ? `
+            <button class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
+              Traitée
+            </button>
+          ` : `
+            <span class="text-xs text-emerald-200/90 font-semibold px-3 py-2 rounded-xl border border-emerald-400/20 bg-emerald-500/10">
+              Déjà traitée
+            </span>
+          `}
         </div>
       </div>
+    `;
+  }
 
-      <div class="flex items-center justify-between gap-3 mb-2">
-        <div class="text-xs text-cream/70">
-          ${t.cartTotal} : ${cart.reduce((sum, cartItem) => {
-            const sourceItem = Object.values(menuData).flat().find(menuItem => menuItem.id === cartItem.id);
-            if (!sourceItem || !sourceItem.price) return sum;
-            const numericPrice = parseFloat(sourceItem.price.replace('€', '').replace(',', '.').trim());
-            if (Number.isNaN(numericPrice)) return sum;
-            return sum + (numericPrice * cartItem.quantity);
-          }, 0).toFixed(2).replace('.', ',')} €
-        </div>
-      </div>
+  wrapper.innerHTML = `
+    <header class="relative overflow-hidden pt-12 pb-8 px-4 md:px-6 animate-fade-up">
+      <div class="max-w-6xl mx-auto">
+        <div class="rounded-[28px] border border-gold/20 bg-gradient-to-br from-white/[0.05] to-white/[0.015] shadow-[0_24px_70px_rgba(0,0,0,0.38)] px-5 py-6 md:px-8 md:py-8">
+          <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
+            <div class="min-w-0">
+              <img
+                src="${siteConfig.appLogoUrl}"
+                alt="TapCarta"
+                class="h-auto w-full max-w-[320px] md:max-w-[420px]"
+                loading="eager"
+                decoding="async"
+              >
 
-      <div class="space-y-2">
-        ${cart.length ? cart.map(cartItem => {
-          const itemData = t.items[cartItem.id];
-          if (!itemData) return '';
-
-          return `
-            <div class="flex items-center justify-between gap-3 rounded-lg border border-gold/15 bg-black/10 px-3 py-2">
-              <div class="text-sm text-cream/85">${itemData.name}</div>
-              <div class="flex items-center gap-2">
-                <div class="text-xs font-semibold text-gold">x${cartItem.quantity}</div>
-                <button onclick="removeFromCart('${cartItem.id}')" class="btn-action px-2 py-1 rounded-md border border-gold/30 text-[11px] font-semibold text-cream/80 hover:bg-gold/10 transition-all">
-                  ${t.removeButton}
-                </button>
+              <div class="mt-5">
+                <h1 class="font-display text-2xl md:text-3xl font-bold text-cream">
+                  ${siteConfig.restaurantName}
+                </h1>
+                <p class="text-sm md:text-base text-cream/72 mt-2">
+                  ${siteConfig.restaurantStatusLabel}
+                </p>
               </div>
             </div>
-          `;
-        }).join('') : `<div class="text-sm text-cream/75">${t.cartEmpty}</div>`}
-      </div>
 
-      ${cart.length ? `
-        <div class="mt-4 pt-4 border-t border-gold/20">
-          <div class="text-sm font-semibold text-gold tracking-wide uppercase mb-3">${t.orderFormTitle}</div>
+            <button class="btn-action inline-flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border-2 border-gold/45 bg-gold/10 hover:bg-gold/15 transition-all shadow-lg min-h-[58px]">
+              <img
+                src="${siteConfig.faviconUrl}"
+                alt="TapCarta"
+                class="w-10 h-10 rounded-xl object-cover flex-shrink-0"
+                loading="lazy"
+                decoding="async"
+              >
+              <div class="text-left">
+                <div class="text-sm font-semibold text-cream leading-tight">Faire une demande</div>
+                <div class="text-xs text-gold/85 mt-1 leading-tight">Option, modification, besoin</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="px-4 md:px-6 pb-10 animate-fade-up delay-1">
+      <div class="max-w-6xl mx-auto space-y-6">
+        <section class="rounded-[28px] border border-gold/22 bg-gradient-to-br from-white/[0.045] to-white/[0.015] shadow-[0_24px_70px_rgba(0,0,0,0.32)] p-5 md:p-7">
+          <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+            <div>
+              <div class="flex items-center gap-3 mb-2">
+                <div class="w-11 h-11 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center">
+                  <i data-lucide="inbox" class="w-5 h-5 text-gold"></i>
+                </div>
+                <div>
+                  <h2 class="font-display text-xl md:text-2xl font-bold text-cream">Demandes reçues</h2>
+                  <p class="text-sm text-cream/65 mt-1">Mise à jour automatique</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="inline-flex items-center gap-3 self-start rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
+              <div class="text-2xl font-bold text-gold">${requestsData.length}</div>
+              <div class="text-xs text-cream/70 leading-tight">
+                Total<br>des demandes
+              </div>
+            </div>
+          </div>
 
           <div class="space-y-3">
-            <div>
-              <label class="block text-xs font-medium text-cream/80 mb-1">${t.orderFormName}</label>
-              <input
-                type="text"
-                value="${orderForm.name}"
-                oninput="updateOrderFormField('name', this.value)"
-                class="w-full rounded-lg bg-black/20 border border-gold/20 px-3 py-2 text-sm text-cream placeholder:text-cream/35 focus:outline-none focus:border-gold/50"
-              >
+            ${activeRequests.map(renderRequestRow).join('')}
+          </div>
+
+          <div class="mt-6 pt-5 border-t border-white/8">
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <h3 class="text-sm font-semibold text-cream/88">Demandes traitées</h3>
+              <span class="text-xs text-cream/50">${treatedRequests.length}</span>
             </div>
 
-            <div>
-              <label class="block text-xs font-medium text-cream/80 mb-1">${t.orderFormPhone}</label>
-              <input
-                type="tel"
-                value="${orderForm.phone}"
-                oninput="updateOrderFormField('phone', this.value)"
-                class="w-full rounded-lg bg-black/20 border border-gold/20 px-3 py-2 text-sm text-cream placeholder:text-cream/35 focus:outline-none focus:border-gold/50"
-              >
+            <div class="space-y-3">
+              ${treatedRequests.map(renderRequestRow).join('')}
             </div>
+          </div>
+        </section>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <section class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center">
+                <i data-lucide="star" class="w-5 h-5 text-gold"></i>
+              </div>
               <div>
-                <label class="block text-xs font-medium text-cream/80 mb-1">${t.orderFormDate}</label>
-                <div class="relative">
-                  <input
-                    type="date"
-                    value="${orderForm.date}"
-                    oninput="updateOrderFormField('date', this.value)"
-                    class="w-full rounded-lg bg-black/20 border border-gold/20 px-3 py-2 pr-10 text-sm text-cream focus:outline-none focus:border-gold/50"
-                  >
-                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                    <i data-lucide="calendar-days" class="w-4 h-4 text-gold"></i>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-xs font-medium text-cream/80 mb-1">${t.orderFormTime}</label>
-                <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-center">
-                  <div class="relative">
-                    <select
-                      onchange="updateOrderFormTimePart('hours', this.value)"
-                      class="w-full rounded-lg bg-black/20 border border-gold/20 px-3 py-2 pr-10 text-sm text-cream focus:outline-none focus:border-gold/50 appearance-none"
-                    >
-                      ${getHourOptions().map(hour => {
-                        const selected = getOrderFormTimeParts().hours === hour ? 'selected' : '';
-                        return `<option value="${hour}" ${selected}>${hour}</option>`;
-                      }).join('')}
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                      <i data-lucide="clock-3" class="w-4 h-4 text-gold"></i>
-                    </div>
-                  </div>
-
-                  <span class="text-gold font-semibold">:</span>
-
-                  <div class="relative">
-                    <select
-                      onchange="updateOrderFormTimePart('minutes', this.value)"
-                      class="w-full rounded-lg bg-black/20 border border-gold/20 px-3 py-2 pr-10 text-sm text-cream focus:outline-none focus:border-gold/50 appearance-none"
-                    >
-                      ${getMinuteOptions().map(minute => {
-                        const selected = getOrderFormTimeParts().minutes === minute ? 'selected' : '';
-                        return `<option value="${minute}" ${selected}>${minute}</option>`;
-                      }).join('')}
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                      <i data-lucide="chevron-down" class="w-4 h-4 text-gold"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="sm:col-span-2">
-                <label class="block text-xs font-medium text-cream/80 mb-1">${t.orderFormNote}</label>
-                <textarea
-                  oninput="updateOrderFormField('note', this.value)"
-                  placeholder="${t.orderFormNotePlaceholder}"
-                  class="w-full min-h-[128px] rounded-lg bg-black/20 border border-gold/20 px-3 py-3 text-sm text-cream placeholder:text-cream/35 focus:outline-none focus:border-gold/50 resize-none"
-                >${orderForm.note}</textarea>
+                <h3 class="font-display text-lg font-bold text-cream">Avis Google</h3>
+                <p class="text-xs text-cream/60 mt-1">Auto-refresh 3 h</p>
               </div>
             </div>
 
-            <div class="mt-4 flex justify-end">
-              <button onclick="openOrderReview()" class="btn-action px-4 py-2 rounded-lg border border-gold/40 bg-gold/10 text-sm font-semibold text-gold hover:bg-gold/15 transition-all">
-                ${t.reviewOrderButton}
+            <div class="flex items-end gap-3 mb-5">
+              <div class="text-4xl font-bold text-gold leading-none">${googleReviewsData.rating}</div>
+              <div class="text-sm text-cream/70 pb-1">/ 5</div>
+            </div>
+
+            <div class="text-sm text-cream/75 mb-6">${googleReviewsData.count} avis Google</div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+              <a href="${siteConfig.reviewUrl}" target="_blank" rel="noopener noreferrer" class="btn-action flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
+                <i data-lucide="external-link" class="w-4 h-4 text-gold"></i>
+                <span>Voir les avis</span>
+              </a>
+
+              <button class="btn-action flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+                <i data-lucide="refresh-cw" class="w-4 h-4 text-gold"></i>
+                <span>Actualiser</span>
               </button>
             </div>
-          </div>
-        </div>
-      ` : ''}
-    </div>
-  ` : ''}
+          </article>
 
-  ${!orderMode ? `
-    <div class="w-full max-w-3xl mx-auto mt-6">
-      ${menuHTML}
-    </div>
-  ` : ''}
-</section>
-
-     ${!orderMode ? `
-  <div class="diamond-divider">
-    <span></span><span></span><span></span>
-  </div>
-
-  <section class="px-6 pb-6 animate-fade-up delay-5">
-    ${renderAllergenSection(t)}
-  </section>
-
-  <div class="diamond-divider">
-    <span></span><span></span><span></span>
-  </div>
-
-  <footer class="px-6 pt-4 pb-10 text-center animate-fade-up delay-5">
-    <div class="space-y-6">
-      <div id="address-section">
-        <div class="flex items-center justify-center gap-2 mb-2">
-          <i data-lucide="map-pin" class="w-4 h-4 text-gold"></i>
-          <h4 class="font-display text-sm font-bold text-gold uppercase tracking-wider">${t.address}</h4>
-        </div>
-        <p class="text-sm text-cream/60 leading-relaxed">Rue de la Croix Jurlet 291<br>4040 Herstal</p>
-      </div>
-
-      <div>
-        <div class="flex items-center justify-center gap-2 mb-3">
-          <i data-lucide="clock" class="w-4 h-4 text-gold"></i>
-          <h4 class="font-display text-sm font-bold text-gold uppercase tracking-wider">${t.hours}</h4>
-        </div>
-        <div class="inline-block text-left">
-          <div class="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
-            <span class="text-cream/50">${t.tueFri}</span>
-            <span class="text-cream/80 font-medium">${t.tueFriHours}</span>
-            <span class="text-cream/50">${t.satSun}</span>
-            <span class="text-cream/80 font-medium">${t.satSunHours}</span>
-            <span class="text-cream/50">${t.monday}</span>
-            <span class="text-cream/40 italic">${t.closed}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex justify-center gap-1 pt-4">
-        <div class="w-8 h-0.5 rounded-full bg-dark border border-gray-700"></div>
-        <div class="w-8 h-0.5 rounded-full bg-gold"></div>
-        <div class="w-8 h-0.5 rounded-full" style="background:#EF3340;"></div>
-      </div>
-
-      <div class="pt-5 flex justify-center">
-        <a
-          href="https://tapcarta.com?lang=${currentLang}"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="brand-card flex items-center gap-4 px-5 py-4 rounded-2xl bg-white/5 border-2 border-gold/40 shadow-lg hover:bg-white/10 hover:border-gold/60 transition-all duration-300 cursor-pointer"
-          title="${t.discoverTapCarta}"
-          aria-label="${t.discoverTapCarta}"
-        >
-          <div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-gold/30 bg-white">
-            <img
-              src="${siteConfig.brandLogoUrl}"
-              alt="FJ"
-              class="w-full h-full object-contain"
-              loading="lazy"
-              decoding="async"
-            >
-          </div>
-
-          <div class="leading-tight text-left min-w-0">
-            <div class="text-base font-semibold text-cream tracking-wide break-words">
-              ${siteConfig.productName}
+          <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 text-gold"></i>
+              </div>
+              <div>
+                <h3 class="font-display text-lg font-bold text-cream">Consulter mon menu</h3>
+                <p class="text-xs text-cream/60 mt-1">Accès rapide à l’expérience client</p>
+              </div>
             </div>
 
-            <div class="text-sm text-gold/80 mt-1 break-words">
-              ${siteConfig.productSignature}
+            <div class="space-y-3">
+              <a href="${siteConfig.clientMenuUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
+                <i data-lucide="book-open" class="w-4 h-4 text-gold"></i>
+                <span>Voir mon menu</span>
+              </a>
+
+              <a href="${siteConfig.qrMenuUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+                <i data-lucide="qr-code" class="w-4 h-4 text-gold"></i>
+                <span>Voir le QR</span>
+              </a>
+
+              <a href="${siteConfig.experienceUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+                <i data-lucide="smartphone" class="w-4 h-4 text-gold"></i>
+                <span>Tester l’expérience client</span>
+              </a>
+            </div>
+          </article>
+
+          <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center">
+                <i data-lucide="building-2" class="w-5 h-5 text-gold"></i>
+              </div>
+              <div>
+                <h3 class="font-display text-lg font-bold text-cream">Infos établissement</h3>
+                <p class="text-xs text-cream/60 mt-1">Vue synthétique</p>
+              </div>
             </div>
 
-            <div class="text-xs text-cream/60 mt-2">
-              ${t.discoverTapCarta}
-            </div>
+            <div class="space-y-3">
+              <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3">
+                <div class="text-xs uppercase tracking-wide text-cream/45 mb-1">Établissement</div>
+                <div class="text-sm font-semibold text-cream">${restaurantData.name}</div>
+              </div>
 
-            <div class="text-xs text-cream/40 mt-2">
-              ${t.versionLabel} ${APP_VERSION}
+              <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3">
+                <div class="text-xs uppercase tracking-wide text-cream/45 mb-1">Formule</div>
+                <div class="text-sm font-semibold text-cream">${restaurantData.plan}</div>
+              </div>
+
+              <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3">
+                <div class="text-xs uppercase tracking-wide text-cream/45 mb-1">Langues actives</div>
+                <div class="text-sm font-semibold text-cream">${restaurantData.languages}</div>
+              </div>
+
+              <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3">
+                <div class="text-xs uppercase tracking-wide text-cream/45 mb-1">Statut</div>
+                <div class="text-sm font-semibold text-emerald-200">${restaurantData.status}</div>
+              </div>
             </div>
-          </div>
-        </a>
+          </article>
+        </section>
       </div>
+    </main>
+  `;
 
-      <p class="text-xs text-cream/30 mt-4">${t.copyright}</p>
-    </div>
-  </footer>
-` : ''}
-      `;
+  const toastTitle = document.getElementById('install-toast-title');
+  const toastText = document.getElementById('install-toast-text');
 
-      const toastTitle = document.getElementById('install-toast-title');   
-      const toastText = document.getElementById('install-toast-text');
-      const iosHelp = document.getElementById('ios-install-help');
+  if (toastTitle && toastText) {
+    toastTitle.textContent = t.installToastTitle;
+    toastText.textContent = t.installToastText;
+  }
 
-      if (toastTitle && toastText) {
-        toastTitle.textContent = t.installToastTitle;
-        toastText.textContent = t.installToastText;
-      }
+  if (window.lucide) {
+    requestAnimationFrame(() => {
+      lucide.createIcons();
+    });
+  }
 
-      if (iosHelp) {
-        iosHelp.innerHTML = isSamsungInternet() ? t.samsungInstallHelp : t.iosInstallHelp;
-      }
-
-      if (window.lucide) {
-        requestAnimationFrame(() => {
-          lucide.createIcons();
-        });
-      }
-
-      updateInstallUI();
-      updateLangButtons();
-    }
+  updateInstallUI();
+  updateLangButtons();
+}
 
  function ensureFreshHtmlVersion() {
   try {
