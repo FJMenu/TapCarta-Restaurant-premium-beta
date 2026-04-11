@@ -6,7 +6,7 @@
   <title>La Bonne Fourchette</title>
 
   <script>
-    const APP_VERSION = '1.0.3';
+    const APP_VERSION = '1.0.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1986,7 +1986,7 @@ const activeOrders = activeRequests.filter(item => item.type === 'Commande');
 const activeReservations = activeRequests.filter(item => item.type === 'Réservation');
 
 function getElapsedLabel(item) {
-  const now = new Date('2026-04-11T12:00:00');
+const now = new Date();
   const requestDate = new Date(`2026-04-${item.date.split('/')[0]}T${item.time}:00`);
   const diffMs = Math.max(0, now - requestDate);
   const diffMinutes = Math.floor(diffMs / 60000);
@@ -2364,15 +2364,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   renderMenu();
 
+  setInterval(() => {
+    renderMenu();
+  }, 30000);
+
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const lang = e.currentTarget.dataset.lang;
       if (!supportedLangs.includes(lang)) return;
 
-currentLang = lang;
-localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
-renderMenu();
-window.scrollTo({ top: 0, behavior: 'auto' });
+      currentLang = lang;
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+      renderMenu();
+      window.scrollTo({ top: 0, behavior: 'auto' });
     });
   });
 });
