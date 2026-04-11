@@ -1960,11 +1960,31 @@ function updateOrderFormTimePart(part, value) {
   const wrapper = document.getElementById('app-wrapper');
   document.documentElement.lang = currentLang;
 
+const now = new Date();
+
+function getRelativeRequestDate(minutesAgo) {
+  const date = new Date(now.getTime() - minutesAgo * 60000);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return {
+    date: `${day}/${month}`,
+    time: `${hours}:${minutes}`
+  };
+}
+
+const req1 = getRelativeRequestDate(2);
+const req2 = getRelativeRequestDate(4.5);
+const req3 = getRelativeRequestDate(12);
+const req4 = getRelativeRequestDate(1.5);
+
 const requestsData = [
-  { id: 1, type: 'Commande', client: 'Marc Dupont', date: '11/04', time: '09:40', status: 'Nouveau', treated: false },
-  { id: 2, type: 'Réservation', client: 'Ana Lopez', date: '11/04', time: '09:30', status: 'En attente', treated: false },
-  { id: 3, type: 'Commande', client: 'Julie Martin', date: '11/04', time: '09:15', status: 'Traitée', treated: true },
-  { id: 4, type: 'Réservation', client: 'Tom Vermeer', date: '11/04', time: '09:00', status: 'Nouveau', treated: false }
+  { id: 1, type: 'Commande', client: 'Marc Dupont', date: req1.date, time: req1.time, status: 'Nouveau', treated: false },
+  { id: 2, type: 'Réservation', client: 'Ana Lopez', date: req2.date, time: req2.time, status: 'En attente', treated: false },
+  { id: 3, type: 'Commande', client: 'Julie Martin', date: req3.date, time: req3.time, status: 'Traitée', treated: true },
+  { id: 4, type: 'Réservation', client: 'Tom Vermeer', date: req4.date, time: req4.time, status: 'Nouveau', treated: false }
 ];
 
   const googleReviewsData = {
