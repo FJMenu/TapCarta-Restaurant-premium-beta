@@ -649,47 +649,21 @@
   </div>
 
   <script>
-const RESTAURANT_DATA_URL = `./restaurants/bistrobelga.json?v=${APP_VERSION}`;
-
-let restaurantConfig = null;
-
-function buildSiteConfigFromRestaurantData(data) {
-  return {
-return {
-    appLogoUrl: data?.branding?.logoUrl || "./logo-app-web-sans-fond.png",
-    faviconUrl: data?.branding?.faviconUrl || "./favicon.png",
-    productName: "TapCarta",
-    productSignature: "Interface restaurant",
-    restaurantName: data?.name || "Restaurant",
-    restaurantStatusLabel: data?.display?.statusLabel || "Actif",
-    reviewWriteUrl: data?.technical?.reviewWriteUrl || "#",
-    reviewReadUrl: data?.technical?.reviewReadUrl || "#",
-    clientMenuUrl: data?.technical?.clientMenuUrl || "#",
-    qrMenuUrl: data?.technical?.qrMenuUrl || "#",
-    experienceUrl: data?.technical?.experienceUrl || "#",
-    orderReservationOptionEnabled: Boolean(data?.contract?.orderEnabled || data?.contract?.bookingEnabled),
-    activationRequestUrl: data?.technical?.activationRequestUrl || "#"
-  };
-}
-
-let siteConfig = buildSiteConfigFromRestaurantData(null);
-
-async function loadRestaurantConfig() {
-  try {
-    const response = await fetch(RESTAURANT_DATA_URL, { cache: "no-store" });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    restaurantConfig = await response.json();
-    siteConfig = buildSiteConfigFromRestaurantData(restaurantConfig);
-  } catch (error) {
-    console.error("Restaurant config loading error:", error);
-    restaurantConfig = null;
-    siteConfig = buildSiteConfigFromRestaurantData(null);
-  }
-}
+const siteConfig = {
+  appLogoUrl: "./logo-app-web-sans-fond.png",
+  faviconUrl: "./favicon.png",
+  productName: "TapCarta",
+  productSignature: "Interface restaurant",
+  restaurantName: "La Bonne Fourchette",
+  restaurantStatusLabel: "Interface restaurant premium",
+  reviewWriteUrl: "https://search.google.com/local/writereview?placeid=ChIJ3b0pGDb7wEcRs2VnXGk2mmE",
+  reviewReadUrl: "https://www.google.com/search?sca_esv=53ad354dfa12427d&hl=es&sxsrf=ANbL-n6RWE3nRUw7f5WaezPnpcLHuoMqxQ:1775912350506&q=Cabinet+Dentaire+Oksuz&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOa4msx7_krR5S5qlB2qNyHs2EArzfB-f6wFFsvXUzF_YL4uf-_g20LPRvAwkA6WCRMsotxQ%3D&uds=ALYpb_kTpE9zdcnRXvuX97Rkoz7XTeKzW--6OACk50lLBISshA1RYyql69TuTGCD1oLi-ge1ZOQa0xzvzOPnc_YCmxERJQBS992uA1TMgs4UU4qhONi-YNgDewOxLmRRJU_0Y5Ly99tX&sa=X&ved=2ahUKEwifmLeG7eWTAxWeT6QEHQTJKD8Q3PALegQIGhAE&biw=1536&bih=695&dpr=1.25",
+  clientMenuUrl: "#",
+  qrMenuUrl: "#",
+  experienceUrl: "#",
+  orderReservationOptionEnabled: true,
+  activationRequestUrl: "#"
+};
 
     const menuData = {
       snacks: [
@@ -2659,7 +2633,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (reloadingForFreshVersion) return;
 
   await registerFreshServiceWorker();
-  await loadRestaurantConfig();
 
   renderMenu();
 
