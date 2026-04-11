@@ -6,7 +6,7 @@
   <title>La Bonne Fourchette</title>
 
   <script>
-    const APP_VERSION = '1.0.9';
+    const APP_VERSION = '1.0.10';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -803,6 +803,16 @@ reviewBackButton: 'Retour',
 reviewValidateButton: 'Valider la commande',
 reviewPendingMessage: 'Étape suivante prête : l’envoi réel de la commande sera branché ensuite.',
 continueAddingButton: 'Ajouter d’autres plats',
+optionInactiveLabel: 'Option disponible',
+optionInactiveTitle: 'Activez commandes et réservations',
+optionInactiveText: 'Recevez directement les commandes take-away et les réservations de table depuis TapCarta.',
+optionInactivePrice: '10 €/mois',
+optionInactiveBenefit1: 'Réception centralisée',
+optionInactiveBenefit2: 'Suivi plus clair',
+optionInactiveButton: 'Demander l’activation',
+optionInactiveStatus: 'Option actuellement non activée',
+optionInactiveCounterLine1: 'Option',
+optionInactiveCounterLine2: 'inactive',
 allergens: ['Gluten', 'Crustacés', 'Œufs', 'Poisson', 'Lait / lactose', 'Fruits à coque', 'Céleri', 'Moutarde', 'Sésame', 'Sulfites', 'Mollusques'],
         items: {
           ailes_poulet: { name: 'Ailes de poulet', subtitle: 'croustillantes et moelleuses' },
@@ -925,6 +935,16 @@ reviewBackButton: 'Volver',
 reviewValidateButton: 'Validar el pedido',
 reviewPendingMessage: 'Siguiente etapa preparada: el envío real del pedido se conectará después.',
 continueAddingButton: 'Añadir más platos',
+optionInactiveLabel: 'Opción disponible',
+optionInactiveTitle: 'Active pedidos y reservas',
+optionInactiveText: 'Reciba directamente los pedidos para llevar y las reservas de mesa desde TapCarta.',
+optionInactivePrice: '10 €/mes',
+optionInactiveBenefit1: 'Recepción centralizada',
+optionInactiveBenefit2: 'Seguimiento más claro',
+optionInactiveButton: 'Solicitar activación',
+optionInactiveStatus: 'Opción actualmente no activada',
+optionInactiveCounterLine1: 'Opción',
+optionInactiveCounterLine2: 'inactiva',
 allergens: ['Gluten', 'Crustáceos', 'Huevos', 'Pescado', 'Leche / lactosa', 'Frutos secos', 'Apio', 'Mostaza', 'Sésamo', 'Sulfitos', 'Moluscos'],
         items: {
           ailes_poulet: { name: 'Alitas de pollo', subtitle: 'crujientes y tiernas' },
@@ -1048,6 +1068,16 @@ reviewBackButton: 'Back',
 reviewValidateButton: 'Validate order',
 reviewPendingMessage: 'Next step ready: the real order submission will be connected afterwards.',
 continueAddingButton: 'Add more dishes',
+optionInactiveLabel: 'Option available',
+optionInactiveTitle: 'Activate orders and reservations',
+optionInactiveText: 'Receive takeaway orders and table reservations directly through TapCarta.',
+optionInactivePrice: '€10/month',
+optionInactiveBenefit1: 'Centralized requests',
+optionInactiveBenefit2: 'Clearer tracking',
+optionInactiveButton: 'Request activation',
+optionInactiveStatus: 'Option currently inactive',
+optionInactiveCounterLine1: 'Option',
+optionInactiveCounterLine2: 'inactive',
 allergens: ['Gluten', 'Crustaceans', 'Eggs', 'Fish', 'Milk / lactose', 'Nuts', 'Celery', 'Mustard', 'Sesame', 'Sulfites', 'Molluscs'],
         items: {
           ailes_poulet: { name: 'Chicken wings', subtitle: 'crispy and tender' },
@@ -1171,6 +1201,16 @@ reviewBackButton: 'Terug',
 reviewValidateButton: 'Bestelling valideren',
 reviewPendingMessage: 'Volgende stap is klaar: de echte verzending van de bestelling wordt later gekoppeld.',
 continueAddingButton: 'Meer gerechten toevoegen',
+optionInactiveLabel: 'Optie beschikbaar',
+optionInactiveTitle: 'Activeer bestellingen en reservaties',
+optionInactiveText: 'Ontvang afhaalbestellingen en tafelreservaties rechtstreeks via TapCarta.',
+optionInactivePrice: '€10/maand',
+optionInactiveBenefit1: 'Gecentraliseerde ontvangst',
+optionInactiveBenefit2: 'Duidelijkere opvolging',
+optionInactiveButton: 'Activatie aanvragen',
+optionInactiveStatus: 'Optie momenteel niet actief',
+optionInactiveCounterLine1: 'Optie',
+optionInactiveCounterLine2: 'inactief',
 allergens: ['Gluten', 'Schaaldieren', 'Eieren', 'Vis', 'Melk / lactose', 'Noten', 'Selderij', 'Mosterd', 'Sesam', 'Sulfieten', 'Weekdieren'],
         items: {
           ailes_poulet: { name: 'Kipvleugels', subtitle: 'knapperig en mals' },
@@ -2116,7 +2156,7 @@ ${!item.treated ? `
         <div>
           <h2 class="font-display text-xl md:text-2xl font-bold text-cream">Demandes reçues</h2>
           <p class="text-sm text-cream/65 mt-1">
-            ${siteConfig.orderReservationOptionEnabled ? 'Mise à jour automatique' : 'Option actuellement non activée'}
+   ${siteConfig.orderReservationOptionEnabled ? 'Mise à jour automatique' : t.optionInactiveStatus}
           </p>
         </div>
       </div>
@@ -2127,7 +2167,7 @@ ${!item.treated ? `
         ${siteConfig.orderReservationOptionEnabled ? requestsData.length : '—'}
       </div>
       <div class="text-xs text-cream/70 leading-tight">
-        ${siteConfig.orderReservationOptionEnabled ? 'Total<br>des demandes' : 'Option<br>inactive'}
+${siteConfig.orderReservationOptionEnabled ? 'Total<br>des demandes' : `${t.optionInactiveCounterLine1}<br>${t.optionInactiveCounterLine2}`}
       </div>
     </div>
   </div>
@@ -2174,47 +2214,47 @@ ${!item.treated ? `
       </div>
     </div>
   ` : `
-    <div class="rounded-[22px] border border-gold/25 bg-gradient-to-br from-gold/10 to-transparent p-4 md:p-5">
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div class="min-w-0">
-          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/25 bg-black/15 mb-3">
-            <i data-lucide="sparkles" class="w-4 h-4 text-gold"></i>
-            <span class="text-xs font-semibold text-gold">Option disponible</span>
-          </div>
+<div class="rounded-[22px] border border-gold/25 bg-gradient-to-br from-gold/10 to-transparent p-4 md:p-5">
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div class="min-w-0">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/25 bg-black/15 mb-3">
+        <i data-lucide="sparkles" class="w-4 h-4 text-gold"></i>
+        <span class="text-xs font-semibold text-gold">${t.optionInactiveLabel}</span>
+      </div>
 
-          <h3 class="font-display text-lg md:text-xl font-bold text-cream mb-2">
-            Activez commandes et réservations
-          </h3>
+      <h3 class="font-display text-lg md:text-xl font-bold text-cream mb-2">
+        ${t.optionInactiveTitle}
+      </h3>
 
-          <p class="text-sm text-cream/75 leading-relaxed max-w-3xl">
-            Recevez directement les commandes take-away et les réservations de table depuis TapCarta.
-          </p>
+      <p class="text-sm text-cream/75 leading-relaxed max-w-3xl">
+        ${t.optionInactiveText}
+      </p>
 
-          <div class="mt-3 flex flex-wrap items-center gap-2">
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/30 bg-black/15 text-xs font-semibold text-gold">
-              <i data-lucide="badge-euro" class="w-4 h-4 text-gold"></i>
-              10 €/mois
-            </span>
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-black/10 text-xs text-cream/70">
-              Réception centralisée
-            </span>
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-black/10 text-xs text-cream/70">
-              Suivi plus clair
-            </span>
-          </div>
-        </div>
-
-        <div class="lg:w-auto w-full">
-          <a
-            href="${siteConfig.activationRequestUrl}"
-            class="btn-action inline-flex items-center justify-center gap-3 w-full lg:w-auto px-4 py-3 rounded-2xl border-2 border-gold/45 bg-gold/10 hover:bg-gold/15 transition-all shadow-lg"
-          >
-            <i data-lucide="zap" class="w-5 h-5 text-gold"></i>
-            <span class="text-sm font-semibold text-cream">Demander l’activation</span>
-          </a>
-        </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/30 bg-black/15 text-xs font-semibold text-gold">
+          <i data-lucide="badge-euro" class="w-4 h-4 text-gold"></i>
+          ${t.optionInactivePrice}
+        </span>
+        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-black/10 text-xs text-cream/70">
+          ${t.optionInactiveBenefit1}
+        </span>
+        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-black/10 text-xs text-cream/70">
+          ${t.optionInactiveBenefit2}
+        </span>
       </div>
     </div>
+
+    <div class="lg:w-auto w-full">
+      <a
+        href="${siteConfig.activationRequestUrl}"
+        class="btn-action inline-flex items-center justify-center gap-3 w-full lg:w-auto px-4 py-3 rounded-2xl border-2 border-gold/45 bg-gold/10 hover:bg-gold/15 transition-all shadow-lg"
+      >
+        <i data-lucide="zap" class="w-5 h-5 text-gold"></i>
+        <span class="text-sm font-semibold text-cream">${t.optionInactiveButton}</span>
+      </a>
+    </div>
+  </div>
+</div>
   `}
 </section>
 
