@@ -6,7 +6,7 @@
   <title>La Bonne Fourchette</title>
 
   <script>
-    const APP_VERSION = '1.0.5';
+    const APP_VERSION = '1.0.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2072,9 +2072,15 @@ ${!item.treated ? `
                 <h1 class="font-display text-2xl md:text-3xl font-bold text-cream">
                   ${siteConfig.restaurantName}
                 </h1>
-                <p class="text-sm md:text-base text-cream/72 mt-2">
-                  ${siteConfig.restaurantStatusLabel}
-                </p>
+<div class="mt-2 space-y-2">
+                  <p class="text-sm md:text-base text-cream/72">
+                    ${siteConfig.restaurantStatusLabel}
+                  </p>
+                  <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/25 bg-black/15">
+                    <span class="text-[11px] uppercase tracking-wide text-cream/50">Version</span>
+                    <span class="text-xs font-semibold text-gold">${APP_VERSION}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
