@@ -2,11 +2,11 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>La Bonne Fourchette</title>
-
-  <script>
-    const APP_VERSION = '1.0.12';
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+      <title>La Bonne Fourchette</title>
+      
+        <script>
+            const APP_VERSION = 'V1.0.13';>
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -649,7 +649,7 @@
   </div>
 
   <script>
-const siteConfig = {
+let siteConfig = {
   appLogoUrl: "./logo-app-web-sans-fond.png",
   faviconUrl: "./favicon.png",
   productName: "TapCarta",
@@ -666,6 +666,36 @@ const siteConfig = {
   orderReservationOptionEnabled: true,
   activationRequestUrl: "#"
 };
+
+let activeRestaurantData = null;
+
+async function fetchJsonFile(path) {
+  const response = await fetch(`${path}?v=${APP_VERSION}`, { cache: 'no-store' });
+
+  if (!response.ok) {
+    throw new Error(`Impossible de charger ${path}`);
+  }
+
+  return response.json();
+}
+
+async function loadActiveRestaurantData() {
+  const restaurantsIndex = await fetchJsonFile('./restaurants/index.json');
+
+  const activeRestaurant = Array.isArray(restaurantsIndex)
+    ? restaurantsIndex.find(item => item.status === 'active')
+    : null;
+
+  if (!activeRestaurant || !activeRestaurant.id) {
+    throw new Error('Aucun établissement actif trouvé.');
+  }
+
+  const restaurantFilePath = `./restaurants/${activeRestaurant.id}.json`;
+  const restaurantData = await fetchJsonFile(restaurantFilePath);
+
+  activeRestaurantData = restaurantData;
+  return restaurantData;
+}
 
     const menuData = {
       snacks: [
@@ -2635,6 +2665,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (reloadingForFreshVersion) return;
 
   await registerFreshServiceWorker();
+  await loadActiveRestaurantData();
+
+  console.log('Restaurant actif chargé :', activeRestaurantData);
 
   renderMenu();
 
