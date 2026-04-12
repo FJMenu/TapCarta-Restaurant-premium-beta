@@ -1,12 +1,12 @@
 {
   "restaurants": [
     {
-      "id": "bistro-belga",
-      "slug": "bistrobelga",
-      "name": "Bistro Belga",
-      "file": "restaurants/bistrobelga.json",
+      "id": "tapcarta-demo",
+      "slug": "tapcarta-demo",
+      "name": "TapCarta Demo",
+      "file": "restaurants/tapcarta-demo.json",
       "status": "active",
-      "publicListingEnabled": true,
+      "publicListingEnabled": false,
       "clientAccessEnabled": true
     }
   ]
