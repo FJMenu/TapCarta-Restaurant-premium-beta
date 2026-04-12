@@ -1,7 +1,7 @@
 {
-  "id": "bistro-belga",
-  "slug": "bistrobelga",
-  "name": "Bistro Belga",
+  "id": "tapcarta-demo",
+  "slug": "tapcartademo",
+  "name": "La Bonne Fourchette",
   "status": "active",
   "languages": ["fr", "es", "en", "nl"],
 
@@ -71,7 +71,7 @@
     "adminNotes": "",
     "lastAccessAt": "",
     "portalPaths": {
-      "publicPage": "/restaurants/bistrobelga",
+      "publicPage": "/restaurants/tapcarta-demo",
       "clientSpace": "/client",
       "adminSpace": "/admin"
     }
