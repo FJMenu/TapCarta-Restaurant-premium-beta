@@ -2193,8 +2193,8 @@ const requestsData = [
  const activeRequests = requestsData.filter(item => !item.treated);
 const treatedRequests = requestsData.filter(item => item.treated);
 
-const activeOrders = activeRequests.filter(item => item.type === 'Commande');
-const activeReservations = activeRequests.filter(item => item.type === 'Réservation');
+const activeOrders = activeRequests.filter(item => item.type === t.restaurantTypeOrder);
+const activeReservations = activeRequests.filter(item => item.type === t.restaurantTypeBooking);
 
 function getElapsedLabel(item) {
   const diffMs = Math.max(0, Date.now() - item.createdAt);
