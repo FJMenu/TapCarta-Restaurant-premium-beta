@@ -682,9 +682,13 @@ async function fetchJsonFile(path) {
 async function loadActiveRestaurantData() {
   const restaurantsIndex = await fetchJsonFile('./restaurants/index.json');
 
-  const activeRestaurant = Array.isArray(restaurantsIndex)
-    ? restaurantsIndex.find(item => item.status === 'active')
-    : null;
+  const restaurantsList = Array.isArray(restaurantsIndex)
+    ? restaurantsIndex
+    : Array.isArray(restaurantsIndex.restaurants)
+      ? restaurantsIndex.restaurants
+      : [];
+
+  const activeRestaurant = restaurantsList.find(item => item.status === 'active');
 
   if (!activeRestaurant || !activeRestaurant.id) {
     throw new Error('Aucun établissement actif trouvé.');
