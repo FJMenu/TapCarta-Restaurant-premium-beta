@@ -2570,10 +2570,12 @@ ${!item.treated ? `
                 <span>${t.restaurantMenuQr}</span>
               </a>
 
+${siteConfig.modules?.web ? `
               <a href="${siteConfig.experienceUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
                 <i data-lucide="smartphone" class="w-4 h-4 text-gold"></i>
                 <span>${t.restaurantMenuTest}</span>
               </a>
+              ` : ''}
             </div>
           </article>
 
