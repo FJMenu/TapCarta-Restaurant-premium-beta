@@ -2488,6 +2488,7 @@ ${!item.treated ? `
 </section>
 
 <section class="mt-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
+   ${siteConfig.modules?.googleReviews ? `
    <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
             <div class="flex items-center gap-3 mb-5">
               <div class="w-10 h-10 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center">
@@ -2518,6 +2519,7 @@ ${!item.treated ? `
               </button>
             </div>
           </article>
+   ` : ''}
 
    <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
             <div class="flex items-center gap-3 mb-5">
