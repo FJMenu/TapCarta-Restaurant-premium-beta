@@ -6,7 +6,7 @@
       <title>La Bonne Fourchette</title>
       
         <script>
-            const APP_VERSION = 'V1.0.13';
+            const APP_VERSION = 'V1.0.14';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -694,8 +694,17 @@ async function loadActiveRestaurantData() {
     throw new Error('Aucun établissement actif trouvé.');
   }
 
-  const restaurantFilePath = `./restaurants/${activeRestaurant.id}.json`;
+  const restaurantFilePath = activeRestaurant.file
+    ? `./${activeRestaurant.file.replace(/^\.?\//, '')}`
+    : `./restaurants/${activeRestaurant.id}.json`;
+
   const restaurantData = await fetchJsonFile(restaurantFilePath);
+
+  siteConfig.restaurantName =
+    restaurantData?.identity?.name ||
+    restaurantData?.name ||
+    activeRestaurant.name ||
+    siteConfig.restaurantName;
 
   activeRestaurantData = restaurantData;
   return restaurantData;
