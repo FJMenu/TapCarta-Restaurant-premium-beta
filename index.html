@@ -2268,10 +2268,20 @@ const requestsData = [
       activeRestaurantData?.identity?.name ||
       siteConfig.restaurantName,
 
-    plan:
-      activeRestaurantData?.identity?.plan ||
-      activeRestaurantData?.plan ||
-      'Standard',
+plan: (() => {
+      const rawPlan =
+        activeRestaurantData?.identity?.plan ||
+        activeRestaurantData?.plan ||
+        'standard';
+
+      const planMap = {
+        light: 'Light',
+        standard: 'Standard',
+        premium: 'Premium'
+      };
+
+      return planMap[rawPlan] || rawPlan;
+    })(),
 
     languages:
       Array.isArray(activeRestaurantData?.identity?.languages)
