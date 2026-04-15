@@ -2280,10 +2280,21 @@ const requestsData = [
           ? activeRestaurantData.languages.map(lang => String(lang).toUpperCase()).join(' · ')
           : 'FR · ES · EN · NL',
 
-    status:
-      activeRestaurantData?.identity?.status ||
-      activeRestaurantData?.status ||
-      'active'
+status: (() => {
+      const rawStatus =
+        activeRestaurantData?.identity?.status ||
+        activeRestaurantData?.status ||
+        'active';
+
+      const statusMap = {
+        active: 'Actif',
+        inactive: 'Inactif',
+        pending: 'En attente',
+        disabled: 'Désactivé'
+      };
+
+      return statusMap[rawStatus] || rawStatus;
+    })()
   };
 
  const activeRequests = requestsData.filter(item => !item.treated);
