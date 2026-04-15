@@ -12,7 +12,7 @@
     ]
   },
   "modules": {
-    "web": false,
+    "web": true,
     "ordering": true,
     "booking": true,
     "googleReviews": true,
