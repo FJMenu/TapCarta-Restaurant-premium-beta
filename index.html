@@ -706,7 +706,15 @@ async function loadActiveRestaurantData() {
     activeRestaurant.name ||
     siteConfig.restaurantName;
 
-  activeRestaurantData = restaurantData;
+siteConfig.modules = {
+  ordering: restaurantData?.modules?.ordering !== false,
+  booking: restaurantData?.modules?.booking !== false,
+  googleReviews: restaurantData?.modules?.googleReviews !== false,
+  whatsapp: restaurantData?.modules?.whatsapp !== false,
+  web: restaurantData?.modules?.web === true
+};
+
+activeRestaurantData = restaurantData;
   return restaurantData;
 }
 
