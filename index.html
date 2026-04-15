@@ -717,6 +717,30 @@ siteConfig.modules = {
 siteConfig.orderReservationOptionEnabled =
   siteConfig.modules.ordering || siteConfig.modules.booking;
 
+siteConfig.clientMenuUrl =
+  restaurantData?.technical?.clientMenuUrl ||
+  siteConfig.clientMenuUrl;
+
+siteConfig.qrMenuUrl =
+  restaurantData?.technical?.qrMenuUrl ||
+  siteConfig.qrMenuUrl;
+
+siteConfig.experienceUrl =
+  restaurantData?.technical?.experienceUrl ||
+  siteConfig.experienceUrl;
+
+siteConfig.activationRequestUrl =
+  restaurantData?.technical?.activationRequestUrl ||
+  siteConfig.activationRequestUrl;
+
+siteConfig.reviewReadUrl =
+  restaurantData?.technical?.reviewReadUrl ||
+  siteConfig.reviewReadUrl;
+
+siteConfig.reviewWriteUrl =
+  restaurantData?.technical?.reviewWriteUrl ||
+  siteConfig.reviewWriteUrl;
+
 activeRestaurantData = restaurantData;
   return restaurantData;
 }
