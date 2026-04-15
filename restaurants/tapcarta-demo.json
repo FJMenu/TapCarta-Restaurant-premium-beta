@@ -2,7 +2,7 @@
   "identity": {
     "id": "tapcarta-demo",
     "name": "TapCarta Demo",
-    "status": "active",
+    "status": "pending",
     "plan": "standard",
     "languages": [
       "fr",
