@@ -2264,10 +2264,26 @@ const requestsData = [
   };
 
   const restaurantData = {
-    name: siteConfig.restaurantName,
-    plan: 'Standard',
-    languages: 'FR · ES · EN · NL',
-    status: 'Actif'
+    name:
+      activeRestaurantData?.identity?.name ||
+      siteConfig.restaurantName,
+
+    plan:
+      activeRestaurantData?.identity?.plan ||
+      activeRestaurantData?.plan ||
+      'Standard',
+
+    languages:
+      Array.isArray(activeRestaurantData?.identity?.languages)
+        ? activeRestaurantData.identity.languages.map(lang => String(lang).toUpperCase()).join(' · ')
+        : Array.isArray(activeRestaurantData?.languages)
+          ? activeRestaurantData.languages.map(lang => String(lang).toUpperCase()).join(' · ')
+          : 'FR · ES · EN · NL',
+
+    status:
+      activeRestaurantData?.identity?.status ||
+      activeRestaurantData?.status ||
+      'active'
   };
 
  const activeRequests = requestsData.filter(item => !item.treated);
