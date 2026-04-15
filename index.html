@@ -714,6 +714,9 @@ siteConfig.modules = {
   web: restaurantData?.modules?.web === true
 };
 
+siteConfig.orderReservationOptionEnabled =
+  siteConfig.modules.ordering || siteConfig.modules.booking;
+
 activeRestaurantData = restaurantData;
   return restaurantData;
 }
