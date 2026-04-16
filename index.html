@@ -2419,19 +2419,15 @@ ${!item.treated ? `
               </div>
             </div>
 
-            <button class="btn-action inline-flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border-2 border-gold/45 bg-gold/10 hover:bg-gold/15 transition-all shadow-lg min-h-[58px]">
-              <img
-                src="${siteConfig.faviconUrl}"
-                alt="TapCarta"
-                class="w-10 h-10 rounded-xl object-cover flex-shrink-0"
-                loading="lazy"
-                decoding="async"
-              >
-              <div class="text-left">
-                <div class="text-sm font-semibold text-cream leading-tight">${t.restaurantRequestButton}</div>
-                <div class="text-xs text-gold/85 mt-1 leading-tight">${t.restaurantRequestSubtext}</div>
+             <div class="inline-flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 shadow-lg min-h-[58px]">
+              <div class="w-10 h-10 rounded-xl border border-gold/20 bg-gold/10 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="shield-alert" class="w-5 h-5 text-gold"></i>
               </div>
-            </button>
+              <div class="text-left">
+                <div class="text-sm font-semibold text-cream leading-tight">Bêta interne</div>
+                <div class="text-xs text-gold/85 mt-1 leading-tight">Demandes réelles non raccordées</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
