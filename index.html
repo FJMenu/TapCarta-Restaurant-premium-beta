@@ -2523,7 +2523,8 @@ ${!item.treated ? `
           </div>
         </div>
 
-        <div class="lg:w-auto w-full">
+          <div class="lg:w-auto w-full">
+          ${siteConfig.activationRequestUrl && siteConfig.activationRequestUrl !== '#' ? `
           <a
             href="${siteConfig.activationRequestUrl}"
             class="btn-action inline-flex items-center justify-center gap-3 w-full lg:w-auto px-4 py-3 rounded-2xl border-2 border-gold/45 bg-gold/10 hover:bg-gold/15 transition-all shadow-lg"
@@ -2531,6 +2532,11 @@ ${!item.treated ? `
             <i data-lucide="zap" class="w-5 h-5 text-gold"></i>
             <span class="text-sm font-semibold text-cream">${t.optionInactiveButton}</span>
           </a>
+          ` : `
+          <div class="inline-flex items-center justify-center gap-3 w-full lg:w-auto px-4 py-3 rounded-2xl border border-gold/20 bg-black/15 text-sm text-cream/65">
+            Activation non configurée dans les données établissement.
+          </div>
+          `}
         </div>
       </div>
     </div>
