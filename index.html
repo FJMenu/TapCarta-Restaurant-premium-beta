@@ -14,8 +14,9 @@
     }
 
     const BASE_PATH = getBasePath();
-    const MANIFEST_URL = `${BASE_PATH}/manifest.webmanifest?v=${APP_VERSION}`; 
+      const MANIFEST_URL = `${BASE_PATH}/manifest.webmanifest?v=${APP_VERSION}`; 
     const ICON_192_URL = `${BASE_PATH}/icon-192.png`;
+    const FAVICON_URL = `${BASE_PATH}/favicon.png?v=${APP_VERSION}`;
     const SW_URL = `${BASE_PATH}/sw.js?v=${APP_VERSION}`;
   </script>
 
@@ -29,6 +30,8 @@
 
  <link id="manifest-link" rel="manifest" href="">
 <link id="apple-touch-icon-link" rel="apple-touch-icon" href="">
+<link id="favicon-link" rel="icon" type="image/png" href="">
+<link id="shortcut-icon-link" rel="shortcut icon" type="image/png" href="">
 
   <meta name="theme-color" content="#0F0F0F">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2760,6 +2763,8 @@ async function registerFreshServiceWorker() {
 document.addEventListener('DOMContentLoaded', async () => {
   const manifestLink = document.getElementById('manifest-link');
   const appleTouchIconLink = document.getElementById('apple-touch-icon-link');
+  const faviconLink = document.getElementById('favicon-link');
+  const shortcutIconLink = document.getElementById('shortcut-icon-link');
 
   if (manifestLink) {
     manifestLink.href = MANIFEST_URL;
@@ -2767,6 +2772,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (appleTouchIconLink) {
     appleTouchIconLink.href = ICON_192_URL;
+  }
+
+  if (faviconLink) {
+    faviconLink.href = FAVICON_URL;
+  }
+
+  if (shortcutIconLink) {
+    shortcutIconLink.href = FAVICON_URL;
   }
 
   const reloadingForFreshVersion = ensureFreshHtmlVersion();
