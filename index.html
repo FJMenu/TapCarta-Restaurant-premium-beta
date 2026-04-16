@@ -717,29 +717,44 @@ siteConfig.modules = {
 siteConfig.orderReservationOptionEnabled =
   siteConfig.modules.ordering || siteConfig.modules.booking;
 
-siteConfig.clientMenuUrl =
+const resolvedClientMenuUrl =
   restaurantData?.technical?.clientMenuUrl ||
+  restaurantData?.portal?.portalPaths?.publicPage ||
+  restaurantData?.links?.clientMenuUrl ||
+  restaurantData?.links?.publicPage ||
   siteConfig.clientMenuUrl;
 
-siteConfig.qrMenuUrl =
+const resolvedQrMenuUrl =
   restaurantData?.technical?.qrMenuUrl ||
+  restaurantData?.links?.qrMenuUrl ||
   siteConfig.qrMenuUrl;
 
-siteConfig.experienceUrl =
+const resolvedExperienceUrl =
   restaurantData?.technical?.experienceUrl ||
+  restaurantData?.links?.experienceUrl ||
   siteConfig.experienceUrl;
 
-siteConfig.activationRequestUrl =
+const resolvedActivationRequestUrl =
   restaurantData?.technical?.activationRequestUrl ||
+  restaurantData?.links?.activationRequestUrl ||
   siteConfig.activationRequestUrl;
 
-siteConfig.reviewReadUrl =
+const resolvedReviewReadUrl =
   restaurantData?.technical?.reviewReadUrl ||
+  restaurantData?.links?.reviewReadUrl ||
   siteConfig.reviewReadUrl;
 
-siteConfig.reviewWriteUrl =
+const resolvedReviewWriteUrl =
   restaurantData?.technical?.reviewWriteUrl ||
+  restaurantData?.links?.reviewWriteUrl ||
   siteConfig.reviewWriteUrl;
+
+siteConfig.clientMenuUrl = resolvedClientMenuUrl;
+siteConfig.qrMenuUrl = resolvedQrMenuUrl;
+siteConfig.experienceUrl = resolvedExperienceUrl;
+siteConfig.activationRequestUrl = resolvedActivationRequestUrl;
+siteConfig.reviewReadUrl = resolvedReviewReadUrl;
+siteConfig.reviewWriteUrl = resolvedReviewWriteUrl;
 
 activeRestaurantData = restaurantData;
   return restaurantData;
