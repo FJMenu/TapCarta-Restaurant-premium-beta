@@ -38,7 +38,8 @@
             "name": "Camembert frit",
             "subtitle": "Panure dorée, cœur fondant",
             "price": 12.5,
-            "visible": true
+            "visible": true,
+            "available": true
           }
         ]
       }
@@ -51,5 +52,8 @@
     "webOption": 0,
     "monthlyTotal": 40,
     "billingStatus": "active"
+  },
+  "links": {
+    "publicPage": ""
   }
 }
