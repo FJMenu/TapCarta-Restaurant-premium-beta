@@ -2571,7 +2571,7 @@ ${!item.treated ? `
           </article>
    ` : ''}
 
-   <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
+     <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
             <div class="flex items-center gap-3 mb-5">
               <div class="w-10 h-10 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center">
                 <i data-lucide="layout-dashboard" class="w-5 h-5 text-gold"></i>
@@ -2583,21 +2583,33 @@ ${!item.treated ? `
             </div>
 
             <div class="space-y-3">
+              ${siteConfig.clientMenuUrl && siteConfig.clientMenuUrl !== '#' ? `
               <a href="${siteConfig.clientMenuUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
                 <i data-lucide="book-open" class="w-4 h-4 text-gold"></i>
                 <span>${t.restaurantMenuView}</span>
               </a>
+              ` : ''}
 
+              ${siteConfig.qrMenuUrl && siteConfig.qrMenuUrl !== '#' ? `
               <a href="${siteConfig.qrMenuUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
                 <i data-lucide="qr-code" class="w-4 h-4 text-gold"></i>
                 <span>${t.restaurantMenuQr}</span>
               </a>
+              ` : ''}
 
-${siteConfig.modules?.web ? `
+              ${siteConfig.modules?.web && siteConfig.experienceUrl && siteConfig.experienceUrl !== '#' ? `
               <a href="${siteConfig.experienceUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
                 <i data-lucide="smartphone" class="w-4 h-4 text-gold"></i>
                 <span>${t.restaurantMenuTest}</span>
               </a>
+              ` : ''}
+
+              ${(!siteConfig.clientMenuUrl || siteConfig.clientMenuUrl === '#') &&
+                (!siteConfig.qrMenuUrl || siteConfig.qrMenuUrl === '#') &&
+                (!siteConfig.modules?.web || !siteConfig.experienceUrl || siteConfig.experienceUrl === '#') ? `
+              <div class="rounded-2xl border border-gold/20 bg-black/15 px-4 py-4 text-sm text-cream/65">
+                Accès menu non encore configuré dans les données établissement.
+              </div>
               ` : ''}
             </div>
           </article>
