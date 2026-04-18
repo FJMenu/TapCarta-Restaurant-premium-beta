@@ -6,7 +6,7 @@
       <title>La Bonne Fourchette</title>
       
         <script>
-            const APP_VERSION = 'V1.0.15';
+            const APP_VERSION = 'V1.0.16';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2269,12 +2269,33 @@ function updateOrderFormTimePart(part, value) {
   const wrapper = document.getElementById('app-wrapper');
   document.documentElement.lang = currentLang;
 
-const requestsData = [
-  { id: 1, type: t.restaurantTypeOrder, client: 'Marc Dupont', createdAt: Date.now() - (2 * 60000), status: t.restaurantStatusNew, treated: false },
-  { id: 2, type: t.restaurantTypeBooking, client: 'Ana Lopez', createdAt: Date.now() - (4.5 * 60000), status: t.restaurantStatusPending, treated: false },
-  { id: 3, type: t.restaurantTypeOrder, client: 'Julie Martin', createdAt: Date.now() - (12 * 60000), status: t.restaurantStatusProcessed, treated: true },
-  { id: 4, type: t.restaurantTypeBooking, client: 'Tom Vermeer', createdAt: Date.now() - (1.5 * 60000), status: t.restaurantStatusNew, treated: false }
-];
+function loadRestaurantRequests() {
+  const storageKey = 'tapcarta_booking_requests';
+
+  try {
+    const raw = localStorage.getItem(storageKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .filter((item) => item && item.requestType === 'booking')
+      .map((item) => ({
+        id: item.requestId || `booking_${Date.now()}`,
+        type: t.restaurantTypeBooking,
+        client: item.customer?.name || 'Client',
+        createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
+        status: item.status === 'pending' ? t.restaurantStatusNew : t.restaurantStatusProcessed,
+        treated: item.status !== 'pending',
+        sourceRequest: item
+      }));
+  } catch (error) {
+    console.warn('TapCarta Restaurant: impossible de lire tapcarta_booking_requests', error);
+    return [];
+  }
+}
+
+const requestsData = loadRestaurantRequests();
 
   const googleReviewsData = {
     rating: '4,6',
