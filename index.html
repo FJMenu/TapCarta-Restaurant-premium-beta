@@ -6,7 +6,7 @@
       <title>La Bonne Fourchette</title>
       
         <script>
-            const APP_VERSION = 'V1.0.17';
+            const APP_VERSION = 'V1.0.18';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2414,7 +2414,9 @@ function getElapsedLabel(item) {
   }
 
 function persistRestaurantRequestUpdate(updatedRequest) {
-  const storageKey = 'tapcarta_booking_requests';
+  const isOrderRequest = !!updatedRequest?.order;
+  const storageKey = isOrderRequest ? 'tapcarta_order_requests' : 'tapcarta_booking_requests';
+  const lastKey = isOrderRequest ? 'tapcarta_last_order_request' : 'tapcarta_last_booking_request';
 
   try {
     const raw = localStorage.getItem(storageKey);
@@ -2429,26 +2431,36 @@ function persistRestaurantRequestUpdate(updatedRequest) {
 
       return {
         ...entry,
-        status: updatedRequest.status || entry.status
+        status: updatedRequest.status || entry.status,
+        updatedAt: updatedRequest.updatedAt || entry.updatedAt || new Date().toISOString(),
+        restaurantResponse: {
+          ...(entry.restaurantResponse || {}),
+          ...(updatedRequest.restaurantResponse || {})
+        }
       };
     });
 
     localStorage.setItem(storageKey, JSON.stringify(updatedList));
 
-    const lastRaw = localStorage.getItem('tapcarta_last_booking_request');
+    const lastRaw = localStorage.getItem(lastKey);
     const lastParsed = lastRaw ? JSON.parse(lastRaw) : null;
 
     if (lastParsed && String(lastParsed.requestId) === String(updatedRequest?.requestId)) {
       localStorage.setItem(
-        'tapcarta_last_booking_request',
+        lastKey,
         JSON.stringify({
           ...lastParsed,
-          status: updatedRequest.status || lastParsed.status
+          status: updatedRequest.status || lastParsed.status,
+          updatedAt: updatedRequest.updatedAt || lastParsed.updatedAt || new Date().toISOString(),
+          restaurantResponse: {
+            ...(lastParsed.restaurantResponse || {}),
+            ...(updatedRequest.restaurantResponse || {})
+          }
         })
       );
     }
   } catch (error) {
-    console.warn('TapCarta Restaurant: impossible de persister la mise à jour de réservation', error);
+    console.warn('TapCarta Restaurant: impossible de persister la mise à jour de demande', error);
   }
 }
 
@@ -2456,11 +2468,38 @@ window.openRequestDetails = function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
   if (!item || !item.sourceRequest) {
-    alert('Détail de réservation introuvable.');
+    alert('Détail de demande introuvable.');
     return;
   }
 
   const source = item.sourceRequest;
+  const isOrder = item.type === t.restaurantTypeOrder;
+
+  if (isOrder) {
+    const orderItems = Array.isArray(source.order?.items) ? source.order.items : [];
+    const itemsLabel = orderItems.length
+      ? orderItems.map((entry) => `${entry.name} x${entry.quantity}`).join(', ')
+      : 'Aucun article';
+
+    const totalLabel = typeof source.order?.totalAmount === 'number'
+      ? `${source.order.totalAmount.toFixed(2).replace('.', ',')} €`
+      : '-';
+
+    const details = [
+      `Nom : ${source.customer?.name || '-'}`,
+      `Téléphone : ${source.customer?.phone || '-'}`,
+      `Langue client : ${source.customer?.language || '-'}`,
+      `Date : ${source.order?.date || '-'}`,
+      `Heure : ${source.order?.time || '-'}`,
+      `Articles : ${itemsLabel}`,
+      `Total : ${totalLabel}`,
+      `Remarque : ${source.order?.note || 'Aucune'}`
+    ].join('\n');
+
+    alert(details);
+    return;
+  }
+
   const preorderItems = Array.isArray(source.booking?.preorderItems) ? source.booking.preorderItems : [];
   const preorderLabel = preorderItems.length
     ? preorderItems.map((entry) => entry.name).join(', ')
@@ -2484,13 +2523,14 @@ window.validateRequest = function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
   if (!item || !item.sourceRequest) {
-    alert('Réservation introuvable.');
+    alert('Demande introuvable.');
     return;
   }
 
   item.treated = true;
   item.status = t.restaurantStatusProcessed;
   item.sourceRequest.status = 'confirmed';
+  item.sourceRequest.updatedAt = new Date().toISOString();
 
   persistRestaurantRequestUpdate(item.sourceRequest);
   renderMenu();
