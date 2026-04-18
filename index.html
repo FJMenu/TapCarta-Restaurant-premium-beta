@@ -2543,10 +2543,24 @@ window.validateRequest = function(requestId) {
     return;
   }
 
+  const nowIso = new Date().toISOString();
+  const isOrder = !!item.sourceRequest?.order;
+  const confirmationMessage = isOrder
+    ? 'Commande confirmée par le restaurant.'
+    : 'Réservation confirmée par le restaurant.';
+
   item.treated = true;
   item.status = t.restaurantStatusProcessed;
+
   item.sourceRequest.status = 'confirmed';
-  item.sourceRequest.updatedAt = new Date().toISOString();
+  item.sourceRequest.updatedAt = nowIso;
+  item.sourceRequest.confirmedAt = nowIso;
+  item.sourceRequest.restaurantResponse = {
+    ...(item.sourceRequest.restaurantResponse || {}),
+    reason: 'confirmed',
+    message: confirmationMessage,
+    updatedBy: 'restaurant'
+  };
 
   persistRestaurantRequestUpdate(item.sourceRequest);
   renderMenu();
