@@ -2395,6 +2395,34 @@ function getElapsedLabel(item) {
       : 'bg-sky-500/15 text-sky-200 border-sky-400/30';
   }
 
+function openRequestDetails(requestId) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
+
+  if (!item || !item.sourceRequest) {
+    alert('Détail de réservation introuvable.');
+    return;
+  }
+
+  const source = item.sourceRequest;
+  const preorderItems = Array.isArray(source.booking?.preorderItems) ? source.booking.preorderItems : [];
+  const preorderLabel = preorderItems.length
+    ? preorderItems.map((entry) => entry.name).join(', ')
+    : 'Aucune';
+
+  const details = [
+    `Nom : ${source.customer?.name || '-'}`,
+    `Téléphone : ${source.customer?.phone || '-'}`,
+    `Langue client : ${source.customer?.language || '-'}`,
+    `Date : ${source.booking?.date || '-'}`,
+    `Heure : ${source.booking?.time || '-'}`,
+    `Personnes : ${source.booking?.people ?? '-'}`,
+    `Remarque : ${source.booking?.note || 'Aucune'}`,
+    `Précommande indicative : ${source.booking?.preorderIndicativeEnabled ? preorderLabel : 'Désactivée'}`
+  ].join('\n');
+
+  alert(details);
+}
+
 function renderRequestRow(item) {
     return `
       <div class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
@@ -2411,7 +2439,7 @@ function renderRequestRow(item) {
         <div class="flex items-center gap-2">
 ${!item.treated ? `
             <div class="flex items-center gap-2">
-              <button class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
+              <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
                 ${t.restaurantViewButton}
               </button>
               <button class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
