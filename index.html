@@ -6,7 +6,7 @@
       <title>La Bonne Fourchette</title>
       
         <script>
-            const APP_VERSION = 'V1.0.18';
+            const APP_VERSION = 'V1.0.19';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2272,6 +2272,11 @@ function updateOrderFormTimePart(part, value) {
 function loadRestaurantRequests() {
   const bookingStorageKey = 'tapcarta_booking_requests';
   const orderStorageKey = 'tapcarta_order_requests';
+  const activeRestaurantId =
+    activeRestaurantData?.identity?.id ||
+    activeRestaurantData?.id ||
+    siteConfig?.identity?.id ||
+    '';
 
   try {
     const rawBookings = localStorage.getItem(bookingStorageKey);
@@ -2282,7 +2287,12 @@ function loadRestaurantRequests() {
 
     const bookings = Array.isArray(parsedBookings)
       ? parsedBookings
-          .filter((item) => item && item.requestType === 'booking')
+          .filter(
+            (item) =>
+              item &&
+              item.requestType === 'booking' &&
+              String(item.restaurantId || '') === String(activeRestaurantId)
+          )
           .map((item) => ({
             id: item.requestId || `booking_${Date.now()}`,
             type: t.restaurantTypeBooking,
@@ -2295,15 +2305,21 @@ function loadRestaurantRequests() {
       : [];
 
     const orders = Array.isArray(parsedOrders)
-      ? parsedOrders.map((item) => ({
-          id: item.requestId || `order_${Date.now()}`,
-          type: t.restaurantTypeOrder,
-          client: item.customer?.name || 'Client',
-          createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
-          status: item.status === 'sent' ? t.restaurantStatusNew : t.restaurantStatusProcessed,
-          treated: item.status !== 'sent',
-          sourceRequest: item
-        }))
+      ? parsedOrders
+          .filter(
+            (item) =>
+              item &&
+              String(item.restaurantId || '') === String(activeRestaurantId)
+          )
+          .map((item) => ({
+            id: item.requestId || `order_${Date.now()}`,
+            type: t.restaurantTypeOrder,
+            client: item.customer?.name || 'Client',
+            createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
+            status: item.status === 'sent' ? t.restaurantStatusNew : t.restaurantStatusProcessed,
+            treated: item.status !== 'sent',
+            sourceRequest: item
+          }))
       : [];
 
     return [...orders, ...bookings].sort((a, b) => b.createdAt - a.createdAt);
