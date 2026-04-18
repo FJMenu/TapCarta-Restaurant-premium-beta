@@ -2497,15 +2497,44 @@ window.validateRequest = function(requestId) {
 };
 
 function renderRequestRow(item) {
+    const isOrder = item.type === t.restaurantTypeOrder;
+    const source = item.sourceRequest || {};
+    const orderItems = Array.isArray(source.order?.items) ? source.order.items : [];
+    const bookingPeople = source.booking?.people ?? null;
+
+    const previewLabel = isOrder
+      ? (orderItems.length
+          ? orderItems.map((entry) => `${entry.name} x${entry.quantity}`).join(' · ')
+          : 'Commande reçue')
+      : `${source.booking?.date || '-'} · ${source.booking?.time || '-'}${bookingPeople ? ` · ${bookingPeople} pers.` : ''}`;
+
+    const typeIcon = isOrder ? 'shopping-bag' : 'calendar-days';
+    const typeBadgeClass = isOrder
+      ? 'bg-gold text-black border-gold shadow-[0_0_0_1px_rgba(255,215,120,0.15)]'
+      : 'bg-sky-500/18 text-sky-100 border-sky-300/35';
+
+    const cardBorderClass = isOrder
+      ? 'border-gold/30'
+      : 'border-sky-400/18';
+
+    const cardGlowClass = isOrder
+      ? 'bg-gradient-to-br from-gold/10 to-black/10'
+      : 'bg-gradient-to-br from-sky-500/10 to-black/10';
+
     return `
-      <div class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <div class="rounded-2xl border ${cardBorderClass} ${cardGlowClass} px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2 mb-2">
-            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${getTypeClass(item.type)}">${item.type}</span>
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${typeBadgeClass}">
+              <i data-lucide="${typeIcon}" class="w-3.5 h-3.5"></i>
+              ${item.type}
+            </span>
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${getStatusClass(item.status)}">${item.status}</span>
           </div>
+
           <div class="text-sm font-semibold text-cream">${item.client}</div>
           <div class="text-xs text-cream/60 mt-1">${new Date(item.createdAt).toLocaleDateString()} · ${new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="text-xs ${isOrder ? 'text-gold/90' : 'text-sky-200/85'} mt-1">${previewLabel}</div>
           <div class="text-xs text-gold/80 mt-1">${getElapsedLabel(item)}</div>
         </div>
 
