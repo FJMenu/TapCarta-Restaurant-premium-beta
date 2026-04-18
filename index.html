@@ -2395,7 +2395,7 @@ function getElapsedLabel(item) {
       : 'bg-sky-500/15 text-sky-200 border-sky-400/30';
   }
 
-function openRequestDetails(requestId) {
+window.openRequestDetails = function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
   if (!item || !item.sourceRequest) {
@@ -2421,7 +2421,7 @@ function openRequestDetails(requestId) {
   ].join('\n');
 
   alert(details);
-}
+};
 
 function renderRequestRow(item) {
     return `
