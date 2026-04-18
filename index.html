@@ -6,7 +6,7 @@
       <title>La Bonne Fourchette</title>
       
         <script>
-            const APP_VERSION = 'V1.0.16';
+            const APP_VERSION = 'V1.0.17';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2270,27 +2270,45 @@ function updateOrderFormTimePart(part, value) {
   document.documentElement.lang = currentLang;
 
 function loadRestaurantRequests() {
-  const storageKey = 'tapcarta_booking_requests';
+  const bookingStorageKey = 'tapcarta_booking_requests';
+  const orderStorageKey = 'tapcarta_order_requests';
 
   try {
-    const raw = localStorage.getItem(storageKey);
-    const parsed = raw ? JSON.parse(raw) : [];
+    const rawBookings = localStorage.getItem(bookingStorageKey);
+    const parsedBookings = rawBookings ? JSON.parse(rawBookings) : [];
 
-    if (!Array.isArray(parsed)) return [];
+    const rawOrders = localStorage.getItem(orderStorageKey);
+    const parsedOrders = rawOrders ? JSON.parse(rawOrders) : [];
 
-    return parsed
-      .filter((item) => item && item.requestType === 'booking')
-      .map((item) => ({
-        id: item.requestId || `booking_${Date.now()}`,
-        type: t.restaurantTypeBooking,
-        client: item.customer?.name || 'Client',
-        createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
-        status: item.status === 'pending' ? t.restaurantStatusNew : t.restaurantStatusProcessed,
-        treated: item.status !== 'pending',
-        sourceRequest: item
-      }));
+    const bookings = Array.isArray(parsedBookings)
+      ? parsedBookings
+          .filter((item) => item && item.requestType === 'booking')
+          .map((item) => ({
+            id: item.requestId || `booking_${Date.now()}`,
+            type: t.restaurantTypeBooking,
+            client: item.customer?.name || 'Client',
+            createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
+            status: item.status === 'pending' ? t.restaurantStatusNew : t.restaurantStatusProcessed,
+            treated: item.status !== 'pending',
+            sourceRequest: item
+          }))
+      : [];
+
+    const orders = Array.isArray(parsedOrders)
+      ? parsedOrders.map((item) => ({
+          id: item.requestId || `order_${Date.now()}`,
+          type: t.restaurantTypeOrder,
+          client: item.customer?.name || 'Client',
+          createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
+          status: item.status === 'sent' ? t.restaurantStatusNew : t.restaurantStatusProcessed,
+          treated: item.status !== 'sent',
+          sourceRequest: item
+        }))
+      : [];
+
+    return [...orders, ...bookings].sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
-    console.warn('TapCarta Restaurant: impossible de lire tapcarta_booking_requests', error);
+    console.warn('TapCarta Restaurant: impossible de lire les demandes Standard', error);
     return [];
   }
 }
@@ -2592,30 +2610,30 @@ ${!item.treated ? `
           </div>
 
           <h3 class="font-display text-lg md:text-xl font-bold text-cream mb-2">
-            ${t.restaurantBookingsTitle}
+            ${t.restaurantOrdersTitle} · ${t.restaurantBookingsTitle}
           </h3>
 
           <p class="text-sm text-cream/75 leading-relaxed max-w-3xl">
-            Réservations reçues localement depuis Standard pour validation de la base de flux.
+            Demandes reçues localement depuis Standard pour validation de la base de flux.
           </p>
         </div>
 
         <div class="inline-flex items-center gap-3 self-start rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
           <div class="text-2xl font-bold text-gold">
-            ${activeReservations.length}
+            ${activeRequests.length}
           </div>
           <div class="text-xs text-cream/70 leading-tight">
-            Total<br>réservations
+            Total<br>demandes
           </div>
         </div>
       </div>
 
       <div class="space-y-3">
-        ${activeReservations.length
-          ? activeReservations.map(renderRequestRow).join('')
+        ${activeRequests.length
+          ? activeRequests.map(renderRequestRow).join('')
           : `
             <div class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 text-sm text-cream/70">
-              ${t.restaurantNoBookingsPending}
+              ${t.restaurantNoOrdersPending}
             </div>
           `}
       </div>
