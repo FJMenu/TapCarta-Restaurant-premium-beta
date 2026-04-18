@@ -2449,6 +2449,8 @@ function persistRestaurantRequestUpdate(updatedRequest) {
         ...entry,
         status: updatedRequest.status || entry.status,
         updatedAt: updatedRequest.updatedAt || entry.updatedAt || new Date().toISOString(),
+        confirmedAt: updatedRequest.confirmedAt || entry.confirmedAt,
+        cancelledAt: updatedRequest.cancelledAt || entry.cancelledAt,
         restaurantResponse: {
           ...(entry.restaurantResponse || {}),
           ...(updatedRequest.restaurantResponse || {})
@@ -2468,6 +2470,8 @@ function persistRestaurantRequestUpdate(updatedRequest) {
           ...lastParsed,
           status: updatedRequest.status || lastParsed.status,
           updatedAt: updatedRequest.updatedAt || lastParsed.updatedAt || new Date().toISOString(),
+          confirmedAt: updatedRequest.confirmedAt || lastParsed.confirmedAt,
+          cancelledAt: updatedRequest.cancelledAt || lastParsed.cancelledAt,
           restaurantResponse: {
             ...(lastParsed.restaurantResponse || {}),
             ...(updatedRequest.restaurantResponse || {})
