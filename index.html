@@ -2920,30 +2920,6 @@ ${!item.treated ? `
         </div>
       </div>
 
-      ${activeRequests.length ? `
-        <div class="mb-4 rounded-2xl border border-gold/20 bg-black/15 px-4 py-4">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <div class="text-sm font-semibold text-cream">
-                ${selectedRequestIds.size} demande(s) sélectionnée(s)
-              </div>
-              <div class="text-xs text-cream/60 mt-1">
-                Sélection multiple active pour confirmation groupée.
-              </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-              <button onclick="toggleAllActiveRequests()" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
-                ${selectedRequestIds.size === activeRequests.length && activeRequests.length ? 'Tout désélectionner' : 'Tout sélectionner'}
-              </button>
-              <button onclick="validateSelectedRequests()" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
-                Confirmer la sélection
-              </button>
-            </div>
-          </div>
-        </div>
-      ` : ''}
-
       <div class="space-y-3">
         ${activeRequests.length
           ? activeRequests.map(renderRequestRow).join('')
@@ -2954,7 +2930,7 @@ ${!item.treated ? `
           `}
       </div>
 
-       <details class="mt-6 rounded-[22px] border border-white/10 bg-black/15 p-4 md:p-5 group">
+      <details class="mt-6 rounded-[22px] border border-white/10 bg-black/15 p-4 md:p-5 group">
         <summary class="list-none cursor-pointer">
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div class="min-w-0">
@@ -2976,6 +2952,28 @@ ${!item.treated ? `
             </div>
           </div>
         </summary>
+
+        <div class="mt-4 mb-4 rounded-2xl border border-white/10 bg-black/10 px-4 py-4">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <div class="text-sm font-semibold text-cream">
+                ${selectedHistoryRequestIds.size} élément(s) sélectionné(s)
+              </div>
+              <div class="text-xs text-cream/60 mt-1">
+                Sélectionnez plusieurs commandes ou réservations puis supprimez-les en une seule fois.
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="toggleAllHistoryRequests()" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
+                ${selectedHistoryRequestIds.size === treatedRequests.length && treatedRequests.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+              </button>
+              <button onclick="deleteSelectedHistoryRequests()" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="Supprimer la sélection">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <div class="mt-4 space-y-3">
           ${treatedRequests.length
