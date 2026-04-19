@@ -3406,6 +3406,13 @@ ${!item.treated ? `
     });
   }
 
+  const refreshAllBtn = document.getElementById('restaurant-refresh-all-btn');
+  if (refreshAllBtn) {
+    refreshAllBtn.addEventListener('click', () => {
+      window.location.reload();
+    });
+  }
+
   updateInstallUI();
   updateLangButtons();
 }
