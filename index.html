@@ -2272,11 +2272,42 @@ function updateOrderFormTimePart(part, value) {
 function loadRestaurantRequests() {
   const bookingStorageKey = 'tapcarta_booking_requests';
   const orderStorageKey = 'tapcarta_order_requests';
+  const historyRetentionMs = 30 * 24 * 60 * 60 * 1000;
   const activeRestaurantId =
     activeRestaurantData?.identity?.id ||
     activeRestaurantData?.id ||
     siteConfig?.identity?.id ||
     '';
+
+  function getHistoryReferenceTimestamp(item) {
+    const rawValue =
+      item?.historyUpdatedAt ||
+      item?.updatedAt ||
+      item?.confirmedAt ||
+      item?.cancelledAt ||
+      item?.createdAt;
+
+    const parsedValue = rawValue ? new Date(rawValue).getTime() : NaN;
+    return Number.isFinite(parsedValue) ? parsedValue : Date.now();
+  }
+
+  function shouldAutoDeleteHistory(item, pendingStatus) {
+    if (!item || item.status === pendingStatus) return false;
+    if (item.historyDeleted === true) return true;
+    return (Date.now() - getHistoryReferenceTimestamp(item)) > historyRetentionMs;
+  }
+
+  function normalizeRequestItem(item, requestType, pendingStatus, typeLabel) {
+    return {
+      id: item.requestId || `${requestType}_${Date.now()}`,
+      type: typeLabel,
+      client: item.customer?.name || 'Client',
+      createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
+      status: item.status === pendingStatus ? t.restaurantStatusNew : t.restaurantStatusProcessed,
+      treated: item.status !== pendingStatus,
+      sourceRequest: item
+    };
+  }
 
   try {
     const rawBookings = localStorage.getItem(bookingStorageKey);
@@ -2285,42 +2316,36 @@ function loadRestaurantRequests() {
     const rawOrders = localStorage.getItem(orderStorageKey);
     const parsedOrders = rawOrders ? JSON.parse(rawOrders) : [];
 
-    const bookings = Array.isArray(parsedBookings)
-      ? parsedBookings
-          .filter(
-            (item) =>
-              item &&
-              item.requestType === 'booking' &&
-              String(item.restaurantId || '') === String(activeRestaurantId)
-          )
-          .map((item) => ({
-            id: item.requestId || `booking_${Date.now()}`,
-            type: t.restaurantTypeBooking,
-            client: item.customer?.name || 'Client',
-            createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
-            status: item.status === 'pending' ? t.restaurantStatusNew : t.restaurantStatusProcessed,
-            treated: item.status !== 'pending',
-            sourceRequest: item
-          }))
-      : [];
+    const safeBookings = Array.isArray(parsedBookings) ? parsedBookings : [];
+    const safeOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
 
-    const orders = Array.isArray(parsedOrders)
-      ? parsedOrders
-          .filter(
-            (item) =>
-              item &&
-              String(item.restaurantId || '') === String(activeRestaurantId)
-          )
-          .map((item) => ({
-            id: item.requestId || `order_${Date.now()}`,
-            type: t.restaurantTypeOrder,
-            client: item.customer?.name || 'Client',
-            createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
-            status: item.status === 'sent' ? t.restaurantStatusNew : t.restaurantStatusProcessed,
-            treated: item.status !== 'sent',
-            sourceRequest: item
-          }))
-      : [];
+    const cleanedBookings = safeBookings.filter((item) => !shouldAutoDeleteHistory(item, 'pending'));
+    const cleanedOrders = safeOrders.filter((item) => !shouldAutoDeleteHistory(item, 'sent'));
+
+    if (cleanedBookings.length !== safeBookings.length) {
+      localStorage.setItem(bookingStorageKey, JSON.stringify(cleanedBookings));
+    }
+
+    if (cleanedOrders.length !== safeOrders.length) {
+      localStorage.setItem(orderStorageKey, JSON.stringify(cleanedOrders));
+    }
+
+    const bookings = cleanedBookings
+      .filter(
+        (item) =>
+          item &&
+          item.requestType === 'booking' &&
+          String(item.restaurantId || '') === String(activeRestaurantId)
+      )
+      .map((item) => normalizeRequestItem(item, 'booking', 'pending', t.restaurantTypeBooking));
+
+    const orders = cleanedOrders
+      .filter(
+        (item) =>
+          item &&
+          String(item.restaurantId || '') === String(activeRestaurantId)
+      )
+      .map((item) => normalizeRequestItem(item, 'order', 'sent', t.restaurantTypeOrder));
 
     return [...orders, ...bookings].sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
