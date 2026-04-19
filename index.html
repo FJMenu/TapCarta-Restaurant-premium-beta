@@ -3429,10 +3429,13 @@ ${!item.treated ? `
   }
 
   window.tapCartaRestaurantRefreshState.requestsIntervalId = window.setInterval(() => {
+    const requestsPanelEl = document.getElementById('restaurant-requests-panel');
     const requestsCountEl = document.getElementById('restaurant-active-requests-count');
-    const requestsListEl = document.getElementById('restaurant-active-requests');
+    const requestsListEl = requestsPanelEl
+      ? requestsPanelEl.querySelector(':scope > .space-y-3')
+      : null;
 
-    if (!requestsCountEl || !requestsListEl) {
+    if (!requestsPanelEl || !requestsCountEl || !requestsListEl) {
       return;
     }
 
