@@ -2355,6 +2355,7 @@ function loadRestaurantRequests() {
 }
 
 const requestsData = loadRestaurantRequests();
+let selectedRequestIds = new Set();
 
   const googleReviewsData = {
     rating: '4,6',
@@ -2405,11 +2406,79 @@ status: (() => {
     })()
   };
 
- const activeRequests = requestsData.filter(item => !item.treated);
+const activeRequests = requestsData.filter(item => !item.treated);
 const treatedRequests = requestsData.filter(item => item.treated);
+
+selectedRequestIds = new Set(
+  [...selectedRequestIds].filter((id) =>
+    activeRequests.some((item) => String(item.id) === String(id))
+  )
+);
 
 const activeOrders = activeRequests.filter(item => item.type === t.restaurantTypeOrder);
 const activeReservations = activeRequests.filter(item => item.type === t.restaurantTypeBooking);
+
+window.toggleRequestSelection = function(requestId) {
+  const normalizedId = String(requestId);
+
+  if (selectedRequestIds.has(normalizedId)) {
+    selectedRequestIds.delete(normalizedId);
+  } else {
+    selectedRequestIds.add(normalizedId);
+  }
+
+  renderMenu();
+};
+
+window.toggleAllActiveRequests = function() {
+  const activeIds = activeRequests.map((item) => String(item.id));
+  const shouldSelectAll = activeIds.some((id) => !selectedRequestIds.has(id));
+
+  selectedRequestIds = shouldSelectAll ? new Set(activeIds) : new Set();
+  renderMenu();
+};
+
+window.validateSelectedRequests = function() {
+  const selectedItems = activeRequests.filter((item) => selectedRequestIds.has(String(item.id)));
+
+  if (!selectedItems.length) {
+    alert('Sélectionnez au moins une demande.');
+    return;
+  }
+
+  const confirmedBatch = window.confirm(`Confirmer ${selectedItems.length} demande(s) sélectionnée(s) ?`);
+
+  if (!confirmedBatch) {
+    return;
+  }
+
+  const nowIso = new Date().toISOString();
+
+  selectedItems.forEach((item) => {
+    const isOrder = !!item.sourceRequest?.order;
+    const confirmationMessage = isOrder
+      ? 'Commande confirmée par le restaurant.'
+      : 'Réservation confirmée par le restaurant.';
+
+    item.treated = true;
+    item.status = t.restaurantStatusProcessed;
+
+    item.sourceRequest.status = 'confirmed';
+    item.sourceRequest.updatedAt = nowIso;
+    item.sourceRequest.confirmedAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      reason: 'confirmed',
+      message: confirmationMessage,
+      updatedBy: 'restaurant'
+    };
+
+    persistRestaurantRequestUpdate(item.sourceRequest);
+  });
+
+  selectedRequestIds = new Set();
+  renderMenu();
+};
 
 function getElapsedLabel(item) {
   const diffMs = Math.max(0, Date.now() - item.createdAt);
@@ -2624,6 +2693,7 @@ function renderRequestRow(item) {
     const source = item.sourceRequest || {};
     const orderItems = Array.isArray(source.order?.items) ? source.order.items : [];
     const bookingPeople = source.booking?.people ?? null;
+    const isSelected = selectedRequestIds.has(String(item.id));
 
     const previewLabel = isOrder
       ? (orderItems.length
@@ -2661,8 +2731,17 @@ function renderRequestRow(item) {
           <div class="text-xs text-gold/80 mt-1">${getElapsedLabel(item)}</div>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap justify-end">
 ${!item.treated ? `
+            <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border ${isSelected ? 'border-gold/45 bg-gold/10' : 'border-white/10 bg-black/15'} text-xs font-semibold text-cream cursor-pointer">
+              <input
+                type="checkbox"
+                class="w-4 h-4 accent-[#D4AF37]"
+                ${isSelected ? 'checked' : ''}
+                onchange="toggleRequestSelection('${item.id}')"
+              >
+              <span>Sélectionner</span>
+            </label>
             <div class="flex items-center gap-2">
               <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
                 ${t.restaurantViewButton}
@@ -2784,6 +2863,30 @@ ${!item.treated ? `
           </div>
         </div>
       </div>
+
+      ${activeRequests.length ? `
+        <div class="mb-4 rounded-2xl border border-gold/20 bg-black/15 px-4 py-4">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <div class="text-sm font-semibold text-cream">
+                ${selectedRequestIds.size} demande(s) sélectionnée(s)
+              </div>
+              <div class="text-xs text-cream/60 mt-1">
+                Sélection multiple active pour confirmation groupée.
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="toggleAllActiveRequests()" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
+                ${selectedRequestIds.size === activeRequests.length && activeRequests.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+              </button>
+              <button onclick="validateSelectedRequests()" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
+                Confirmer la sélection
+              </button>
+            </div>
+          </div>
+        </div>
+      ` : ''}
 
       <div class="space-y-3">
         ${activeRequests.length
