@@ -2390,91 +2390,102 @@ function loadRestaurantRequests() {
   }
 }
 
-const requestsData = loadRestaurantRequests();
+let requestsData = loadRestaurantRequests();
 window.selectedRequestIds = window.selectedRequestIds instanceof Set ? window.selectedRequestIds : new Set();
 window.selectedHistoryRequestIds = window.selectedHistoryRequestIds instanceof Set ? window.selectedHistoryRequestIds : new Set();
 
 let selectedRequestIds = window.selectedRequestIds;
 let selectedHistoryRequestIds = window.selectedHistoryRequestIds;
 
-  const REQUESTS_REFRESH_INTERVAL_MS = 30 * 1000;
-  const GOOGLE_REVIEWS_REFRESH_INTERVAL_MS = 3 * 60 * 60 * 1000;
+const REQUESTS_REFRESH_INTERVAL_MS = 30 * 1000;
+const GOOGLE_REVIEWS_REFRESH_INTERVAL_MS = 3 * 60 * 60 * 1000;
 
-  window.tapCartaGoogleReviewsData = window.tapCartaGoogleReviewsData || {
-    rating: '4,6',
-    count: 128
-  };
+window.tapCartaGoogleReviewsData = window.tapCartaGoogleReviewsData || {
+  rating: '4,6',
+  count: 128
+};
 
-  window.tapCartaRestaurantRefreshState = window.tapCartaRestaurantRefreshState || {
-    requestsIntervalId: null,
-    googleIntervalId: null
-  };
+window.tapCartaRestaurantRefreshState = window.tapCartaRestaurantRefreshState || {
+  requestsIntervalId: null,
+  googleIntervalId: null
+};
 
-  const googleReviewsData = window.tapCartaGoogleReviewsData;
+const googleReviewsData = window.tapCartaGoogleReviewsData;
 
-  const restaurantData = {
-    name:
-      activeRestaurantData?.identity?.name ||
-      siteConfig.restaurantName,
+const restaurantData = {
+  name:
+    activeRestaurantData?.identity?.name ||
+    siteConfig.restaurantName,
 
-plan: (() => {
-      const rawPlan =
-        activeRestaurantData?.identity?.plan ||
-        activeRestaurantData?.plan ||
-        'standard';
+  plan: (() => {
+    const rawPlan =
+      activeRestaurantData?.identity?.plan ||
+      activeRestaurantData?.plan ||
+      'standard';
 
-      const planMap = {
-        light: 'Light',
-        standard: 'Standard',
-        premium: 'Premium'
-      };
+    const planMap = {
+      light: 'Light',
+      standard: 'Standard',
+      premium: 'Premium'
+    };
 
-      return planMap[rawPlan] || rawPlan;
-    })(),
+    return planMap[rawPlan] || rawPlan;
+  })(),
 
-    languages:
-      Array.isArray(activeRestaurantData?.identity?.languages)
-        ? activeRestaurantData.identity.languages.map(lang => String(lang).toUpperCase()).join(' · ')
-        : Array.isArray(activeRestaurantData?.languages)
-          ? activeRestaurantData.languages.map(lang => String(lang).toUpperCase()).join(' · ')
-          : 'FR · ES · EN · NL',
+  languages:
+    Array.isArray(activeRestaurantData?.identity?.languages)
+      ? activeRestaurantData.identity.languages.map(lang => String(lang).toUpperCase()).join(' · ')
+      : Array.isArray(activeRestaurantData?.languages)
+        ? activeRestaurantData.languages.map(lang => String(lang).toUpperCase()).join(' · ')
+        : 'FR · ES · EN · NL',
 
-status: (() => {
-      const rawStatus =
-        activeRestaurantData?.identity?.status ||
-        activeRestaurantData?.status ||
-        'active';
+  status: (() => {
+    const rawStatus =
+      activeRestaurantData?.identity?.status ||
+      activeRestaurantData?.status ||
+      'active';
 
-      const statusMap = {
-        active: 'Actif',
-        inactive: 'Inactif',
-        pending: 'En attente',
-        disabled: 'Désactivé'
-      };
+    const statusMap = {
+      active: 'Actif',
+      inactive: 'Inactif',
+      pending: 'En attente',
+      disabled: 'Désactivé'
+    };
 
-      return statusMap[rawStatus] || rawStatus;
-    })()
-  };
+    return statusMap[rawStatus] || rawStatus;
+  })()
+};
 
-const activeRequests = requestsData.filter(item => !item.treated);
-const treatedRequests = requestsData.filter(item => item.treated);
+let activeRequests = [];
+let treatedRequests = [];
+let activeOrders = [];
+let activeReservations = [];
 
-selectedRequestIds = new Set(
-  [...selectedRequestIds].filter((id) =>
-    activeRequests.some((item) => String(item.id) === String(id))
-  )
-);
-window.selectedRequestIds = selectedRequestIds;
+function syncRequestsState() {
+  requestsData = loadRestaurantRequests();
 
-selectedHistoryRequestIds = new Set(
-  [...selectedHistoryRequestIds].filter((id) =>
-    treatedRequests.some((item) => String(item.id) === String(id))
-  )
-);
-window.selectedHistoryRequestIds = selectedHistoryRequestIds;
+  activeRequests = requestsData.filter(item => !item.treated);
+  treatedRequests = requestsData.filter(item => item.treated);
 
-const activeOrders = activeRequests.filter(item => item.type === t.restaurantTypeOrder);
-const activeReservations = activeRequests.filter(item => item.type === t.restaurantTypeBooking);
+  selectedRequestIds = new Set(
+    [...selectedRequestIds].filter((id) =>
+      activeRequests.some((item) => String(item.id) === String(id))
+    )
+  );
+  window.selectedRequestIds = selectedRequestIds;
+
+  selectedHistoryRequestIds = new Set(
+    [...selectedHistoryRequestIds].filter((id) =>
+      treatedRequests.some((item) => String(item.id) === String(id))
+    )
+  );
+  window.selectedHistoryRequestIds = selectedHistoryRequestIds;
+
+  activeOrders = activeRequests.filter(item => item.type === t.restaurantTypeOrder);
+  activeReservations = activeRequests.filter(item => item.type === t.restaurantTypeBooking);
+}
+
+syncRequestsState();
 
 window.toggleRequestSelection = function(requestId) {
   const normalizedId = String(requestId);
