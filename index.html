@@ -954,6 +954,15 @@ restaurantInfoPlan: 'Formule',
 restaurantInfoLanguages: 'Langues actives',
 restaurantInfoStatus: 'Statut',
 restaurantInfoActive: 'Actif',
+restaurantHistorySelected: 'élément(s) sélectionné(s)',
+restaurantHistorySelectMultiple: 'Sélectionnez plusieurs commandes ou réservations puis supprimez-les en une seule fois.',
+restaurantHistorySelectAll: 'Tout sélectionner',
+restaurantHistoryDeselectAll: 'Tout désélectionner',
+restaurantHistoryDeleteSelected: 'Supprimer la sélection',
+restaurantHistoryConfirmDelete: 'Supprimer les éléments sélectionnés de l’historique ?',
+restaurantHistoryNothingSelected: 'Sélectionnez au moins un élément de l’historique.',
+restaurantHistoryViewDetail: 'Voir le détail',
+restaurantHistoryDeleteOne: 'Supprimer',
 allergens: ['Gluten', 'Crustacés', 'Œufs', 'Poisson', 'Lait / lactose', 'Fruits à coque', 'Céleri', 'Moutarde', 'Sésame', 'Sulfites', 'Mollusques'],
         items: {
           ailes_poulet: { name: 'Ailes de poulet', subtitle: 'croustillantes et moelleuses' },
@@ -1128,6 +1137,15 @@ restaurantInfoPlan: 'Plan',
 restaurantInfoLanguages: 'Idiomas activos',
 restaurantInfoStatus: 'Estado',
 restaurantInfoActive: 'Activo',
+restaurantHistorySelected: 'elemento(s) seleccionado(s)',
+restaurantHistorySelectMultiple: 'Seleccione varios pedidos o reservas y elimínelos en una sola acción.',
+restaurantHistorySelectAll: 'Seleccionar todo',
+restaurantHistoryDeselectAll: 'Deseleccionar todo',
+restaurantHistoryDeleteSelected: 'Eliminar selección',
+restaurantHistoryConfirmDelete: '¿Eliminar los elementos seleccionados del historial?',
+restaurantHistoryNothingSelected: 'Seleccione al menos un elemento del historial.',
+restaurantHistoryViewDetail: 'Ver el detalle',
+restaurantHistoryDeleteOne: 'Eliminar',
 allergens: ['Gluten', 'Crustáceos', 'Huevos', 'Pescado', 'Leche / lactosa', 'Frutos secos', 'Apio', 'Mostaza', 'Sésamo', 'Sulfitos', 'Moluscos'],
         items: {
           ailes_poulet: { name: 'Alitas de pollo', subtitle: 'crujientes y tiernas' },
@@ -1303,6 +1321,15 @@ restaurantInfoPlan: 'Plan',
 restaurantInfoLanguages: 'Active languages',
 restaurantInfoStatus: 'Status',
 restaurantInfoActive: 'Active',
+restaurantHistorySelected: 'item(s) selected',
+restaurantHistorySelectMultiple: 'Select multiple orders or reservations and delete them in one action.',
+restaurantHistorySelectAll: 'Select all',
+restaurantHistoryDeselectAll: 'Deselect all',
+restaurantHistoryDeleteSelected: 'Delete selection',
+restaurantHistoryConfirmDelete: 'Delete selected items from history?',
+restaurantHistoryNothingSelected: 'Select at least one history item.',
+restaurantHistoryViewDetail: 'View details',
+restaurantHistoryDeleteOne: 'Delete',
 allergens: ['Gluten', 'Crustaceans', 'Eggs', 'Fish', 'Milk / lactose', 'Nuts', 'Celery', 'Mustard', 'Sesame', 'Sulfites', 'Molluscs'],
         items: {
           ailes_poulet: { name: 'Chicken wings', subtitle: 'crispy and tender' },
@@ -1478,6 +1505,15 @@ restaurantInfoPlan: 'Formule',
 restaurantInfoLanguages: 'Actieve talen',
 restaurantInfoStatus: 'Status',
 restaurantInfoActive: 'Actief',
+restaurantHistorySelected: 'item(s) geselecteerd',
+restaurantHistorySelectMultiple: 'Selecteer meerdere bestellingen of reserveringen en verwijder ze in één actie.',
+restaurantHistorySelectAll: 'Alles selecteren',
+restaurantHistoryDeselectAll: 'Alles deselecteren',
+restaurantHistoryDeleteSelected: 'Selectie verwijderen',
+restaurantHistoryConfirmDelete: 'Geselecteerde items uit de geschiedenis verwijderen?',
+restaurantHistoryNothingSelected: 'Selecteer minstens één item uit de geschiedenis.',
+restaurantHistoryViewDetail: 'Details bekijken',
+restaurantHistoryDeleteOne: 'Verwijderen',
 allergens: ['Gluten', 'Schaaldieren', 'Eieren', 'Vis', 'Melk / lactose', 'Noten', 'Selderij', 'Mosterd', 'Sesam', 'Sulfieten', 'Weekdieren'],
         items: {
           ailes_poulet: { name: 'Kipvleugels', subtitle: 'knapperig en mals' },
@@ -2516,11 +2552,11 @@ window.deleteSelectedHistoryRequests = function() {
   const selectedItems = treatedRequests.filter((item) => window.selectedHistoryRequestIds.has(String(item.id)));
 
   if (!selectedItems.length) {
-    alert('Sélectionnez au moins un élément de l’historique.');
+    alert(t.restaurantHistoryNothingSelected);
     return;
   }
 
-  const confirmedDelete = window.confirm(`Supprimer ${selectedItems.length} élément(s) sélectionné(s) de l’historique ?`);
+  const confirmedDelete = window.confirm(`${t.restaurantHistoryDeleteSelected} (${selectedItems.length}) ?`);
 
   if (!confirmedDelete) {
     return;
