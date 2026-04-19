@@ -2960,7 +2960,7 @@ ${!item.treated ? `
             ${activeRequests.length}
           </div>
           <div class="text-xs text-cream/70 leading-tight">
-            Total<br>demandes
+            ${currentLang === 'es' ? 'Total<br>solicitudes' : currentLang === 'en' ? 'Total<br>requests' : currentLang === 'nl' ? 'Totaal<br>aanvragen' : 'Total<br>demandes'}
           </div>
         </div>
       </div>
@@ -2992,7 +2992,7 @@ ${!item.treated ? `
                 ${treatedRequests.length}
               </div>
               <div class="text-xs text-cream/65 leading-tight">
-                Total<br>historique
+                ${currentLang === 'es' ? 'Total<br>historial' : currentLang === 'en' ? 'Total<br>history' : currentLang === 'nl' ? 'Totaal<br>geschiedenis' : 'Total<br>historique'}
               </div>
             </div>
           </div>
