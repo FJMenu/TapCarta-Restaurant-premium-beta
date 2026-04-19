@@ -2595,6 +2595,30 @@ window.validateRequest = function(requestId) {
   renderMenu();
 };
 
+window.deleteRequestFromHistory = function(requestId) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
+
+  if (!item || !item.sourceRequest) {
+    alert('Demande introuvable.');
+    return;
+  }
+
+  const confirmedDelete = window.confirm('Supprimer cette demande de l’historique ?');
+
+  if (!confirmedDelete) {
+    return;
+  }
+
+  const nowIso = new Date().toISOString();
+
+  item.sourceRequest.historyDeleted = true;
+  item.sourceRequest.historyUpdatedAt = nowIso;
+  item.sourceRequest.updatedAt = nowIso;
+
+  persistRestaurantRequestUpdate(item.sourceRequest);
+  renderMenu();
+};
+
 function renderRequestRow(item) {
     const isOrder = item.type === t.restaurantTypeOrder;
     const source = item.sourceRequest || {};
