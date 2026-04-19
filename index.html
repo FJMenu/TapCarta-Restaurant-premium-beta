@@ -6,7 +6,7 @@
       <title>La Bonne Fourchette</title>
       
         <script>
-            const APP_VERSION = 'V1.0.20';
+            const APP_VERSION = '1.0.21';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2355,8 +2355,11 @@ function loadRestaurantRequests() {
 }
 
 const requestsData = loadRestaurantRequests();
-let selectedRequestIds = new Set();
-let selectedHistoryRequestIds = new Set();
+window.selectedRequestIds = window.selectedRequestIds instanceof Set ? window.selectedRequestIds : new Set();
+window.selectedHistoryRequestIds = window.selectedHistoryRequestIds instanceof Set ? window.selectedHistoryRequestIds : new Set();
+
+let selectedRequestIds = window.selectedRequestIds;
+let selectedHistoryRequestIds = window.selectedHistoryRequestIds;
 
   const googleReviewsData = {
     rating: '4,6',
@@ -2415,12 +2418,14 @@ selectedRequestIds = new Set(
     activeRequests.some((item) => String(item.id) === String(id))
   )
 );
+window.selectedRequestIds = selectedRequestIds;
 
 selectedHistoryRequestIds = new Set(
   [...selectedHistoryRequestIds].filter((id) =>
     treatedRequests.some((item) => String(item.id) === String(id))
   )
 );
+window.selectedHistoryRequestIds = selectedHistoryRequestIds;
 
 const activeOrders = activeRequests.filter(item => item.type === t.restaurantTypeOrder);
 const activeReservations = activeRequests.filter(item => item.type === t.restaurantTypeBooking);
@@ -2428,10 +2433,10 @@ const activeReservations = activeRequests.filter(item => item.type === t.restaur
 window.toggleRequestSelection = function(requestId) {
   const normalizedId = String(requestId);
 
-  if (selectedRequestIds.has(normalizedId)) {
-    selectedRequestIds.delete(normalizedId);
+  if (window.selectedRequestIds.has(normalizedId)) {
+    window.selectedRequestIds.delete(normalizedId);
   } else {
-    selectedRequestIds.add(normalizedId);
+    window.selectedRequestIds.add(normalizedId);
   }
 
   renderMenu();
@@ -2439,14 +2444,14 @@ window.toggleRequestSelection = function(requestId) {
 
 window.toggleAllActiveRequests = function() {
   const activeIds = activeRequests.map((item) => String(item.id));
-  const shouldSelectAll = activeIds.some((id) => !selectedRequestIds.has(id));
+  const shouldSelectAll = activeIds.some((id) => !window.selectedRequestIds.has(id));
 
-  selectedRequestIds = shouldSelectAll ? new Set(activeIds) : new Set();
+  window.selectedRequestIds = shouldSelectAll ? new Set(activeIds) : new Set();
   renderMenu();
 };
 
 window.validateSelectedRequests = function() {
-  const selectedItems = activeRequests.filter((item) => selectedRequestIds.has(String(item.id)));
+  const selectedItems = activeRequests.filter((item) => window.selectedRequestIds.has(String(item.id)));
 
   if (!selectedItems.length) {
     alert('Sélectionnez au moins une demande.');
@@ -2483,17 +2488,17 @@ window.validateSelectedRequests = function() {
     persistRestaurantRequestUpdate(item.sourceRequest);
   });
 
-  selectedRequestIds = new Set();
+  window.selectedRequestIds = new Set();
   renderMenu();
 };
 
 window.toggleHistoryRequestSelection = function(requestId) {
   const normalizedId = String(requestId);
 
-  if (selectedHistoryRequestIds.has(normalizedId)) {
-    selectedHistoryRequestIds.delete(normalizedId);
+  if (window.selectedHistoryRequestIds.has(normalizedId)) {
+    window.selectedHistoryRequestIds.delete(normalizedId);
   } else {
-    selectedHistoryRequestIds.add(normalizedId);
+    window.selectedHistoryRequestIds.add(normalizedId);
   }
 
   renderMenu();
@@ -2501,14 +2506,14 @@ window.toggleHistoryRequestSelection = function(requestId) {
 
 window.toggleAllHistoryRequests = function() {
   const treatedIds = treatedRequests.map((item) => String(item.id));
-  const shouldSelectAll = treatedIds.some((id) => !selectedHistoryRequestIds.has(id));
+  const shouldSelectAll = treatedIds.some((id) => !window.selectedHistoryRequestIds.has(id));
 
-  selectedHistoryRequestIds = shouldSelectAll ? new Set(treatedIds) : new Set();
+  window.selectedHistoryRequestIds = shouldSelectAll ? new Set(treatedIds) : new Set();
   renderMenu();
 };
 
 window.deleteSelectedHistoryRequests = function() {
-  const selectedItems = treatedRequests.filter((item) => selectedHistoryRequestIds.has(String(item.id)));
+  const selectedItems = treatedRequests.filter((item) => window.selectedHistoryRequestIds.has(String(item.id)));
 
   if (!selectedItems.length) {
     alert('Sélectionnez au moins un élément de l’historique.');
@@ -2533,7 +2538,7 @@ window.deleteSelectedHistoryRequests = function() {
     persistRestaurantRequestUpdate(item.sourceRequest);
   });
 
-  selectedHistoryRequestIds = new Set();
+  window.selectedHistoryRequestIds = new Set();
   renderMenu();
 };
 
