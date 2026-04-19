@@ -2607,6 +2607,8 @@ function persistRestaurantRequestUpdate(updatedRequest) {
         updatedAt: updatedRequest.updatedAt || entry.updatedAt || new Date().toISOString(),
         confirmedAt: updatedRequest.confirmedAt || entry.confirmedAt,
         cancelledAt: updatedRequest.cancelledAt || entry.cancelledAt,
+        historyDeleted: updatedRequest.historyDeleted === true ? true : entry.historyDeleted === true,
+        historyUpdatedAt: updatedRequest.historyUpdatedAt || entry.historyUpdatedAt,
         restaurantResponse: {
           ...(entry.restaurantResponse || {}),
           ...(updatedRequest.restaurantResponse || {})
@@ -2628,6 +2630,8 @@ function persistRestaurantRequestUpdate(updatedRequest) {
           updatedAt: updatedRequest.updatedAt || lastParsed.updatedAt || new Date().toISOString(),
           confirmedAt: updatedRequest.confirmedAt || lastParsed.confirmedAt,
           cancelledAt: updatedRequest.cancelledAt || lastParsed.cancelledAt,
+          historyDeleted: updatedRequest.historyDeleted === true ? true : lastParsed.historyDeleted === true,
+          historyUpdatedAt: updatedRequest.historyUpdatedAt || lastParsed.historyUpdatedAt,
           restaurantResponse: {
             ...(lastParsed.restaurantResponse || {}),
             ...(updatedRequest.restaurantResponse || {})
@@ -2935,7 +2939,7 @@ ${!item.treated ? `
           `}
       </div>
 
-      <details class="mt-6 rounded-[22px] border border-white/10 bg-black/15 p-4 md:p-5 group">
+      <details ${window.historyPanelOpen ? 'open' : ''} ontoggle="window.historyPanelOpen=this.open" class="mt-6 rounded-[22px] border border-white/10 bg-black/15 p-4 md:p-5 group">
         <summary class="list-none cursor-pointer">
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div class="min-w-0">
