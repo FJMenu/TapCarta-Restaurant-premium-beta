@@ -6,7 +6,7 @@
       <title>La Bonne Fourchette</title>
       
         <script>
-            const APP_VERSION = 'V1.0.22';
+            const APP_VERSION = 'V1.0.23';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3179,8 +3179,8 @@ ${!item.treated ? `
               </a>
               ` : ''}
 
-              ${siteConfig.modules?.web && siteConfig.experienceUrl && siteConfig.experienceUrl !== '#' ? `
-              <a href="${siteConfig.experienceUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+              ${(siteConfig.experienceUrl && siteConfig.experienceUrl !== '#') || (siteConfig.clientMenuUrl && siteConfig.clientMenuUrl !== '#') ? `
+              <a href="${siteConfig.experienceUrl && siteConfig.experienceUrl !== '#' ? siteConfig.experienceUrl : siteConfig.clientMenuUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
                 <i data-lucide="smartphone" class="w-4 h-4 text-gold"></i>
                 <span>${t.restaurantMenuTest}</span>
               </a>
