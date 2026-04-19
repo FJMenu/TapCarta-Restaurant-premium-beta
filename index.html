@@ -2853,10 +2853,10 @@ ${!item.treated ? `
                   onchange="toggleHistoryRequestSelection('${item.id}')"
                 >
               </label>
-              <button onclick="openRequestDetails('${item.id}')" class="btn-action w-11 h-11 rounded-xl border border-white/10 text-cream hover:bg-white/5 transition-all inline-flex items-center justify-center" title="Voir le détail">
+              <button onclick="openRequestDetails('${item.id}')" class="btn-action w-11 h-11 rounded-xl border border-white/10 text-cream hover:bg-white/5 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryViewDetail}">
                 <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
               </button>
-              <button onclick="deleteRequestFromHistory('${item.id}')" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="Supprimer">
+              <button onclick="deleteRequestFromHistory('${item.id}')" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryDeleteOne}">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
             </div>
@@ -3002,18 +3002,18 @@ ${!item.treated ? `
           <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <div class="text-sm font-semibold text-cream">
-                ${selectedHistoryRequestIds.size} élément(s) sélectionné(s)
+                ${selectedHistoryRequestIds.size} ${t.restaurantHistorySelected}
               </div>
               <div class="text-xs text-cream/60 mt-1">
-                Sélectionnez plusieurs commandes ou réservations puis supprimez-les en une seule fois.
+                ${t.restaurantHistorySelectMultiple}
               </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
               <button onclick="toggleAllHistoryRequests()" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
-                ${selectedHistoryRequestIds.size === treatedRequests.length && treatedRequests.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                ${selectedHistoryRequestIds.size === treatedRequests.length && treatedRequests.length ? t.restaurantHistoryDeselectAll : t.restaurantHistorySelectAll}
               </button>
-              <button onclick="deleteSelectedHistoryRequests()" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="Supprimer la sélection">
+              <button onclick="deleteSelectedHistoryRequests()" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryDeleteSelected}">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
             </div>
