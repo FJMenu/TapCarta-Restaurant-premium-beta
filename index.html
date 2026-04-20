@@ -3960,18 +3960,21 @@ ${!item.treated ? `
       if (field === 'category-name') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]) return;
         activeRestaurantData.menu.categories[categoryIndex].name = e.target.value;
+        markMenuTranslationWarningNeeded();
         return;
       }
 
       if (field === 'item-name') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
         activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].name = e.target.value;
+        markMenuTranslationWarningNeeded();
         return;
       }
 
       if (field === 'item-subtitle') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
         activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].subtitle = e.target.value;
+        markMenuTranslationWarningNeeded();
         return;
       }
 
