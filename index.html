@@ -6,7 +6,7 @@
       <title>La Bonne Fourchette</title>
       
         <script>
-            const APP_VERSION = 'V1.0.23';
+            const APP_VERSION = 'V1.0.24';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -709,12 +709,19 @@ async function loadActiveRestaurantData() {
     activeRestaurant.name ||
     siteConfig.restaurantName;
 
+const restaurantLifecycle =
+  restaurantData?.status?.lifecycle ||
+  restaurantData?.identity?.status ||
+  'active';
+
+const isRestaurantActive = restaurantLifecycle === 'active';
+
 siteConfig.modules = {
-  ordering: restaurantData?.modules?.ordering !== false,
-  booking: restaurantData?.modules?.booking !== false,
-  googleReviews: restaurantData?.modules?.googleReviews !== false,
-  whatsapp: restaurantData?.modules?.whatsapp !== false,
-  web: restaurantData?.modules?.web === true
+  ordering: isRestaurantActive && restaurantData?.modules?.ordering !== false,
+  booking: isRestaurantActive && restaurantData?.modules?.booking !== false,
+  googleReviews: isRestaurantActive && restaurantData?.modules?.googleReviews !== false,
+  whatsapp: isRestaurantActive && restaurantData?.modules?.whatsapp !== false,
+  web: isRestaurantActive && restaurantData?.modules?.web === true
 };
 
 siteConfig.orderReservationOptionEnabled =
