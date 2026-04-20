@@ -3737,6 +3737,12 @@ ${!item.treated ? `
     }
   }
 
+  let menuTranslationWarningNeeded = false;
+
+  function markMenuTranslationWarningNeeded() {
+    menuTranslationWarningNeeded = true;
+  }
+
   function addRestaurantItemToCategory(categoryIndex) {
     ensureRestaurantMenuShape();
 
@@ -3759,6 +3765,7 @@ ${!item.treated ? `
       updatedAt: activeRestaurantData.menu?.updatedAt || ''
     });
 
+    markMenuTranslationWarningNeeded();
     syncRestaurantItemOrder(category);
     renderRestaurantMenuEditor();
   }
@@ -3797,6 +3804,7 @@ ${!item.treated ? `
       items: []
     });
 
+    markMenuTranslationWarningNeeded();
     syncRestaurantCategoryOrder();
     renderRestaurantMenuEditor();
   }
@@ -3850,6 +3858,18 @@ ${!item.treated ? `
 
     ensureRestaurantMenuShape();
 
+    if (menuTranslationWarningNeeded) {
+      alert(
+        currentLang === 'es'
+          ? 'Atención: los nuevos textos añadidos al menú no se traducen automáticamente. Si su menú existe en varios idiomas, las traducciones deberán actualizarse manualmente si lo desea.'
+          : currentLang === 'en'
+            ? 'Warning: new texts added to the menu are not translated automatically. If your menu exists in several languages, translations will need to be updated manually if you wish.'
+            : currentLang === 'nl'
+              ? 'Let op: nieuwe teksten die aan het menu worden toegevoegd, worden niet automatisch vertaald. Als uw menu in meerdere talen bestaat, moeten de vertalingen handmatig worden bijgewerkt als u dat wenst.'
+              : 'Attention : les nouveaux textes ajoutés au menu ne sont pas traduits automatiquement. Si votre menu existe en plusieurs langues, les traductions devront être mises à jour manuellement si vous le souhaitez.'
+      );
+    }
+
     const previousMenuSnapshot = JSON.stringify(activeRestaurantData.menu || {});
     const nowIso = new Date().toISOString();
 
@@ -3887,7 +3907,17 @@ ${!item.treated ? `
     link.remove();
     URL.revokeObjectURL(url);
 
-    alert('JSON exporté avec le menu mis à jour.');
+    menuTranslationWarningNeeded = false;
+
+    alert(
+      currentLang === 'es'
+        ? 'JSON exportado con el menú actualizado.'
+        : currentLang === 'en'
+          ? 'JSON exported with the updated menu.'
+          : currentLang === 'nl'
+            ? 'JSON geëxporteerd met het bijgewerkte menu.'
+            : 'JSON exporté avec le menu mis à jour.'
+    );
   }
 
   const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
