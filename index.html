@@ -3207,39 +3207,8 @@ ${!item.treated ? `
                 class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
               >
                 <i data-lucide="pencil-line" class="w-4 h-4 text-gold"></i>
-                <span>Éditer le menu</span>
+                <span>Gérer le menu</span>
               </button>
-            </div>
-
-            <div id="restaurant-menu-editor-panel" class="hidden mt-5 rounded-[22px] border border-gold/20 bg-black/15 p-4 md:p-5">
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <div>
-                  <div class="text-sm font-semibold text-cream">Édition du menu</div>
-                  <div class="text-xs text-cream/60 mt-1">Bloc brut repris dans Restaurant pour gérer catégories, plats, visibilité et disponibilité.</div>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                  <button
-                    id="restaurant-add-category-btn"
-                    type="button"
-                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
-                  >
-                    <i data-lucide="folder-plus" class="w-4 h-4 text-gold"></i>
-                    <span>Ajouter une catégorie</span>
-                  </button>
-
-                  <button
-                    id="restaurant-save-menu-json-btn"
-                    type="button"
-                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
-                  >
-                    <i data-lucide="check" class="w-4 h-4 text-gold"></i>
-                    <span>Valider les modifications</span>
-                  </button>
-                </div>
-              </div>
-
-              <div id="restaurant-menu-categories-list" class="space-y-3"></div>
             </div>
           </article>
 
@@ -3274,6 +3243,41 @@ ${!item.treated ? `
                 <div class="text-xs uppercase tracking-wide text-cream/45 mb-1">${t.restaurantInfoStatus}</div>
                 <div class="text-sm font-semibold text-emerald-200">${restaurantData.status}</div>
               </div>
+            </div>
+          </article>
+        </section>
+
+        <section id="restaurant-menu-editor-section" class="hidden mt-8">
+          <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
+              <div>
+                <h3 class="font-display text-xl font-bold text-cream">Gestion du menu</h3>
+                <p class="text-sm text-cream/60 mt-1">Modifiez rapidement les catégories, plats, visibilités et disponibilités.</p>
+              </div>
+
+              <div class="flex flex-wrap gap-3">
+                <button
+                  id="restaurant-add-category-btn"
+                  type="button"
+                  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
+                >
+                  <i data-lucide="folder-plus" class="w-4 h-4 text-gold"></i>
+                  <span>Ajouter une catégorie</span>
+                </button>
+
+                <button
+                  id="restaurant-save-menu-json-btn"
+                  type="button"
+                  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
+                >
+                  <i data-lucide="check" class="w-4 h-4 text-gold"></i>
+                  <span>Valider les modifications</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-gold/15 bg-black/15 p-4 md:p-5">
+              <div id="restaurant-menu-categories-list" class="space-y-4"></div>
             </div>
           </article>
         </section>
@@ -3755,16 +3759,22 @@ ${!item.treated ? `
   }
 
   const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
-  const editorPanel = document.getElementById('restaurant-menu-editor-panel');
+  const editorSection = document.getElementById('restaurant-menu-editor-section');
   const addCategoryBtn = document.getElementById('restaurant-add-category-btn');
   const exportJsonBtn = document.getElementById('restaurant-save-menu-json-btn');
   const editorList = document.getElementById('restaurant-menu-categories-list');
 
-  if (editorToggleBtn && editorPanel) {
+  if (editorToggleBtn && editorSection) {
     editorToggleBtn.addEventListener('click', () => {
-      editorPanel.classList.toggle('hidden');
-      if (!editorPanel.classList.contains('hidden')) {
+      const willOpen = editorSection.classList.contains('hidden');
+
+      editorSection.classList.toggle('hidden');
+
+      if (willOpen) {
         renderRestaurantMenuEditor();
+        requestAnimationFrame(() => {
+          editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
       }
     });
   }
