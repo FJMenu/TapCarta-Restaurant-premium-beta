@@ -22,7 +22,14 @@
 
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/_sdk/element_sdk.js"></script>
+
+  <script>
+    const SUPABASE_URL = 'https://uzuejudgccpnuzqefjre.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_FUtVznXw3Y0dftgEE7zgHg_aTbK669l';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://i.postimg.cc" crossorigin>
