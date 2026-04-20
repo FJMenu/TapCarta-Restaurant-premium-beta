@@ -3197,7 +3197,13 @@ ${!item.treated ? `
                 (!siteConfig.qrMenuUrl || siteConfig.qrMenuUrl === '#') &&
                 (!siteConfig.modules?.web || !siteConfig.experienceUrl || siteConfig.experienceUrl === '#') ? `
               <div class="rounded-2xl border border-gold/20 bg-black/15 px-4 py-4 text-sm text-cream/65">
-                Accès menu non encore configuré dans les données établissement.
+                ${currentLang === 'es'
+                  ? 'Acceso al menú aún no configurado en los datos del establecimiento.'
+                  : currentLang === 'en'
+                    ? 'Menu access is not configured yet in the establishment data.'
+                    : currentLang === 'nl'
+                      ? 'Menutoegang is nog niet ingesteld in de gegevens van de zaak.'
+                      : 'Accès menu non encore configuré dans les données établissement.'}
               </div>
               ` : ''}
 
@@ -3207,7 +3213,13 @@ ${!item.treated ? `
                 class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
               >
                 <i data-lucide="pencil-line" class="w-4 h-4 text-gold"></i>
-                <span>Gérer le menu</span>
+                <span>${currentLang === 'es'
+                  ? 'Gestionar el menú'
+                  : currentLang === 'en'
+                    ? 'Manage menu'
+                    : currentLang === 'nl'
+                      ? 'Menu beheren'
+                      : 'Gérer le menu'}</span>
               </button>
             </div>
           </article>
@@ -3251,8 +3263,20 @@ ${!item.treated ? `
           <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
             <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
               <div>
-                <h3 class="font-display text-xl font-bold text-cream">Gestion du menu</h3>
-                <p class="text-sm text-cream/60 mt-1">Modifiez rapidement les catégories, plats, visibilités et disponibilités.</p>
+                <h3 class="font-display text-xl font-bold text-cream">${currentLang === 'es'
+                  ? 'Gestión del menú'
+                  : currentLang === 'en'
+                    ? 'Menu management'
+                    : currentLang === 'nl'
+                      ? 'Menubeheer'
+                      : 'Gestion du menu'}</h3>
+                <p class="text-sm text-cream/60 mt-1">${currentLang === 'es'
+                  ? 'Modifique rápidamente las categorías, platos, visibilidad y disponibilidad.'
+                  : currentLang === 'en'
+                    ? 'Quickly edit categories, dishes, visibility and availability.'
+                    : currentLang === 'nl'
+                      ? 'Pas categorieën, gerechten, zichtbaarheid en beschikbaarheid snel aan.'
+                      : 'Modifiez rapidement les catégories, plats, visibilités et disponibilités.'}</p>
               </div>
 
               <div class="flex flex-wrap gap-3">
@@ -3262,7 +3286,13 @@ ${!item.treated ? `
                   class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
                 >
                   <i data-lucide="folder-plus" class="w-4 h-4 text-gold"></i>
-                  <span>Ajouter une catégorie</span>
+                  <span>${currentLang === 'es'
+                    ? 'Añadir una categoría'
+                    : currentLang === 'en'
+                      ? 'Add a category'
+                      : currentLang === 'nl'
+                        ? 'Categorie toevoegen'
+                        : 'Ajouter une catégorie'}</span>
                 </button>
 
                 <button
@@ -3271,7 +3301,13 @@ ${!item.treated ? `
                   class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
                 >
                   <i data-lucide="check" class="w-4 h-4 text-gold"></i>
-                  <span>Valider les modifications</span>
+                  <span>${currentLang === 'es'
+                    ? 'Validar los cambios'
+                    : currentLang === 'en'
+                      ? 'Apply changes'
+                      : currentLang === 'nl'
+                        ? 'Wijzigingen bevestigen'
+                        : 'Valider les modifications'}</span>
                 </button>
               </div>
             </div>
@@ -3413,10 +3449,104 @@ ${!item.treated ? `
 
     const categories = activeRestaurantData?.menu?.categories || [];
 
+    const editorText = {
+      noCategory: currentLang === 'es'
+        ? 'Ninguna categoría cargada.'
+        : currentLang === 'en'
+          ? 'No category loaded.'
+          : currentLang === 'nl'
+            ? 'Geen categorie geladen.'
+            : 'Aucune catégorie chargée.',
+      categoryName: currentLang === 'es'
+        ? 'Nombre de la categoría'
+        : currentLang === 'en'
+          ? 'Category name'
+          : currentLang === 'nl'
+            ? 'Categorienaam'
+            : 'Nom de catégorie',
+      order: currentLang === 'es'
+        ? 'Orden'
+        : currentLang === 'en'
+          ? 'Order'
+          : currentLang === 'nl'
+            ? 'Volgorde'
+            : 'Ordre',
+      dishCountSuffix: currentLang === 'es'
+        ? 'plato(s)'
+        : currentLang === 'en'
+          ? 'dish(es)'
+          : currentLang === 'nl'
+            ? 'gerecht(en)'
+            : 'plat(s)',
+      addDish: currentLang === 'es'
+        ? '+ Plato'
+        : currentLang === 'en'
+          ? '+ Dish'
+          : currentLang === 'nl'
+            ? '+ Gerecht'
+            : '+ Plat',
+      dishName: currentLang === 'es'
+        ? 'Nombre del plato'
+        : currentLang === 'en'
+          ? 'Dish name'
+          : currentLang === 'nl'
+            ? 'Naam van het gerecht'
+            : 'Nom du plat',
+      subtitle: currentLang === 'es'
+        ? 'Subtítulo'
+        : currentLang === 'en'
+          ? 'Subtitle'
+          : currentLang === 'nl'
+            ? 'Ondertitel'
+            : 'Sous-titre',
+      price: currentLang === 'es'
+        ? 'Precio'
+        : currentLang === 'en'
+          ? 'Price'
+          : currentLang === 'nl'
+            ? 'Prijs'
+            : 'Prix',
+      visible: currentLang === 'es'
+        ? 'Visible'
+        : currentLang === 'en'
+          ? 'Visible'
+          : currentLang === 'nl'
+            ? 'Zichtbaar'
+            : 'Visible',
+      hidden: currentLang === 'es'
+        ? 'Oculto'
+        : currentLang === 'en'
+          ? 'Hidden'
+          : currentLang === 'nl'
+            ? 'Verborgen'
+            : 'Masqué',
+      available: currentLang === 'es'
+        ? 'Disponible'
+        : currentLang === 'en'
+          ? 'Available'
+          : currentLang === 'nl'
+            ? 'Beschikbaar'
+            : 'Disponible',
+      unavailable: currentLang === 'es'
+        ? 'No disponible'
+        : currentLang === 'en'
+          ? 'Unavailable'
+          : currentLang === 'nl'
+            ? 'Niet beschikbaar'
+            : 'Indisponible',
+      noDish: currentLang === 'es'
+        ? 'Ningún plato en esta categoría.'
+        : currentLang === 'en'
+          ? 'No dish in this category.'
+          : currentLang === 'nl'
+            ? 'Geen gerecht in deze categorie.'
+            : 'Aucun plat dans cette catégorie.'
+    };
+
     if (!categories.length) {
       container.innerHTML = `
         <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3 text-sm text-cream/55">
-          Aucune catégorie chargée.
+          ${editorText.noCategory}
         </div>
       `;
       return;
@@ -3427,7 +3557,7 @@ ${!item.treated ? `
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0 flex-1">
             <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2">
-              Nom de catégorie
+              ${editorText.categoryName}
             </label>
             <input
               type="text"
@@ -3437,13 +3567,13 @@ ${!item.treated ? `
               class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
             >
             <div class="text-xs text-cream/55 mt-2">
-              ID : ${category.id || '—'} · Ordre : ${typeof category.order === 'number' ? category.order : categoryIndex + 1}
+              ID : ${category.id || '—'} · ${editorText.order} : ${typeof category.order === 'number' ? category.order : categoryIndex + 1}
             </div>
           </div>
 
           <div class="flex flex-col items-end gap-2 flex-shrink-0 ml-3">
             <div class="text-xs text-gold">
-              ${(category.items || []).length} plat(s)
+              ${(category.items || []).length} ${editorText.dishCountSuffix}
             </div>
 
             <div class="flex items-center gap-2">
@@ -3479,7 +3609,7 @@ ${!item.treated ? `
               data-category-index="${categoryIndex}"
               class="rounded-lg border border-gold/25 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold"
             >
-              + Plat
+              ${editorText.addDish}
             </button>
           </div>
         </div>
@@ -3490,7 +3620,7 @@ ${!item.treated ? `
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 flex-1">
                   <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2">
-                    Nom du plat
+                    ${editorText.dishName}
                   </label>
                   <input
                     type="text"
@@ -3505,7 +3635,7 @@ ${!item.treated ? `
                   </div>
 
                   <label class="block text-[11px] uppercase tracking-wide text-cream/45 mt-3 mb-2">
-                    Sous-titre
+                    ${editorText.subtitle}
                   </label>
                   <input
                     type="text"
@@ -3519,7 +3649,7 @@ ${!item.treated ? `
 
                 <div class="text-right flex-shrink-0">
                   <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2 text-right">
-                    Prix
+                    ${editorText.price}
                   </label>
                   <input
                     type="text"
@@ -3533,7 +3663,7 @@ ${!item.treated ? `
 
                   <div class="mt-2 flex flex-col items-end gap-2">
                     <label class="inline-flex items-center justify-end gap-2 text-[11px] ${item.visible !== false ? 'text-emerald-300' : 'text-red-300'}">
-                      <span>${item.visible !== false ? 'Visible' : 'Masqué'}</span>
+                      <span>${item.visible !== false ? editorText.visible : editorText.hidden}</span>
                       <input
                         type="checkbox"
                         ${item.visible !== false ? 'checked' : ''}
@@ -3545,7 +3675,7 @@ ${!item.treated ? `
                     </label>
 
                     <label class="inline-flex items-center justify-end gap-2 text-[11px] ${item.available !== false ? 'text-emerald-300' : 'text-red-300'}">
-                      <span>${item.available !== false ? 'Disponible' : 'Indisponible'}</span>
+                      <span>${item.available !== false ? editorText.available : editorText.unavailable}</span>
                       <input
                         type="checkbox"
                         ${item.available !== false ? 'checked' : ''}
@@ -3591,7 +3721,7 @@ ${!item.treated ? `
             </div>
           `).join('') : `
             <div class="rounded-lg border border-white/6 bg-black/20 px-3 py-3 text-xs text-cream/50">
-              Aucun plat dans cette catégorie.
+              ${editorText.noDish}
             </div>
           `}
         </div>
