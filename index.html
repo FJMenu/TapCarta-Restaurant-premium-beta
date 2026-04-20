@@ -6,7 +6,7 @@
       <title>La Bonne Fourchette</title>
       
         <script>
-            const APP_VERSION = 'V1.0.24';
+            const APP_VERSION = 'V1.0.25';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3200,6 +3200,46 @@ ${!item.treated ? `
                 Accès menu non encore configuré dans les données établissement.
               </div>
               ` : ''}
+
+              <button
+                id="restaurant-menu-editor-toggle"
+                type="button"
+                class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
+              >
+                <i data-lucide="pencil-line" class="w-4 h-4 text-gold"></i>
+                <span>Éditer le menu</span>
+              </button>
+            </div>
+
+            <div id="restaurant-menu-editor-panel" class="hidden mt-5 rounded-[22px] border border-gold/20 bg-black/15 p-4 md:p-5">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div>
+                  <div class="text-sm font-semibold text-cream">Édition du menu</div>
+                  <div class="text-xs text-cream/60 mt-1">Bloc brut repris dans Restaurant pour gérer catégories, plats, visibilité et disponibilité.</div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <button
+                    id="restaurant-add-category-btn"
+                    type="button"
+                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
+                  >
+                    <i data-lucide="folder-plus" class="w-4 h-4 text-gold"></i>
+                    <span>Ajouter une catégorie</span>
+                  </button>
+
+                  <button
+                    id="restaurant-save-menu-json-btn"
+                    type="button"
+                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
+                  >
+                    <i data-lucide="download" class="w-4 h-4 text-gold"></i>
+                    <span>Exporter le JSON</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="restaurant-menu-categories-list" class="space-y-3"></div>
             </div>
           </article>
 
@@ -3259,6 +3299,579 @@ ${!item.treated ? `
   if (refreshAllBtn) {
     refreshAllBtn.addEventListener('click', () => {
       window.location.reload();
+    });
+  }
+
+  function ensureRestaurantMenuShape() {
+    if (!activeRestaurantData || typeof activeRestaurantData !== 'object') return;
+
+    if (!activeRestaurantData.menu || typeof activeRestaurantData.menu !== 'object') {
+      activeRestaurantData.menu = {};
+    }
+
+    if (!Array.isArray(activeRestaurantData.menu.categories)) {
+      activeRestaurantData.menu.categories = [];
+    }
+
+    if (typeof activeRestaurantData.menu.menuVersion !== 'number') {
+      activeRestaurantData.menu.menuVersion = 1;
+    }
+
+    if (typeof activeRestaurantData.menu.updatedAt !== 'string') {
+      activeRestaurantData.menu.updatedAt = '';
+    }
+
+    activeRestaurantData.menu.categories = activeRestaurantData.menu.categories.map((category, categoryIndex) => {
+      const normalizedCategory = category && typeof category === 'object' ? category : {};
+
+      if (typeof normalizedCategory.id !== 'string') {
+        normalizedCategory.id = `categorie-${categoryIndex + 1}`;
+      }
+
+      if (typeof normalizedCategory.name !== 'string') {
+        normalizedCategory.name = '';
+      }
+
+      if (typeof normalizedCategory.order !== 'number') {
+        normalizedCategory.order = categoryIndex + 1;
+      }
+
+      if (typeof normalizedCategory.visible !== 'boolean') {
+        normalizedCategory.visible = true;
+      }
+
+      if (!Array.isArray(normalizedCategory.items)) {
+        normalizedCategory.items = [];
+      }
+
+      normalizedCategory.items = normalizedCategory.items.map((item, itemIndex) => {
+        const normalizedItem = item && typeof item === 'object' ? item : {};
+
+        if (typeof normalizedItem.id !== 'string') {
+          normalizedItem.id = `item-${categoryIndex + 1}-${itemIndex + 1}`;
+        }
+
+        if (typeof normalizedItem.name !== 'string') {
+          normalizedItem.name = '';
+        }
+
+        if (typeof normalizedItem.subtitle !== 'string') {
+          normalizedItem.subtitle = '';
+        }
+
+        if (typeof normalizedItem.price !== 'number') {
+          normalizedItem.price = 0;
+        }
+
+        if (typeof normalizedItem.visible !== 'boolean') {
+          normalizedItem.visible = true;
+        }
+
+        if (typeof normalizedItem.available !== 'boolean') {
+          normalizedItem.available = true;
+        }
+
+        if (typeof normalizedItem.order !== 'number') {
+          normalizedItem.order = itemIndex + 1;
+        }
+
+        if (typeof normalizedItem.updatedAt !== 'string') {
+          normalizedItem.updatedAt = activeRestaurantData.menu.updatedAt || '';
+        }
+
+        return normalizedItem;
+      });
+
+      return normalizedCategory;
+    });
+  }
+
+  function syncRestaurantItemOrder(category) {
+    if (!category || !Array.isArray(category.items)) return;
+    category.items.forEach((item, index) => {
+      item.order = index + 1;
+    });
+  }
+
+  function syncRestaurantCategoryOrder() {
+    if (!activeRestaurantData?.menu?.categories) return;
+    activeRestaurantData.menu.categories.forEach((category, index) => {
+      category.order = index + 1;
+      syncRestaurantItemOrder(category);
+    });
+  }
+
+  function renderRestaurantMenuEditor() {
+    const container = document.getElementById('restaurant-menu-categories-list');
+    if (!container) return;
+
+    ensureRestaurantMenuShape();
+
+    const categories = activeRestaurantData?.menu?.categories || [];
+
+    if (!categories.length) {
+      container.innerHTML = `
+        <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3 text-sm text-cream/55">
+          Aucune catégorie chargée.
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = categories.map((category, categoryIndex) => `
+      <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2">
+              Nom de catégorie
+            </label>
+            <input
+              type="text"
+              value="${category.name || ''}"
+              data-category-index="${categoryIndex}"
+              data-field="category-name"
+              class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+            >
+            <div class="text-xs text-cream/55 mt-2">
+              ID : ${category.id || '—'} · Ordre : ${typeof category.order === 'number' ? category.order : categoryIndex + 1}
+            </div>
+          </div>
+
+          <div class="flex flex-col items-end gap-2 flex-shrink-0 ml-3">
+            <div class="text-xs text-gold">
+              ${(category.items || []).length} plat(s)
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                data-action="move-category-up"
+                data-category-index="${categoryIndex}"
+                class="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-cream/80"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                data-action="move-category-down"
+                data-category-index="${categoryIndex}"
+                class="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-cream/80"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                data-action="delete-category"
+                data-category-index="${categoryIndex}"
+                class="rounded-lg border border-red-400/30 bg-red-500/12 px-3 py-1.5 text-sm font-bold text-red-300"
+              >
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              data-action="add-item"
+              data-category-index="${categoryIndex}"
+              class="rounded-lg border border-gold/25 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold"
+            >
+              + Plat
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-2">
+          ${(category.items || []).length ? (category.items || []).map((item, itemIndex) => `
+            <div class="rounded-lg border border-white/6 bg-black/20 px-3 py-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2">
+                    Nom du plat
+                  </label>
+                  <input
+                    type="text"
+                    value="${item.name || ''}"
+                    data-category-index="${categoryIndex}"
+                    data-item-index="${itemIndex}"
+                    data-field="item-name"
+                    class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+                  >
+                  <div class="text-xs text-cream/55 mt-2">
+                    ID : ${item.id || '—'}
+                  </div>
+
+                  <label class="block text-[11px] uppercase tracking-wide text-cream/45 mt-3 mb-2">
+                    Sous-titre
+                  </label>
+                  <input
+                    type="text"
+                    value="${item.subtitle || ''}"
+                    data-category-index="${categoryIndex}"
+                    data-item-index="${itemIndex}"
+                    data-field="item-subtitle"
+                    class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+                  >
+                </div>
+
+                <div class="text-right flex-shrink-0">
+                  <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2 text-right">
+                    Prix
+                  </label>
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    value="${typeof item.price === 'number' ? item.price : ''}"
+                    data-category-index="${categoryIndex}"
+                    data-item-index="${itemIndex}"
+                    data-field="item-price"
+                    class="w-24 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-gold text-right outline-none"
+                  >
+
+                  <div class="mt-2 flex flex-col items-end gap-2">
+                    <label class="inline-flex items-center justify-end gap-2 text-[11px] ${item.visible !== false ? 'text-emerald-300' : 'text-red-300'}">
+                      <span>${item.visible !== false ? 'Visible' : 'Masqué'}</span>
+                      <input
+                        type="checkbox"
+                        ${item.visible !== false ? 'checked' : ''}
+                        data-category-index="${categoryIndex}"
+                        data-item-index="${itemIndex}"
+                        data-field="item-visible"
+                        class="w-4 h-4 accent-yellow-400"
+                      >
+                    </label>
+
+                    <label class="inline-flex items-center justify-end gap-2 text-[11px] ${item.available !== false ? 'text-emerald-300' : 'text-red-300'}">
+                      <span>${item.available !== false ? 'Disponible' : 'Indisponible'}</span>
+                      <input
+                        type="checkbox"
+                        ${item.available !== false ? 'checked' : ''}
+                        data-category-index="${categoryIndex}"
+                        data-item-index="${itemIndex}"
+                        data-field="item-available"
+                        class="w-4 h-4 accent-yellow-400"
+                      >
+                    </label>
+
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        data-action="move-item-up"
+                        data-category-index="${categoryIndex}"
+                        data-item-index="${itemIndex}"
+                        class="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-cream/80"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        data-action="move-item-down"
+                        data-category-index="${categoryIndex}"
+                        data-item-index="${itemIndex}"
+                        class="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-cream/80"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        data-action="delete-item"
+                        data-category-index="${categoryIndex}"
+                        data-item-index="${itemIndex}"
+                        class="rounded-lg border border-red-400/30 bg-red-500/12 px-3 py-1.5 text-sm font-bold text-red-300"
+                      >
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('') : `
+            <div class="rounded-lg border border-white/6 bg-black/20 px-3 py-3 text-xs text-cream/50">
+              Aucun plat dans cette catégorie.
+            </div>
+          `}
+        </div>
+      </div>
+    `).join('');
+
+    if (window.lucide) {
+      requestAnimationFrame(() => {
+        lucide.createIcons();
+      });
+    }
+  }
+
+  function addRestaurantItemToCategory(categoryIndex) {
+    ensureRestaurantMenuShape();
+
+    if (!activeRestaurantData?.menu?.categories?.[categoryIndex]) return;
+
+    const category = activeRestaurantData.menu.categories[categoryIndex];
+
+    if (!Array.isArray(category.items)) {
+      category.items = [];
+    }
+
+    category.items.unshift({
+      id: `nouveau-plat-${Date.now()}`,
+      name: 'Nouveau plat',
+      subtitle: '',
+      price: 0,
+      visible: true,
+      available: true,
+      order: 1,
+      updatedAt: activeRestaurantData.menu?.updatedAt || ''
+    });
+
+    syncRestaurantItemOrder(category);
+    renderRestaurantMenuEditor();
+  }
+
+  function addRestaurantCategory() {
+    ensureRestaurantMenuShape();
+
+    const canonicalCategories = [
+      { id: 'snacks', name: 'Snacks' },
+      { id: 'entrees', name: 'Entrées' },
+      { id: 'plats', name: 'Plats' },
+      { id: 'moules', name: 'Moules' },
+      { id: 'desserts', name: 'Desserts' },
+      { id: 'crepes', name: 'Crêpes' },
+      { id: 'suggestions', name: 'Suggestions' },
+      { id: 'supplements', name: 'Suppléments' },
+      { id: 'boissons', name: 'Boissons' }
+    ];
+
+    const existingIds = new Set(
+      activeRestaurantData.menu.categories.map((category) => category.id)
+    );
+
+    const nextCategory = canonicalCategories.find((category) => !existingIds.has(category.id));
+
+    if (!nextCategory) {
+      alert('Toutes les catégories standard compatibles sont déjà créées.');
+      return;
+    }
+
+    activeRestaurantData.menu.categories.unshift({
+      id: nextCategory.id,
+      name: nextCategory.name,
+      order: 1,
+      visible: true,
+      items: []
+    });
+
+    syncRestaurantCategoryOrder();
+    renderRestaurantMenuEditor();
+  }
+
+  function moveRestaurantItem(categoryIndex, itemIndex, direction) {
+    if (!activeRestaurantData?.menu?.categories?.[categoryIndex]?.items) return;
+
+    const category = activeRestaurantData.menu.categories[categoryIndex];
+    const items = category.items;
+    const targetIndex = direction === 'up' ? itemIndex - 1 : itemIndex + 1;
+
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+
+    [items[itemIndex], items[targetIndex]] = [items[targetIndex], items[itemIndex]];
+    syncRestaurantItemOrder(category);
+    renderRestaurantMenuEditor();
+  }
+
+  function moveRestaurantCategory(categoryIndex, direction) {
+    if (!activeRestaurantData?.menu?.categories) return;
+
+    const categories = activeRestaurantData.menu.categories;
+    const targetIndex = direction === 'up' ? categoryIndex - 1 : categoryIndex + 1;
+
+    if (targetIndex < 0 || targetIndex >= categories.length) return;
+
+    [categories[categoryIndex], categories[targetIndex]] = [categories[targetIndex], categories[categoryIndex]];
+    syncRestaurantCategoryOrder();
+    renderRestaurantMenuEditor();
+  }
+
+  function deleteRestaurantItem(categoryIndex, itemIndex) {
+    if (!activeRestaurantData?.menu?.categories?.[categoryIndex]?.items) return;
+
+    const category = activeRestaurantData.menu.categories[categoryIndex];
+    category.items.splice(itemIndex, 1);
+    syncRestaurantItemOrder(category);
+    renderRestaurantMenuEditor();
+  }
+
+  function deleteRestaurantCategory(categoryIndex) {
+    if (!activeRestaurantData?.menu?.categories?.[categoryIndex]) return;
+
+    activeRestaurantData.menu.categories.splice(categoryIndex, 1);
+    syncRestaurantCategoryOrder();
+    renderRestaurantMenuEditor();
+  }
+
+  function exportRestaurantJson() {
+    if (!activeRestaurantData) return;
+
+    ensureRestaurantMenuShape();
+
+    const previousMenuSnapshot = JSON.stringify(activeRestaurantData.menu || {});
+    const nowIso = new Date().toISOString();
+
+    if (activeRestaurantData.menu?.categories?.length) {
+      activeRestaurantData.menu.menuVersion = Math.max((activeRestaurantData.menu.menuVersion || 0) + 1, 1);
+      activeRestaurantData.menu.updatedAt = nowIso;
+
+      activeRestaurantData.menu.categories.forEach((category) => {
+        if (!Array.isArray(category.items)) return;
+        category.items.forEach((item) => {
+          item.updatedAt = nowIso;
+        });
+      });
+    }
+
+    const nextMenuSnapshot = JSON.stringify(activeRestaurantData.menu || {});
+    if (previousMenuSnapshot === nextMenuSnapshot && !activeRestaurantData.menu.updatedAt) {
+      activeRestaurantData.menu.updatedAt = nowIso;
+    }
+
+    const restaurantId =
+      activeRestaurantData?.identity?.id ||
+      activeRestaurantData?.id ||
+      'restaurant';
+
+    const jsonString = JSON.stringify(activeRestaurantData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `${restaurantId}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    alert('JSON exporté avec le menu mis à jour.');
+  }
+
+  const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
+  const editorPanel = document.getElementById('restaurant-menu-editor-panel');
+  const addCategoryBtn = document.getElementById('restaurant-add-category-btn');
+  const exportJsonBtn = document.getElementById('restaurant-save-menu-json-btn');
+  const editorList = document.getElementById('restaurant-menu-categories-list');
+
+  if (editorToggleBtn && editorPanel) {
+    editorToggleBtn.addEventListener('click', () => {
+      editorPanel.classList.toggle('hidden');
+      if (!editorPanel.classList.contains('hidden')) {
+        renderRestaurantMenuEditor();
+      }
+    });
+  }
+
+  if (addCategoryBtn) {
+    addCategoryBtn.addEventListener('click', addRestaurantCategory);
+  }
+
+  if (exportJsonBtn) {
+    exportJsonBtn.addEventListener('click', exportRestaurantJson);
+  }
+
+  if (editorList) {
+    editorList.addEventListener('input', (e) => {
+      if (!activeRestaurantData) return;
+
+      const categoryIndex = Number(e.target.dataset.categoryIndex);
+      const itemIndex = Number(e.target.dataset.itemIndex);
+      const field = e.target.dataset.field;
+
+      if (field === 'category-name') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]) return;
+        activeRestaurantData.menu.categories[categoryIndex].name = e.target.value;
+        return;
+      }
+
+      if (field === 'item-name') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
+        activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].name = e.target.value;
+        return;
+      }
+
+      if (field === 'item-subtitle') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
+        activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].subtitle = e.target.value;
+        return;
+      }
+
+      if (field === 'item-price') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
+        const parsedPrice = parseFloat(String(e.target.value).replace(',', '.'));
+        activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].price = Number.isNaN(parsedPrice) ? 0 : parsedPrice;
+      }
+    });
+
+    editorList.addEventListener('change', (e) => {
+      if (!activeRestaurantData) return;
+
+      const categoryIndex = Number(e.target.dataset.categoryIndex);
+      const itemIndex = Number(e.target.dataset.itemIndex);
+      const field = e.target.dataset.field;
+
+      if (field === 'item-visible') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
+        activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].visible = e.target.checked;
+        renderRestaurantMenuEditor();
+        return;
+      }
+
+      if (field === 'item-available') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
+        activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].available = e.target.checked;
+        renderRestaurantMenuEditor();
+      }
+    });
+
+    editorList.addEventListener('click', (e) => {
+      const actionButton = e.target.closest('[data-action]');
+      if (!actionButton) return;
+
+      const categoryIndex = Number(actionButton.dataset.categoryIndex);
+      const itemIndex = Number(actionButton.dataset.itemIndex);
+      const action = actionButton.dataset.action;
+
+      if (action === 'add-item') {
+        addRestaurantItemToCategory(categoryIndex);
+        return;
+      }
+
+      if (action === 'move-item-up') {
+        moveRestaurantItem(categoryIndex, itemIndex, 'up');
+        return;
+      }
+
+      if (action === 'move-item-down') {
+        moveRestaurantItem(categoryIndex, itemIndex, 'down');
+        return;
+      }
+
+      if (action === 'move-category-up') {
+        moveRestaurantCategory(categoryIndex, 'up');
+        return;
+      }
+
+      if (action === 'move-category-down') {
+        moveRestaurantCategory(categoryIndex, 'down');
+        return;
+      }
+
+      if (action === 'delete-item') {
+        deleteRestaurantItem(categoryIndex, itemIndex);
+        return;
+      }
+
+      if (action === 'delete-category') {
+        deleteRestaurantCategory(categoryIndex);
+      }
     });
   }
 
