@@ -1667,33 +1667,59 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
       });
     }
 
+    function getInstallAppTexts() {
+      return currentLang === 'es'
+        ? {
+            button: 'Instalar la app',
+            samsungHelp: '<div class="install-help-box"><div class="install-help-title">Instalar la app en su teléfono</div><div class="install-help-step"><span class="install-help-num">1</span><span>Pulse <strong>☰ las 3 líneas abajo a la derecha</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Pulse <strong>+ Añadir a</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Pulse <strong>Pantalla de inicio</strong></span></div><div class="install-help-note">La app del restaurante aparecerá después en la pantalla de inicio.</div></div>',
+            androidHelp: '<div class="install-help-box"><div class="install-help-title">Instalar la app en su dispositivo</div><div class="install-help-step"><span class="install-help-num">1</span><span>Abra el menú del navegador <strong>(⋮ o Compartir)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Pulse <strong>Instalar app</strong>, <strong>Añadir a la pantalla de inicio</strong> o equivalente</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirme la instalación</span></div><div class="install-help-note">Según el navegador, el nombre exacto puede variar.</div></div>',
+            iosHelp: 'En iPhone o iPad: pulse <strong>Compartir</strong> y luego <strong>Añadir a la pantalla de inicio</strong>.'
+          }
+        : currentLang === 'en'
+          ? {
+              button: 'Install the app',
+              samsungHelp: '<div class="install-help-box"><div class="install-help-title">Install the app on your phone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tap <strong>☰ the 3 lines at the bottom right</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tap <strong>+ Add to</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tap <strong>Home screen</strong></span></div><div class="install-help-note">The restaurant app will then appear on your home screen.</div></div>',
+              androidHelp: '<div class="install-help-box"><div class="install-help-title">Install the app on your device</div><div class="install-help-step"><span class="install-help-num">1</span><span>Open the browser menu <strong>(⋮ or Share)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tap <strong>Install app</strong>, <strong>Add to Home screen</strong> or the equivalent</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirm the installation</span></div><div class="install-help-note">The exact wording may vary depending on the browser.</div></div>',
+              iosHelp: 'On iPhone or iPad: tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.'
+            }
+          : currentLang === 'nl'
+            ? {
+                button: 'App installeren',
+                samsungHelp: '<div class="install-help-box"><div class="install-help-title">Installeer de app op uw telefoon</div><div class="install-help-step"><span class="install-help-num">1</span><span>Tik op <strong>☰ de 3 lijnen rechtsonder</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tik op <strong>+ Toevoegen aan</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Tik op <strong>Startscherm</strong></span></div><div class="install-help-note">De restaurantapp verschijnt daarna op uw startscherm.</div></div>',
+                androidHelp: '<div class="install-help-box"><div class="install-help-title">Installeer de app op uw toestel</div><div class="install-help-step"><span class="install-help-num">1</span><span>Open het browsermenu <strong>(⋮ of Delen)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Tik op <strong>App installeren</strong>, <strong>Toevoegen aan startscherm</strong> of gelijkwaardig</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Bevestig de installatie</span></div><div class="install-help-note">De exacte benaming kan per browser verschillen.</div></div>',
+                iosHelp: 'Op iPhone of iPad: tik op <strong>Deel</strong> en daarna op <strong>Zet op beginscherm</strong>.'
+              }
+            : {
+                button: 'Installer l’app',
+                samsungHelp: '<div class="install-help-box"><div class="install-help-title">Installer l’app sur votre téléphone</div><div class="install-help-step"><span class="install-help-num">1</span><span>Appuyez sur <strong>☰ les 3 lignes en bas à droite</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Appuyez sur <strong>+ Ajouter à</strong></span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Appuyez sur <strong>Écran d’accueil</strong></span></div><div class="install-help-note">L’app restaurant apparaîtra ensuite sur votre écran d’accueil.</div></div>',
+                androidHelp: '<div class="install-help-box"><div class="install-help-title">Installer l’app sur votre appareil</div><div class="install-help-step"><span class="install-help-num">1</span><span>Ouvrez le menu du navigateur <strong>(⋮ ou Partager)</strong></span></div><div class="install-help-step"><span class="install-help-num">2</span><span>Appuyez sur <strong>Installer l’app</strong>, <strong>Ajouter à l’écran d’accueil</strong> ou l’équivalent</span></div><div class="install-help-step"><span class="install-help-num">3</span><span>Confirmez l’installation</span></div><div class="install-help-note">L’intitulé exact peut varier selon le navigateur.</div></div>',
+                iosHelp: 'Sur iPhone ou iPad : appuyez sur <strong>Partager</strong>, puis <strong>Sur l’écran d’accueil</strong>.'
+              };
+    }
+
     function updateInstallUI() {
       const installBtn = document.getElementById('install-app-btn');
       const iosHelp = document.getElementById('ios-install-help');
-      const t = translations[currentLang];
+      const installTexts = getInstallAppTexts();
 
       if (!installBtn) return;
 
-      if (isInStandaloneMode()) {
-        installBtn.hidden = true;
-        if (iosHelp) iosHelp.hidden = true;
-        return;
+      const buttonSpan = installBtn.querySelector('span');
+      if (buttonSpan) {
+        buttonSpan.textContent = installTexts.button;
       }
 
-      if (isSamsungInternet()) {
-        installBtn.hidden = false;
-        installBtn.querySelector('span').textContent = t.installApp;
-
+      if (isInStandaloneMode()) {
+        installBtn.hidden = true;
         if (iosHelp) {
           iosHelp.hidden = true;
-          iosHelp.innerHTML = t.samsungInstallHelp;
+          iosHelp.innerHTML = '';
         }
         return;
       }
 
-      if (deferredInstallPrompt || isIos()) {
+      if (isSamsungInternet() || deferredInstallPrompt || isIos() || isAndroid()) {
         installBtn.hidden = false;
-        installBtn.querySelector('span').textContent = t.installApp;
       } else {
         installBtn.hidden = true;
       }
@@ -1733,25 +1759,29 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
 
     async function handleInstallClick() {
       const iosHelp = document.getElementById('ios-install-help');
-      const t = translations[currentLang];
+      const installTexts = getInstallAppTexts();
+
+      const toggleHelp = (html) => {
+        if (!iosHelp) return;
+
+        if (!iosHelp.hidden) {
+          clearTimeout(installHelpTimeout);
+          iosHelp.hidden = true;
+          return;
+        }
+
+        clearTimeout(installHelpTimeout);
+        iosHelp.hidden = false;
+        iosHelp.innerHTML = html;
+        iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        installHelpTimeout = setTimeout(() => {
+          iosHelp.hidden = true;
+        }, 15000);
+      };
 
       if (isSamsungInternet()) {
-        if (iosHelp) {
-          if (!iosHelp.hidden) {
-            clearTimeout(installHelpTimeout);
-            iosHelp.hidden = true;
-            return;
-          }
-
-          clearTimeout(installHelpTimeout);
-          iosHelp.hidden = false;
-          iosHelp.innerHTML = t.samsungInstallHelp;
-          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-          installHelpTimeout = setTimeout(() => {
-            iosHelp.hidden = true;
-          }, 15000);
-        }
+        toggleHelp(installTexts.samsungHelp);
         return;
       }
 
@@ -1769,8 +1799,16 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
                 showInstallToast();
               }
             }, 1200);
+          } else {
+            if (isAndroid()) {
+              toggleHelp(installTexts.androidHelp);
+            }
           }
-        } catch (_) {}
+        } catch (_) {
+          if (isAndroid()) {
+            toggleHelp(installTexts.androidHelp);
+          }
+        }
 
         deferredInstallPrompt = null;
         updateInstallUI();
@@ -1778,22 +1816,12 @@ const VERSION_RELOAD_FLAG_KEY = 'tapcarta-version-reload-done';
       }
 
       if (isIos() && !isInStandaloneMode()) {
-        if (iosHelp) {
-          if (!iosHelp.hidden) {
-            clearTimeout(installHelpTimeout);
-            iosHelp.hidden = true;
-            return;
-          }
+        toggleHelp(installTexts.iosHelp);
+        return;
+      }
 
-          clearTimeout(installHelpTimeout);
-          iosHelp.hidden = false;
-          iosHelp.innerHTML = t.iosInstallHelp;
-          iosHelp.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-          installHelpTimeout = setTimeout(() => {
-            iosHelp.hidden = true;
-          }, 15000);
-        }
+      if (isAndroid() && !isInStandaloneMode()) {
+        toggleHelp(installTexts.androidHelp);
       }
     }
 
