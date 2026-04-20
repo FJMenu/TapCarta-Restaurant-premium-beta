@@ -3158,8 +3158,21 @@ ${!item.treated ? `
                   <div class="text-xs text-gold/85 mt-1 leading-tight">Demandes réelles non raccordées</div>
                 </div>
               </div>
+
+              <button
+                id="install-app-btn"
+                type="button"
+                onclick="handleInstallClick()"
+                hidden
+                class="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 text-sm font-semibold text-gold shadow-lg hover:bg-gold/10 transition-all min-h-[58px]"
+              >
+                <i data-lucide="download" class="w-5 h-5 text-gold"></i>
+                <span>Installer l’app</span>
+              </button>
             </div>
           </div>
+
+          <div id="ios-install-help" class="mt-4"></div>
         </div>
       </div>
     </header>
