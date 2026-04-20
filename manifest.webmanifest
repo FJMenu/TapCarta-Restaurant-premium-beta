@@ -1,7 +1,7 @@
 {
-  "name": "La Bonne Fourchette",
-  "short_name": "Bonne Fourchette",
-  "description": "Menu digital de La Bonne Fourchette",
+  "name": "TapCarta Resto",
+  "short_name": "TapCarta Resto",
+  "description": "Application de gestion restaurant TapCarta",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

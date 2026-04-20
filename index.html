@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-      <title>La Bonne Fourchette</title>
+      <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.0.25';
+            const APP_VERSION = 'V1.1.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -42,7 +42,7 @@
 
   <meta name="theme-color" content="#0F0F0F">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="La Bonne Fourchette">
+  <meta name="apple-mobile-web-app-title" content="TapCarta Resto">
 
   <script>
     tailwind.config = {
@@ -2975,7 +2975,7 @@ ${!item.treated ? `
         <div>
           <h2 class="font-display text-xl md:text-2xl font-bold text-cream">${t.restaurantRequestsTitle}</h2>
           <p class="text-sm text-cream/65 mt-1">
-            ${siteConfig.orderReservationOptionEnabled ? 'Bêta interne : base de flux prête, raccord réel encore à faire.' : t.optionInactiveStatus}
+            ${siteConfig.orderReservationOptionEnabled ? 'Gérez ici les demandes et le suivi de votre établissement.' : t.optionInactiveStatus}
           </p>
         </div>
       </div>
@@ -3179,11 +3179,11 @@ ${!item.treated ? `
 
               <div class="inline-flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 shadow-lg min-h-[58px]">
                 <div class="w-10 h-10 rounded-xl border border-gold/20 bg-gold/10 flex items-center justify-center flex-shrink-0">
-                  <i data-lucide="shield-alert" class="w-5 h-5 text-gold"></i>
+                  <i data-lucide="store" class="w-5 h-5 text-gold"></i>
                 </div>
                 <div class="text-left">
-                  <div class="text-sm font-semibold text-cream leading-tight">Bêta interne</div>
-                  <div class="text-xs text-gold/85 mt-1 leading-tight">Demandes réelles non raccordées</div>
+                  <div class="text-sm font-semibold text-cream leading-tight">TapCarta Resto</div>
+                  <div class="text-xs text-gold/85 mt-1 leading-tight">Gestion restaurant</div>
                 </div>
               </div>
 
