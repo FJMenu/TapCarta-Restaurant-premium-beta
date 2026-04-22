@@ -3841,22 +3841,21 @@ window.validateRequest = function(requestId) {
   renderMenu();
 };
 
-window.requestTargetedModification = function(requestId, event) {
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
+window.requestTargetedModification = function(requestId) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
-  closeRequestDetailsModal();
+  if (!item || !item.sourceRequest) {
+    alert(t.restaurantRequestDetailsNotFound);
+    return false;
+  }
 
   window.tapCartaRequestDetailsState = {
     requestId: String(requestId),
     editMode: true
   };
 
-  setTimeout(() => {
-    window.openRequestDetails(requestId, true);
-  }, 0);
+  window.openRequestDetails(requestId, true);
+  return false;
 };
 
 window.submitRequestTargetedModification = function() {
