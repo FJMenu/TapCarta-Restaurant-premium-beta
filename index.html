@@ -3811,6 +3811,26 @@ ${!item.treated ? `
       activeRestaurantData.menu.updatedAt = '';
     }
 
+    function ensureTranslationBucket(source) {
+      const bucket = source && typeof source === 'object' ? source : {};
+
+      ['fr', 'es', 'en', 'nl'].forEach((lang) => {
+        if (!bucket[lang] || typeof bucket[lang] !== 'object') {
+          bucket[lang] = {};
+        }
+
+        if (typeof bucket[lang].name !== 'string') {
+          bucket[lang].name = '';
+        }
+
+        if (typeof bucket[lang].subtitle !== 'string') {
+          bucket[lang].subtitle = '';
+        }
+      });
+
+      return bucket;
+    }
+
     activeRestaurantData.menu.categories = activeRestaurantData.menu.categories.map((category, categoryIndex) => {
       const normalizedCategory = category && typeof category === 'object' ? category : {};
 
@@ -3848,6 +3868,8 @@ ${!item.treated ? `
         if (typeof normalizedItem.subtitle !== 'string') {
           normalizedItem.subtitle = '';
         }
+
+        normalizedItem.translations = ensureTranslationBucket(normalizedItem.translations);
 
         if (typeof normalizedItem.price !== 'number') {
           normalizedItem.price = 0;
