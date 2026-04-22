@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.8';
+            const APP_VERSION = 'V1.1.9';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -4012,8 +4012,94 @@ ${!item.treated ? `
           ? 'No dish in this category.'
           : currentLang === 'nl'
             ? 'Geen gerecht in deze categorie.'
-            : 'Aucun plat dans cette catégorie.'
+            : 'Aucun plat dans cette catégorie.',
+      translations: currentLang === 'es'
+        ? 'Traducciones'
+        : currentLang === 'en'
+          ? 'Translations'
+          : currentLang === 'nl'
+            ? 'Vertalingen'
+            : 'Traductions',
+      manualTranslations: currentLang === 'es'
+        ? 'Edición manual por idioma'
+        : currentLang === 'en'
+          ? 'Manual edit by language'
+          : currentLang === 'nl'
+            ? 'Handmatige invoer per taal'
+            : 'Édition manuelle par langue',
+      mainValueHint: currentLang === 'es'
+        ? 'Valor principal'
+        : currentLang === 'en'
+          ? 'Main value'
+          : currentLang === 'nl'
+            ? 'Hoofdwaarde'
+            : 'Valeur principale'
     };
+
+    const translationLangs = [
+      { code: 'fr', label: 'FR' },
+      { code: 'es', label: 'ES' },
+      { code: 'en', label: 'EN' },
+      { code: 'nl', label: 'NL' }
+    ];
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    function renderTranslationFields(item, categoryIndex, itemIndex) {
+      const translations = item?.translations || {};
+
+      return `
+        <details class="mt-4 rounded-lg border border-white/8 bg-black/15">
+          <summary class="cursor-pointer list-none px-3 py-3 flex items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-cream">${editorText.translations}</div>
+              <div class="text-[11px] text-cream/50 mt-1">${editorText.manualTranslations}</div>
+            </div>
+            <span class="text-[11px] text-gold">${translationLangs.map((lang) => lang.label).join(' · ')}</span>
+          </summary>
+
+          <div class="px-3 pb-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${translationLangs.map((lang) => `
+              <div class="rounded-lg border border-white/8 bg-black/20 p-3">
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-gold mb-3">${lang.label}</div>
+
+                <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2">
+                  ${editorText.dishName}
+                </label>
+                <input
+                  type="text"
+                  value="${escapeHtml(translations?.[lang.code]?.name || '')}"
+                  data-category-index="${categoryIndex}"
+                  data-item-index="${itemIndex}"
+                  data-lang="${lang.code}"
+                  data-field="item-translation-name"
+                  class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+                >
+
+                <label class="block text-[11px] uppercase tracking-wide text-cream/45 mt-3 mb-2">
+                  ${editorText.subtitle}
+                </label>
+                <input
+                  type="text"
+                  value="${escapeHtml(translations?.[lang.code]?.subtitle || '')}"
+                  data-category-index="${categoryIndex}"
+                  data-item-index="${itemIndex}"
+                  data-lang="${lang.code}"
+                  data-field="item-translation-subtitle"
+                  class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+                >
+              </div>
+            `).join('')}
+          </div>
+        </details>
+      `;
+    }
 
     if (!categories.length) {
       container.innerHTML = `
@@ -4033,13 +4119,13 @@ ${!item.treated ? `
             </label>
             <input
               type="text"
-              value="${category.name || ''}"
+              value="${escapeHtml(category.name || '')}"
               data-category-index="${categoryIndex}"
               data-field="category-name"
               class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
             >
             <div class="text-xs text-cream/55 mt-2">
-              ID : ${category.id || '—'} · ${editorText.order} : ${typeof category.order === 'number' ? category.order : categoryIndex + 1}
+              ID : ${escapeHtml(category.id || '—')} · ${editorText.order} : ${typeof category.order === 'number' ? category.order : categoryIndex + 1}
             </div>
           </div>
 
@@ -4096,14 +4182,14 @@ ${!item.treated ? `
                   </label>
                   <input
                     type="text"
-                    value="${item.name || ''}"
+                    value="${escapeHtml(item.name || '')}"
                     data-category-index="${categoryIndex}"
                     data-item-index="${itemIndex}"
                     data-field="item-name"
                     class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
                   >
                   <div class="text-xs text-cream/55 mt-2">
-                    ID : ${item.id || '—'}
+                    ID : ${escapeHtml(item.id || '—')} · ${editorText.mainValueHint}
                   </div>
 
                   <label class="block text-[11px] uppercase tracking-wide text-cream/45 mt-3 mb-2">
@@ -4111,12 +4197,14 @@ ${!item.treated ? `
                   </label>
                   <input
                     type="text"
-                    value="${item.subtitle || ''}"
+                    value="${escapeHtml(item.subtitle || '')}"
                     data-category-index="${categoryIndex}"
                     data-item-index="${itemIndex}"
                     data-field="item-subtitle"
                     class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
                   >
+
+                  ${renderTranslationFields(item, categoryIndex, itemIndex)}
                 </div>
 
                 <div class="text-right flex-shrink-0">
@@ -4611,6 +4699,7 @@ ${!item.treated ? `
       const categoryIndex = Number(e.target.dataset.categoryIndex);
       const itemIndex = Number(e.target.dataset.itemIndex);
       const field = e.target.dataset.field;
+      const lang = e.target.dataset.lang;
 
       if (field === 'category-name') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]) return;
@@ -4629,6 +4718,34 @@ ${!item.treated ? `
       if (field === 'item-subtitle') {
         if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex]) return;
         activeRestaurantData.menu.categories[categoryIndex].items[itemIndex].subtitle = e.target.value;
+        markMenuTranslationWarningNeeded();
+        return;
+      }
+
+      if (field === 'item-translation-name') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex] || !lang) return;
+        const item = activeRestaurantData.menu.categories[categoryIndex].items[itemIndex];
+        if (!item.translations || typeof item.translations !== 'object') {
+          item.translations = {};
+        }
+        if (!item.translations[lang] || typeof item.translations[lang] !== 'object') {
+          item.translations[lang] = { name: '', subtitle: '' };
+        }
+        item.translations[lang].name = e.target.value;
+        markMenuTranslationWarningNeeded();
+        return;
+      }
+
+      if (field === 'item-translation-subtitle') {
+        if (!activeRestaurantData.menu?.categories?.[categoryIndex]?.items?.[itemIndex] || !lang) return;
+        const item = activeRestaurantData.menu.categories[categoryIndex].items[itemIndex];
+        if (!item.translations || typeof item.translations !== 'object') {
+          item.translations = {};
+        }
+        if (!item.translations[lang] || typeof item.translations[lang] !== 'object') {
+          item.translations[lang] = { name: '', subtitle: '' };
+        }
+        item.translations[lang].subtitle = e.target.value;
         markMenuTranslationWarningNeeded();
         return;
       }
