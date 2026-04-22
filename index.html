@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.9';
+            const APP_VERSION = 'V1.1.10';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2630,20 +2630,31 @@ function loadRestaurantRequests() {
     return Number.isFinite(parsedValue) ? parsedValue : Date.now();
   }
 
+  function isRequestStillActive(item, pendingStatus) {
+    if (!item) return false;
+
+    return (
+      item.status === pendingStatus ||
+      item.status === 'modification_requested'
+    );
+  }
+
   function shouldAutoDeleteHistory(item, pendingStatus) {
-    if (!item || item.status === pendingStatus) return false;
+    if (!item || isRequestStillActive(item, pendingStatus)) return false;
     if (item.historyDeleted === true) return true;
     return (Date.now() - getHistoryReferenceTimestamp(item)) > historyRetentionMs;
   }
 
   function normalizeRequestItem(item, requestType, pendingStatus, typeLabel) {
+    const isStillActive = isRequestStillActive(item, pendingStatus);
+
     return {
       id: item.requestId || `${requestType}_${Date.now()}`,
       type: typeLabel,
       client: item.customer?.name || 'Client',
       createdAt: item.createdAt ? new Date(item.createdAt).getTime() : Date.now(),
-      status: item.status === pendingStatus ? t.restaurantStatusNew : t.restaurantStatusProcessed,
-      treated: item.status !== pendingStatus,
+      status: isStillActive ? t.restaurantStatusNew : t.restaurantStatusProcessed,
+      treated: !isStillActive,
       sourceRequest: item
     };
   }
@@ -3120,6 +3131,90 @@ window.validateRequest = function(requestId) {
   renderMenu();
 };
 
+window.requestTargetedModification = function(requestId) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
+
+  if (!item || !item.sourceRequest) {
+    alert('Demande introuvable.');
+    return;
+  }
+
+  const source = item.sourceRequest;
+  const isOrder = !!source?.order;
+  const nowIso = new Date().toISOString();
+
+  let targetedChange = null;
+
+  if (isOrder) {
+    const proposedTime = window.prompt("Nouvelle heure proposée (laisser vide pour ne pas changer) :", source.order?.time || "");
+    if (proposedTime === null) return;
+
+    const unavailableItems = window.prompt("Article(s) indisponible(s) ou à ajuster :", "");
+    if (unavailableItems === null) return;
+
+    const replacementProposal = window.prompt("Proposition de remplacement courte (optionnel) :", "");
+    if (replacementProposal === null) return;
+
+    const shortMessage = window.prompt("Message court au client :", "");
+    if (shortMessage === null) return;
+
+    if (!proposedTime.trim() && !unavailableItems.trim() && !replacementProposal.trim() && !shortMessage.trim()) {
+      alert("Aucune modification saisie.");
+      return;
+    }
+
+    targetedChange = {
+      type: 'order',
+      proposedTime: proposedTime.trim() || null,
+      unavailableItems: unavailableItems.trim() || null,
+      replacementProposal: replacementProposal.trim() || null,
+      shortMessage: shortMessage.trim() || null
+    };
+  } else {
+    const proposedDate = window.prompt("Nouvelle date proposée (laisser vide pour ne pas changer) :", source.booking?.date || "");
+    if (proposedDate === null) return;
+
+    const proposedTime = window.prompt("Nouvelle heure proposée (laisser vide pour ne pas changer) :", source.booking?.time || "");
+    if (proposedTime === null) return;
+
+    const proposedPeople = window.prompt("Nouveau nombre de personnes (laisser vide pour ne pas changer) :", source.booking?.people != null ? String(source.booking.people) : "");
+    if (proposedPeople === null) return;
+
+    const shortMessage = window.prompt("Message court au client :", "");
+    if (shortMessage === null) return;
+
+    if (!proposedDate.trim() && !proposedTime.trim() && !proposedPeople.trim() && !shortMessage.trim()) {
+      alert("Aucune modification saisie.");
+      return;
+    }
+
+    targetedChange = {
+      type: 'booking',
+      proposedDate: proposedDate.trim() || null,
+      proposedTime: proposedTime.trim() || null,
+      proposedPeople: proposedPeople.trim() || null,
+      shortMessage: shortMessage.trim() || null
+    };
+  }
+
+  item.treated = false;
+  item.status = t.restaurantStatusNew;
+
+  item.sourceRequest.status = 'modification_requested';
+  item.sourceRequest.updatedAt = nowIso;
+  item.sourceRequest.modificationRequestedAt = nowIso;
+  item.sourceRequest.restaurantResponse = {
+    ...(item.sourceRequest.restaurantResponse || {}),
+    reason: 'modification_requested',
+    message: targetedChange.shortMessage || null,
+    targetedChange,
+    updatedBy: 'restaurant'
+  };
+
+  void void void void void persistRestaurantRequestUpdate(item.sourceRequest);
+  renderMenu();
+};
+
 window.deleteRequestFromHistory = function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
@@ -3228,9 +3323,12 @@ function renderRequestRow(item) {
 
         <div class="flex items-center gap-2 flex-wrap justify-end">
 ${!item.treated ? `
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap justify-end">
               <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
                 ${t.restaurantViewButton}
+              </button>
+              <button onclick="requestTargetedModification('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-white/15 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
+                Modifier
               </button>
               <button onclick="validateRequest('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
                 ${t.restaurantValidateButton}
