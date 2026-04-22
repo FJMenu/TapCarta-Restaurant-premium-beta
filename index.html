@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.3';
+            const APP_VERSION = 'V1.1.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3052,12 +3052,51 @@ window.deleteRequestFromHistory = function(requestId) {
   renderMenu();
 };
 
+function getRequestDisplayStatusMeta(item) {
+  const sourceStatus = item?.sourceRequest?.status || '';
+  const treated = item?.treated === true;
+
+  if (!treated) {
+    return {
+      label: t.restaurantStatusNew,
+      className: 'bg-red-500/15 text-red-300 border-red-400/30'
+    };
+  }
+
+  if (sourceStatus === 'cancelled') {
+    return {
+      label: currentLang === 'es' ? 'Cancelada' : currentLang === 'en' ? 'Cancelled' : currentLang === 'nl' ? 'Geannuleerd' : 'Annulée',
+      className: 'bg-red-500/15 text-red-200 border-red-400/30'
+    };
+  }
+
+  if (sourceStatus === 'confirmed') {
+    return {
+      label: currentLang === 'es' ? 'Confirmada' : currentLang === 'en' ? 'Confirmed' : currentLang === 'nl' ? 'Bevestigd' : 'Confirmée',
+      className: 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
+    };
+  }
+
+  if (sourceStatus === 'pending') {
+    return {
+      label: t.restaurantStatusPending,
+      className: 'bg-amber-500/15 text-amber-200 border-amber-400/30'
+    };
+  }
+
+  return {
+    label: t.restaurantStatusProcessed,
+    className: 'bg-white/10 text-cream border-white/15'
+  };
+}
+
 function renderRequestRow(item) {
     const isOrder = item.type === t.restaurantTypeOrder;
     const source = item.sourceRequest || {};
     const orderItems = Array.isArray(source.order?.items) ? source.order.items : [];
     const bookingPeople = source.booking?.people ?? null;
     const isHistorySelected = selectedHistoryRequestIds.has(String(item.id));
+    const statusMeta = getRequestDisplayStatusMeta(item);
 
     const previewLabel = isOrder
       ? (orderItems.length
@@ -3086,7 +3125,7 @@ function renderRequestRow(item) {
               <i data-lucide="${typeIcon}" class="w-3.5 h-3.5"></i>
               ${item.type}
             </span>
-            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${getStatusClass(item.status)}">${item.status}</span>
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${statusMeta.className}">${statusMeta.label}</span>
           </div>
 
           <div class="text-sm font-semibold text-cream">${item.client}</div>
@@ -3148,10 +3187,18 @@ ${!item.treated ? `
 
     <div class="inline-flex items-center gap-3 self-start rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
       <div class="text-2xl font-bold text-gold">
-        ${siteConfig.orderReservationOptionEnabled ? '—' : '—'}
+        ${siteConfig.orderReservationOptionEnabled ? activeRequests.length : '—'}
       </div>
       <div class="text-xs text-cream/70 leading-tight">
-        ${siteConfig.orderReservationOptionEnabled ? `Flux réel<br>non branché` : `${t.optionInactiveCounterLine1}<br>${t.optionInactiveCounterLine2}`}
+        ${siteConfig.orderReservationOptionEnabled
+          ? (currentLang === 'es'
+              ? 'Flux reserva<br>activo'
+              : currentLang === 'en'
+                ? 'Booking flow<br>active'
+                : currentLang === 'nl'
+                  ? 'Reservatieflow<br>actief'
+                  : 'Flux réservation<br>actif')
+          : `${t.optionInactiveCounterLine1}<br>${t.optionInactiveCounterLine2}`}
       </div>
     </div>
   </div>
@@ -3170,7 +3217,13 @@ ${!item.treated ? `
           </h3>
 
           <p class="text-sm text-cream/75 leading-relaxed max-w-3xl">
-            Demandes reçues localement depuis Standard pour validation de la base de flux.
+            ${currentLang === 'es'
+              ? 'Solicitudes visibles en la interfaz restaurante con suivi de estado de reserva.'
+              : currentLang === 'en'
+                ? 'Requests visible in the restaurant interface with booking status tracking.'
+                : currentLang === 'nl'
+                  ? 'Aanvragen zichtbaar in de restaurantinterface met opvolging van reservatiestatus.'
+                  : 'Demandes visibles dans l’interface restaurant avec suivi du statut de réservation.'}
           </p>
         </div>
 
