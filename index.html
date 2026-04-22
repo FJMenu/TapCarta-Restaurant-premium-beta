@@ -233,13 +233,15 @@
 
     .menu-editor-floating-save {
       position: fixed;
-      right: 20px;
-      bottom: 20px;
+      right: 16px;
+      bottom: 16px;
       z-index: 80;
       display: none;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
       pointer-events: none;
+      width: auto;
+      max-width: calc(100vw - 32px);
     }
 
     .menu-editor-floating-save.visible {
@@ -250,6 +252,13 @@
     .menu-editor-floating-save .menu-editor-floating-save-btn {
       box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
       border-width: 1px;
+      min-height: 52px;
+      max-width: min(360px, calc(100vw - 32px));
+      padding-left: 18px;
+      padding-right: 18px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     @media (max-width: 767px) {
@@ -257,10 +266,12 @@
         left: 16px;
         right: 16px;
         bottom: 16px;
+        max-width: none;
       }
 
       .menu-editor-floating-save .menu-editor-floating-save-btn {
         width: 100%;
+        max-width: none;
       }
     }
 
@@ -4362,9 +4373,7 @@ ${!item.treated ? `
 
       const floatingLabelSpan = floatingButton.querySelector('span');
       if (floatingLabelSpan) {
-        floatingLabelSpan.textContent = menuEditorDirty
-          ? `${getMenuSaveDefaultLabel()} • ${getMenuUnsavedChangesLabel()}`
-          : getMenuSaveDefaultLabel();
+        floatingLabelSpan.textContent = getMenuSaveDefaultLabel();
       }
     }
 
