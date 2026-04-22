@@ -3858,7 +3858,7 @@ window.requestTargetedModification = function(requestId) {
   return false;
 };
 
-window.submitRequestTargetedModification = function() {
+window.submitRequestTargetedModification = async function() {
   const state = window.tapCartaRequestDetailsState || {};
   const requestId = state.requestId;
 
@@ -3880,7 +3880,7 @@ window.submitRequestTargetedModification = function() {
   const additionalMessage = (document.getElementById('request-modify-additional-message')?.value || '').trim();
 
   const originalDate = (source.booking?.date || '').trim();
-  const originalTime = (isOrder ? source.order?.time : source.booking?.time || '').trim();
+  const originalTime = ((isOrder ? source.order?.time : source.booking?.time) || '').trim();
   const originalPeople = String(source.booking?.people != null ? source.booking.people : '').trim();
 
   if (!selectedReason) {
@@ -3942,9 +3942,9 @@ window.submitRequestTargetedModification = function() {
     updatedBy: 'restaurant'
   };
 
-  closeRequestDetailsModal();
-  void void void void void persistRestaurantRequestUpdate(item.sourceRequest);
+  await persistRestaurantRequestUpdate(item.sourceRequest);
   renderMenu();
+  window.openRequestDetails(requestId, false);
 };
 
 window.deleteRequestFromHistory = function(requestId) {
