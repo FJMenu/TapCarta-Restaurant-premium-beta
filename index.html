@@ -2762,7 +2762,7 @@ window.validateSelectedRequests = function() {
       updatedBy: 'restaurant'
     };
 
-    persistRestaurantRequestUpdate(item.sourceRequest);
+    void void void void void persistRestaurantRequestUpdate(item.sourceRequest);
   });
 
   window.selectedRequestIds = new Set();
@@ -2812,7 +2812,7 @@ window.deleteSelectedHistoryRequests = function() {
     item.sourceRequest.historyUpdatedAt = nowIso;
     item.sourceRequest.updatedAt = nowIso;
 
-    persistRestaurantRequestUpdate(item.sourceRequest);
+    void void void persistRestaurantRequestUpdate(item.sourceRequest);
   });
 
   window.selectedHistoryRequestIds = new Set();
@@ -2862,8 +2862,12 @@ function getElapsedLabel(item) {
       : 'bg-sky-500/15 text-sky-200 border-sky-400/30';
   }
 
-function persistRestaurantRequestUpdate(updatedRequest) {
+async function persistRestaurantRequestUpdate(updatedRequest) {
   const isOrderRequest = !!updatedRequest?.order;
+  const isLiveBookingRequest =
+    !isOrderRequest &&
+    (updatedRequest?.requestType === 'booking' || updatedRequest?.liveRequestId);
+
   const storageKey = isOrderRequest ? 'tapcarta_order_requests' : 'tapcarta_booking_requests';
   const lastKey = isOrderRequest ? 'tapcarta_last_order_request' : 'tapcarta_last_booking_request';
 
@@ -2871,29 +2875,29 @@ function persistRestaurantRequestUpdate(updatedRequest) {
     const raw = localStorage.getItem(storageKey);
     const parsed = raw ? JSON.parse(raw) : [];
 
-    if (!Array.isArray(parsed)) return;
-
-    const updatedList = parsed.map((entry) => {
-      if (String(entry?.requestId) !== String(updatedRequest?.requestId)) {
-        return entry;
-      }
-
-      return {
-        ...entry,
-        status: updatedRequest.status || entry.status,
-        updatedAt: updatedRequest.updatedAt || entry.updatedAt || new Date().toISOString(),
-        confirmedAt: updatedRequest.confirmedAt || entry.confirmedAt,
-        cancelledAt: updatedRequest.cancelledAt || entry.cancelledAt,
-        historyDeleted: updatedRequest.historyDeleted === true ? true : entry.historyDeleted === true,
-        historyUpdatedAt: updatedRequest.historyUpdatedAt || entry.historyUpdatedAt,
-        restaurantResponse: {
-          ...(entry.restaurantResponse || {}),
-          ...(updatedRequest.restaurantResponse || {})
+    if (Array.isArray(parsed)) {
+      const updatedList = parsed.map((entry) => {
+        if (String(entry?.requestId) !== String(updatedRequest?.requestId)) {
+          return entry;
         }
-      };
-    });
 
-    localStorage.setItem(storageKey, JSON.stringify(updatedList));
+        return {
+          ...entry,
+          status: updatedRequest.status || entry.status,
+          updatedAt: updatedRequest.updatedAt || entry.updatedAt || new Date().toISOString(),
+          confirmedAt: updatedRequest.confirmedAt || entry.confirmedAt,
+          cancelledAt: updatedRequest.cancelledAt || entry.cancelledAt,
+          historyDeleted: updatedRequest.historyDeleted === true ? true : entry.historyDeleted === true,
+          historyUpdatedAt: updatedRequest.historyUpdatedAt || entry.historyUpdatedAt,
+          restaurantResponse: {
+            ...(entry.restaurantResponse || {}),
+            ...(updatedRequest.restaurantResponse || {})
+          }
+        };
+      });
+
+      localStorage.setItem(storageKey, JSON.stringify(updatedList));
+    }
 
     const lastRaw = localStorage.getItem(lastKey);
     const lastParsed = lastRaw ? JSON.parse(lastRaw) : null;
@@ -2915,6 +2919,23 @@ function persistRestaurantRequestUpdate(updatedRequest) {
           }
         })
       );
+    }
+
+    if (isLiveBookingRequest && updatedRequest?.liveRequestId) {
+      const livePayload = {
+        status: updatedRequest.status || 'pending',
+        updated_at: updatedRequest.updatedAt || new Date().toISOString(),
+        restaurant_message: updatedRequest?.restaurantResponse?.message || null
+      };
+
+      const { error } = await supabaseClient
+        .from('requests')
+        .update(livePayload)
+        .eq('id', updatedRequest.liveRequestId);
+
+      if (error) {
+        console.warn('TapCarta Restaurant: impossible de synchroniser la réservation live', error);
+      }
     }
   } catch (error) {
     console.warn('TapCarta Restaurant: impossible de persister la mise à jour de demande', error);
@@ -3003,7 +3024,7 @@ window.validateRequest = function(requestId) {
     updatedBy: 'restaurant'
   };
 
-  persistRestaurantRequestUpdate(item.sourceRequest);
+  void void void void void persistRestaurantRequestUpdate(item.sourceRequest);
   renderMenu();
 };
 
@@ -3027,7 +3048,7 @@ window.deleteRequestFromHistory = function(requestId) {
   item.sourceRequest.historyUpdatedAt = nowIso;
   item.sourceRequest.updatedAt = nowIso;
 
-  persistRestaurantRequestUpdate(item.sourceRequest);
+  void void void void void persistRestaurantRequestUpdate(item.sourceRequest);
   renderMenu();
 };
 
