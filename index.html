@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.7';
+            const APP_VERSION = 'V1.1.8';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3481,7 +3481,13 @@ ${!item.treated ? `
                 class="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 text-sm font-semibold text-gold shadow-lg hover:bg-gold/10 transition-all min-h-[58px]"
               >
                 <i data-lucide="refresh-cw" class="w-5 h-5 text-gold"></i>
-                <span>Actualiser la page</span>
+                <span>${currentLang === 'es'
+                  ? 'Actualizar la página'
+                  : currentLang === 'en'
+                    ? 'Refresh page'
+                    : currentLang === 'nl'
+                      ? 'Pagina vernieuwen'
+                      : 'Actualiser la page'}</span>
               </button>
 
               <div class="inline-flex items-center justify-center gap-3 px-5 py-4 rounded-2xl border border-gold/25 bg-black/15 shadow-lg min-h-[58px]">
@@ -3490,7 +3496,13 @@ ${!item.treated ? `
                 </div>
                 <div class="text-left">
                   <div class="text-sm font-semibold text-cream leading-tight">TapCarta Resto</div>
-                  <div class="text-xs text-gold/85 mt-1 leading-tight">Gestion restaurant</div>
+                  <div class="text-xs text-gold/85 mt-1 leading-tight">${currentLang === 'es'
+                    ? 'Gestión restaurante'
+                    : currentLang === 'en'
+                      ? 'Restaurant management'
+                      : currentLang === 'nl'
+                        ? 'Restaurantbeheer'
+                        : 'Gestion restaurant'}</div>
                 </div>
               </div>
 
@@ -3683,6 +3695,21 @@ ${!item.treated ? `
               </div>
 
               <div class="flex flex-wrap gap-3">
+                <button
+                  id="restaurant-close-menu-editor-btn"
+                  type="button"
+                  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+                >
+                  <i data-lucide="arrow-left" class="w-4 h-4 text-cream"></i>
+                  <span>${currentLang === 'es'
+                    ? 'Volver'
+                    : currentLang === 'en'
+                      ? 'Back'
+                      : currentLang === 'nl'
+                        ? 'Terug'
+                        : 'Retour'}</span>
+                </button>
+
                 <button
                   id="restaurant-add-category-btn"
                   type="button"
@@ -4494,6 +4521,7 @@ ${!item.treated ? `
 
   const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
   const editorSection = document.getElementById('restaurant-menu-editor-section');
+  const closeEditorBtn = document.getElementById('restaurant-close-menu-editor-btn');
   const addCategoryBtn = document.getElementById('restaurant-add-category-btn');
   const exportJsonBtn = document.getElementById('restaurant-save-menu-json-btn');
   const floatingSaveBtn = document.getElementById('restaurant-save-menu-floating-btn');
@@ -4504,26 +4532,46 @@ ${!item.treated ? `
     document.body.classList.toggle('menu-editor-open', isEditorOpen);
   }
 
+  function closeMenuEditor() {
+    if (!editorSection || editorSection.classList.contains('hidden')) return;
+    if (!confirmLeaveMenuEditorIfDirty()) return;
+
+    editorSection.classList.add('hidden');
+    syncMenuEditorUiState();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   if (editorToggleBtn && editorSection) {
     syncMenuEditorUiState();
 
     editorToggleBtn.addEventListener('click', () => {
       const willOpen = editorSection.classList.contains('hidden');
 
-      editorSection.classList.toggle('hidden');
-      syncMenuEditorUiState();
-
-      if (willOpen) {
-        renderRestaurantMenuEditor();
-        requestAnimationFrame(() => {
-          editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+      if (!willOpen) {
+        closeMenuEditor();
+        return;
       }
+
+      editorSection.classList.remove('hidden');
+      syncMenuEditorUiState();
+      renderRestaurantMenuEditor();
+      updateMenuEditorDirtyUi();
+
+      requestAnimationFrame(() => {
+        editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     });
   }
 
+  if (closeEditorBtn) {
+    closeEditorBtn.addEventListener('click', closeMenuEditor);
+  }
+
   if (addCategoryBtn) {
-    addCategoryBtn.addEventListener('click', addRestaurantCategory);
+    addCategoryBtn.addEventListener('click', () => {
+      markMenuEditorDirty();
+      addRestaurantCategory();
+    });
   }
 
   if (exportJsonBtn) {
