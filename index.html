@@ -1066,7 +1066,7 @@ restaurantNoOrdersPending: 'Aucune commande en attente.',
 restaurantNoBookingsPending: 'Aucune réservation en attente.',
 restaurantProcessedTitle: 'Demandes traitées',
 restaurantNoProcessed: 'Aucune demande traitée pour le moment.',
-restaurantViewButton: 'Voir',
+restaurantViewButton: 'Voir / gérer',
 restaurantModifyButton: 'Modifier',
 restaurantValidateButton: 'Valider',
 restaurantValidatedLabel: 'Validée',
@@ -1287,7 +1287,7 @@ restaurantNoOrdersPending: 'Ningún pedido pendiente.',
 restaurantNoBookingsPending: 'Ninguna reserva pendiente.',
 restaurantProcessedTitle: 'Solicitudes procesadas',
 restaurantNoProcessed: 'Ninguna solicitud procesada por el momento.',
-restaurantViewButton: 'Ver',
+restaurantViewButton: 'Ver / gestionar',
 restaurantModifyButton: 'Modificar',
 restaurantValidateButton: 'Validar',
 restaurantValidatedLabel: 'Validada',
@@ -1509,7 +1509,7 @@ restaurantNoOrdersPending: 'No pending orders.',
 restaurantNoBookingsPending: 'No pending bookings.',
 restaurantProcessedTitle: 'Processed requests',
 restaurantNoProcessed: 'No processed requests for the moment.',
-restaurantViewButton: 'View',
+restaurantViewButton: 'View / manage',
 restaurantModifyButton: 'Modify',
 restaurantValidateButton: 'Validate',
 restaurantValidatedLabel: 'Validated',
@@ -1731,7 +1731,7 @@ restaurantNoOrdersPending: 'Geen bestellingen in afwachting.',
 restaurantNoBookingsPending: 'Geen reservaties in afwachting.',
 restaurantProcessedTitle: 'Verwerkte aanvragen',
 restaurantNoProcessed: 'Nog geen verwerkte aanvragen.',
-restaurantViewButton: 'Bekijken',
+restaurantViewButton: 'Bekijken / beheren',
 restaurantModifyButton: 'Wijzigen',
 restaurantValidateButton: 'Valideren',
 restaurantValidatedLabel: 'Gevalideerd',
@@ -3215,6 +3215,22 @@ function formatRequestAmount(amount) {
     : '-';
 }
 
+function escapeRequestDetailsHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function escapeRequestDetailsHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
 function buildRequestDetailsRows(item) {
   const source = item.sourceRequest || {};
   const isOrder = !!source?.order;
@@ -3229,23 +3245,23 @@ function buildRequestDetailsRows(item) {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
           <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsCustomer}</div>
-          <div class="text-sm font-semibold text-cream">${escapeHtml(source.customer?.name || '-')}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.name || '-')}</div>
         </div>
         <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
           <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPhone}</div>
-          <div class="text-sm font-semibold text-cream">${escapeHtml(source.customer?.phone || '-')}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.phone || '-')}</div>
         </div>
         <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
           <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsLanguage}</div>
-          <div class="text-sm font-semibold text-cream">${escapeHtml(source.customer?.language || '-')}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.language || '-')}</div>
         </div>
         <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
           <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsDate}</div>
-          <div class="text-sm font-semibold text-cream">${escapeHtml(source.order?.date || '-')}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.order?.date || '-')}</div>
         </div>
         <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
           <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsTime}</div>
-          <div class="text-sm font-semibold text-cream">${escapeHtml(source.order?.time || '-')}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.order?.time || '-')}</div>
         </div>
         <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
           <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsTotal}</div>
@@ -3253,11 +3269,11 @@ function buildRequestDetailsRows(item) {
         </div>
         <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
           <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsItems}</div>
-          <div class="text-sm font-semibold text-cream">${escapeHtml(itemsLabel)}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(itemsLabel)}</div>
         </div>
         <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
           <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsNote}</div>
-          <div class="text-sm font-semibold text-cream">${escapeHtml(source.order?.note || t.restaurantDetailsNone)}</div>
+          <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.order?.note || t.restaurantDetailsNone)}</div>
         </div>
       </div>
     `;
@@ -3272,35 +3288,35 @@ function buildRequestDetailsRows(item) {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
         <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsCustomer}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(source.customer?.name || '-')}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.name || '-')}</div>
       </div>
       <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
         <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPhone}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(source.customer?.phone || '-')}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.phone || '-')}</div>
       </div>
       <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
         <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsLanguage}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(source.customer?.language || '-')}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.language || '-')}</div>
       </div>
       <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
         <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsDate}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(source.booking?.date || '-')}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.booking?.date || '-')}</div>
       </div>
       <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
         <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsTime}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(source.booking?.time || '-')}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.booking?.time || '-')}</div>
       </div>
       <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
         <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPeople}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(String(source.booking?.people ?? '-'))}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(String(source.booking?.people ?? '-'))}</div>
       </div>
       <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
         <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsNote}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(source.booking?.note || t.restaurantDetailsNone)}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.booking?.note || t.restaurantDetailsNone)}</div>
       </div>
       <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
         <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPreorder}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(source.booking?.preorderIndicativeEnabled ? preorderLabel : t.restaurantDetailsDisabled)}</div>
+        <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.booking?.preorderIndicativeEnabled ? preorderLabel : t.restaurantDetailsDisabled)}</div>
       </div>
     </div>
   `;
