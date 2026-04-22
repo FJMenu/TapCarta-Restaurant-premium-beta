@@ -3209,7 +3209,15 @@ ${!item.treated ? `
         <div class="min-w-0">
           <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/25 bg-black/15 mb-3">
             <i data-lucide="inbox" class="w-4 h-4 text-gold"></i>
-            <span class="text-xs font-semibold text-gold">V0.1.0 bêta interne</span>
+            <span class="text-xs font-semibold text-gold">
+              ${currentLang === 'es'
+                ? 'Interface restaurante'
+                : currentLang === 'en'
+                  ? 'Restaurant interface'
+                  : currentLang === 'nl'
+                    ? 'Restaurantinterface'
+                    : 'Interface restaurant'}
+            </span>
           </div>
 
           <h3 class="font-display text-lg md:text-xl font-bold text-cream mb-2">
@@ -3378,8 +3386,24 @@ ${!item.treated ? `
                     ${t.restaurantHeaderStatus}
                   </p>
                   <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/25 bg-black/15">
-                    <span class="text-[11px] uppercase tracking-wide text-cream/50">${t.restaurantVersionLabel}</span>
-                    <span class="text-xs font-semibold text-gold">${APP_VERSION}</span>
+                    <span class="text-[11px] uppercase tracking-wide text-cream/50">
+                      ${currentLang === 'es'
+                        ? 'Estado'
+                        : currentLang === 'en'
+                          ? 'Status'
+                          : currentLang === 'nl'
+                            ? 'Status'
+                            : 'Statut'}
+                    </span>
+                    <span class="text-xs font-semibold text-gold">
+                      ${currentLang === 'es'
+                        ? 'Activo'
+                        : currentLang === 'en'
+                          ? 'Active'
+                          : currentLang === 'nl'
+                            ? 'Actief'
+                            : 'Actif'}
+                    </span>
                   </div>
                 </div>
               </div>
