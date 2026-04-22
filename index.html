@@ -231,6 +231,39 @@
       }
     }
 
+    .menu-editor-floating-save {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .menu-editor-floating-save.visible {
+      display: flex;
+      pointer-events: auto;
+    }
+
+    .menu-editor-floating-save .menu-editor-floating-save-btn {
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+      border-width: 1px;
+    }
+
+    @media (max-width: 767px) {
+      .menu-editor-floating-save {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+      }
+
+      .menu-editor-floating-save .menu-editor-floating-save-btn {
+        width: 100%;
+      }
+    }
+
     .lang-btn {
       min-width: 48px;
       height: 44px;
@@ -3686,6 +3719,26 @@ ${!item.treated ? `
               <div id="restaurant-menu-categories-list" class="space-y-4"></div>
             </div>
           </article>
+
+          <div
+            id="restaurant-menu-floating-save-wrap"
+            class="menu-editor-floating-save"
+          >
+            <button
+              id="restaurant-save-menu-floating-btn"
+              type="button"
+              class="menu-editor-floating-save-btn btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 bg-[#151515]/95 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
+            >
+              <i data-lucide="check" class="w-4 h-4 text-gold"></i>
+              <span>${currentLang === 'es'
+                ? 'Validar los cambios'
+                : currentLang === 'en'
+                  ? 'Apply changes'
+                  : currentLang === 'nl'
+                    ? 'Wijzigingen bevestigen'
+                    : 'Valider les modifications'}</span>
+            </button>
+          </div>
         </section>
       </div>
     </main>
@@ -4141,6 +4194,8 @@ ${!item.treated ? `
   function updateMenuEditorDirtyUi() {
     const banner = document.getElementById('restaurant-menu-unsaved-banner');
     const saveButton = document.getElementById('restaurant-save-menu-json-btn');
+    const floatingWrap = document.getElementById('restaurant-menu-floating-save-wrap');
+    const floatingButton = document.getElementById('restaurant-save-menu-floating-btn');
 
     if (banner) {
       banner.classList.toggle('hidden', !menuEditorDirty);
@@ -4154,6 +4209,23 @@ ${!item.treated ? `
       const labelSpan = saveButton.querySelector('span');
       if (labelSpan) {
         labelSpan.textContent = menuEditorDirty
+          ? `${getMenuSaveDefaultLabel()} • ${getMenuUnsavedChangesLabel()}`
+          : getMenuSaveDefaultLabel();
+      }
+    }
+
+    if (floatingWrap) {
+      floatingWrap.classList.toggle('visible', !!menuEditorDirty);
+    }
+
+    if (floatingButton) {
+      floatingButton.classList.toggle('border-amber-400/50', menuEditorDirty);
+      floatingButton.classList.toggle('bg-amber-500/10', menuEditorDirty);
+      floatingButton.classList.toggle('text-amber-100', menuEditorDirty);
+
+      const floatingLabelSpan = floatingButton.querySelector('span');
+      if (floatingLabelSpan) {
+        floatingLabelSpan.textContent = menuEditorDirty
           ? `${getMenuSaveDefaultLabel()} • ${getMenuUnsavedChangesLabel()}`
           : getMenuSaveDefaultLabel();
       }
@@ -4424,6 +4496,7 @@ ${!item.treated ? `
   const editorSection = document.getElementById('restaurant-menu-editor-section');
   const addCategoryBtn = document.getElementById('restaurant-add-category-btn');
   const exportJsonBtn = document.getElementById('restaurant-save-menu-json-btn');
+  const floatingSaveBtn = document.getElementById('restaurant-save-menu-floating-btn');
   const editorList = document.getElementById('restaurant-menu-categories-list');
 
   function syncMenuEditorUiState() {
@@ -4455,6 +4528,10 @@ ${!item.treated ? `
 
   if (exportJsonBtn) {
     exportJsonBtn.addEventListener('click', exportRestaurantJson);
+  }
+
+  if (floatingSaveBtn) {
+    floatingSaveBtn.addEventListener('click', exportRestaurantJson);
   }
 
   if (editorList) {
