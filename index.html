@@ -2698,6 +2698,15 @@ function syncRequestsState() {
 
 syncRequestsState();
 
+if (!window.tapCartaRestaurantLiveBookingBootstrapDone) {
+  window.tapCartaRestaurantLiveBookingBootstrapDone = true;
+
+  void syncLiveBookingsToLocalStorage().then(() => {
+    syncRequestsState();
+    renderMenu();
+  });
+}
+
 window.toggleRequestSelection = function(requestId) {
   const normalizedId = String(requestId);
 
@@ -4319,7 +4328,7 @@ ${!item.treated ? `
     clearInterval(window.tapCartaRestaurantRefreshState.requestsIntervalId);
   }
 
-  window.tapCartaRestaurantRefreshState.requestsIntervalId = window.setInterval(() => {
+  window.tapCartaRestaurantRefreshState.requestsIntervalId = window.setInterval(async () => {
     const requestsPanelEl = document.getElementById('restaurant-requests-panel');
     const requestsCountEl = document.getElementById('restaurant-active-requests-count');
     const requestsListEl = requestsPanelEl
@@ -4330,6 +4339,7 @@ ${!item.treated ? `
       return;
     }
 
+    await syncLiveBookingsToLocalStorage();
     syncRequestsState();
 
     requestsCountEl.textContent = String(activeRequests.length);
