@@ -3943,7 +3943,8 @@ window.submitRequestTargetedModification = async function() {
   };
 
   await persistRestaurantRequestUpdate(item.sourceRequest);
-  renderMenu();
+  syncRequestsState();
+  removeRequestDetailsModal();
   window.openRequestDetails(requestId, false);
 };
 
