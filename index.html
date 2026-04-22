@@ -3874,43 +3874,58 @@ window.submitRequestTargetedModification = function() {
   const isOrder = !!source?.order;
   const nowIso = new Date().toISOString();
 
+  const selectedReason = (document.getElementById('request-modify-reason')?.value || '').trim();
+  const proposedDate = (document.getElementById('request-modify-date')?.value || '').trim();
+  const proposedTime = (document.getElementById('request-modify-time')?.value || '').trim();
+  const proposedPeople = (document.getElementById('request-modify-people')?.value || '').trim();
+  const additionalMessage = (document.getElementById('request-modify-additional-message')?.value || '').trim();
+
+  const originalDate = (source.booking?.date || '').trim();
+  const originalTime = (isOrder ? source.order?.time : source.booking?.time || '').trim();
+  const originalPeople = String(source.booking?.people != null ? source.booking.people : '').trim();
+
+  if (!selectedReason) {
+    alert(t.restaurantNoModificationEntered);
+    return;
+  }
+
   let targetedChange = null;
 
   if (isOrder) {
-    const proposedTime = (document.getElementById('request-modify-time')?.value || '').trim();
-    const unavailableItems = (document.getElementById('request-modify-unavailable-items')?.value || '').trim();
-    const replacementProposal = (document.getElementById('request-modify-replacement')?.value || '').trim();
-    const shortMessage = (document.getElementById('request-modify-short-message')?.value || '').trim();
+    const timeChanged = proposedTime !== originalTime;
+    const hasAdditionalMessage = !!additionalMessage;
 
-    if (!proposedTime && !unavailableItems && !replacementProposal && !shortMessage) {
+    if (!timeChanged && !hasAdditionalMessage) {
       alert(t.restaurantNoModificationEntered);
       return;
     }
 
     targetedChange = {
       type: 'order',
+      reason: selectedReason,
       proposedTime: proposedTime || null,
-      unavailableItems: unavailableItems || null,
-      replacementProposal: replacementProposal || null,
-      shortMessage: shortMessage || null
+      additionalMessage: additionalMessage || null,
+      shortMessage: additionalMessage || null
     };
   } else {
-    const proposedDate = (document.getElementById('request-modify-date')?.value || '').trim();
-    const proposedTime = (document.getElementById('request-modify-time')?.value || '').trim();
-    const proposedPeople = (document.getElementById('request-modify-people')?.value || '').trim();
-    const shortMessage = (document.getElementById('request-modify-short-message')?.value || '').trim();
+    const dateChanged = proposedDate !== originalDate;
+    const timeChanged = proposedTime !== originalTime;
+    const peopleChanged = proposedPeople !== originalPeople;
+    const hasAdditionalMessage = !!additionalMessage;
 
-    if (!proposedDate && !proposedTime && !proposedPeople && !shortMessage) {
+    if (!dateChanged && !timeChanged && !peopleChanged && !hasAdditionalMessage) {
       alert(t.restaurantNoModificationEntered);
       return;
     }
 
     targetedChange = {
       type: 'booking',
+      reason: selectedReason,
       proposedDate: proposedDate || null,
       proposedTime: proposedTime || null,
       proposedPeople: proposedPeople || null,
-      shortMessage: shortMessage || null
+      additionalMessage: additionalMessage || null,
+      shortMessage: additionalMessage || null
     };
   }
 
@@ -3922,8 +3937,8 @@ window.submitRequestTargetedModification = function() {
   item.sourceRequest.modificationRequestedAt = nowIso;
   item.sourceRequest.restaurantResponse = {
     ...(item.sourceRequest.restaurantResponse || {}),
-    reason: 'modification_requested',
-    message: targetedChange.shortMessage || null,
+    reason: selectedReason,
+    message: additionalMessage || null,
     targetedChange,
     updatedBy: 'restaurant'
   };
