@@ -3268,15 +3268,71 @@ function getRequestActionTexts() {
   };
 }
 
-function getRequestActionPresets(isOrder, mode) {
-  const texts = getRequestActionTexts();
+function getRequestActionPresets(isOrder, mode, targetLang = currentLang, hasProposedTime = false) {
+  const actionTextsByLang = (lang) => {
+    if (lang === 'es') {
+      return {
+        otherReason: 'Otro',
+        modifiedOrderDefault: hasProposedTime
+          ? 'El restaurante le ha propuesto una adaptación de su pedido.'
+          : 'El restaurante le propone una adaptación de su pedido.',
+        modifiedBookingDefault: hasProposedTime
+          ? 'El restaurante le ha propuesto una adaptación de su reserva.'
+          : 'El restaurante le propone una adaptación de su reserva.',
+        cancelledOrderDefault: 'Pedido cancelado por el restaurante.',
+        cancelledBookingDefault: 'Reserva cancelada por el restaurante.'
+      };
+    }
 
-  if (currentLang === 'es') {
+    if (lang === 'en') {
+      return {
+        otherReason: 'Other',
+        modifiedOrderDefault: hasProposedTime
+          ? 'The restaurant has proposed an adjustment to your order.'
+          : 'The restaurant proposes an adjustment to your order.',
+        modifiedBookingDefault: hasProposedTime
+          ? 'The restaurant has proposed an adjustment to your booking.'
+          : 'The restaurant proposes an adjustment to your booking.',
+        cancelledOrderDefault: 'Order cancelled by the restaurant.',
+        cancelledBookingDefault: 'Booking cancelled by the restaurant.'
+      };
+    }
+
+    if (lang === 'nl') {
+      return {
+        otherReason: 'Andere',
+        modifiedOrderDefault: hasProposedTime
+          ? 'Het restaurant heeft een aanpassing van uw bestelling voorgesteld.'
+          : 'Het restaurant stelt een aanpassing van uw bestelling voor.',
+        modifiedBookingDefault: hasProposedTime
+          ? 'Het restaurant heeft een aanpassing van uw reservatie voorgesteld.'
+          : 'Het restaurant stelt een aanpassing van uw reservatie voor.',
+        cancelledOrderDefault: 'Bestelling geannuleerd door het restaurant.',
+        cancelledBookingDefault: 'Reservatie geannuleerd door het restaurant.'
+      };
+    }
+
+    return {
+      otherReason: 'Autre',
+      modifiedOrderDefault: hasProposedTime
+        ? 'Le restaurant vous a proposé une adaptation de votre commande.'
+        : 'Le restaurant vous propose une adaptation de votre commande.',
+      modifiedBookingDefault: hasProposedTime
+        ? 'Le restaurant vous a proposé une adaptation de votre réservation.'
+        : 'Le restaurant vous propose une adaptation de votre réservation.',
+      cancelledOrderDefault: 'Commande annulée par le restaurant.',
+      cancelledBookingDefault: 'Réservation annulée par le restaurant.'
+    };
+  };
+
+  const texts = actionTextsByLang(targetLang);
+
+  if (targetLang === 'es') {
     if (isOrder && mode === 'modify') {
       return [
-        { reason: 'kitchen_temporary_closed', label: 'Cocina cerrada temporalmente', message: 'La cocina está cerrada temporalmente en el horario solicitado. Podemos proponerle otra hora.' },
+        { reason: 'kitchen_temporary_closed', label: 'Cocina cerrada temporalmente', message: hasProposedTime ? 'La cocina está cerrada temporalmente en el horario solicitado. Le hemos propuesto otra hora.' : 'La cocina está cerrada temporalmente en el horario solicitado. Podemos proponerle otra hora.' },
         { reason: 'item_unavailable', label: 'Artículo no disponible', message: 'Uno de los artículos solicitados ya no está disponible. La carta ha sido actualizada en su aplicación.' },
-        { reason: 'longer_delay', label: 'Plazo más largo de lo previsto', message: 'El plazo es más largo de lo previsto en el horario solicitado. Podemos proponerle otra hora.' },
+        { reason: 'longer_delay', label: 'Plazo más largo de lo previsto', message: hasProposedTime ? 'El plazo es más largo de lo previsto en el horario solicitado. Le hemos propuesto otra hora.' : 'El plazo es más largo de lo previsto en el horario solicitado. Podemos proponerle otra hora.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
       ];
     }
@@ -3291,9 +3347,9 @@ function getRequestActionPresets(isOrder, mode) {
 
     if (!isOrder && mode === 'modify') {
       return [
-        { reason: 'restaurant_full', label: 'Restaurante completo', message: 'El restaurante está completo en el horario solicitado. Podemos proponerle otra hora.' },
-        { reason: 'slot_unavailable', label: 'Horario no disponible', message: 'El horario solicitado ya no está disponible. Podemos proponerle otra hora.' },
-        { reason: 'party_size_not_possible', label: 'Número de personas no posible', message: 'Lo sentimos, pero no podemos confirmar el número de personas solicitado en ese horario. Podemos proponerle otra hora.' },
+        { reason: 'restaurant_full', label: 'Restaurante completo', message: hasProposedTime ? 'El restaurante está completo en el horario solicitado. Le hemos propuesto otra hora.' : 'El restaurante está completo en el horario solicitado. Podemos proponerle otra hora.' },
+        { reason: 'slot_unavailable', label: 'Horario no disponible', message: hasProposedTime ? 'El horario solicitado ya no está disponible. Le hemos propuesto otra hora.' : 'El horario solicitado ya no está disponible. Podemos proponerle otra hora.' },
+        { reason: 'party_size_not_possible', label: 'Número de personas no posible', message: hasProposedTime ? 'Lo sentimos, pero no podemos confirmar el número de personas solicitado en ese horario. Le hemos propuesto otra hora.' : 'Lo sentimos, pero no podemos confirmar el número de personas solicitado en ese horario. Podemos proponerle otra hora.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
       ];
     }
@@ -3305,12 +3361,12 @@ function getRequestActionPresets(isOrder, mode) {
     ];
   }
 
-  if (currentLang === 'en') {
+  if (targetLang === 'en') {
     if (isOrder && mode === 'modify') {
       return [
-        { reason: 'kitchen_temporary_closed', label: 'Kitchen temporarily closed', message: 'The kitchen is temporarily closed at the requested time. We can offer you another time.' },
+        { reason: 'kitchen_temporary_closed', label: 'Kitchen temporarily closed', message: hasProposedTime ? 'The kitchen is temporarily closed at the requested time. We have proposed another time for your order.' : 'The kitchen is temporarily closed at the requested time. We can offer you another time.' },
         { reason: 'item_unavailable', label: 'Item unavailable', message: 'One of the requested items is no longer available. The menu has been updated in your app.' },
-        { reason: 'longer_delay', label: 'Longer delay than expected', message: 'The delay is longer than expected at the requested time. We can offer you another time.' },
+        { reason: 'longer_delay', label: 'Longer delay than expected', message: hasProposedTime ? 'The delay is longer than expected at the requested time. We have proposed another time for your order.' : 'The delay is longer than expected at the requested time. We can offer you another time.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
       ];
     }
@@ -3325,9 +3381,9 @@ function getRequestActionPresets(isOrder, mode) {
 
     if (!isOrder && mode === 'modify') {
       return [
-        { reason: 'restaurant_full', label: 'Restaurant full', message: 'The restaurant is fully booked at the requested time. We can offer you another time.' },
-        { reason: 'slot_unavailable', label: 'Time slot unavailable', message: 'The requested time slot is no longer available. We can offer you another time.' },
-        { reason: 'party_size_not_possible', label: 'Party size not possible', message: 'We are sorry, but we cannot confirm the requested party size at that time. We can offer you another time.' },
+        { reason: 'restaurant_full', label: 'Restaurant full', message: hasProposedTime ? 'The restaurant is fully booked at the requested time. We have proposed another time for your booking.' : 'The restaurant is fully booked at the requested time. We can offer you another time.' },
+        { reason: 'slot_unavailable', label: 'Time slot unavailable', message: hasProposedTime ? 'The requested time slot is no longer available. We have proposed another time for your booking.' : 'The requested time slot is no longer available. We can offer you another time.' },
+        { reason: 'party_size_not_possible', label: 'Party size not possible', message: hasProposedTime ? 'We are sorry, but we cannot confirm the requested party size at that time. We have proposed another time for your booking.' : 'We are sorry, but we cannot confirm the requested party size at that time. We can offer you another time.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
       ];
     }
@@ -3339,12 +3395,12 @@ function getRequestActionPresets(isOrder, mode) {
     ];
   }
 
-  if (currentLang === 'nl') {
+  if (targetLang === 'nl') {
     if (isOrder && mode === 'modify') {
       return [
-        { reason: 'kitchen_temporary_closed', label: 'Keuken tijdelijk gesloten', message: 'De keuken is tijdelijk gesloten op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
+        { reason: 'kitchen_temporary_closed', label: 'Keuken tijdelijk gesloten', message: hasProposedTime ? 'De keuken is tijdelijk gesloten op het gevraagde uur. Wij hebben u een ander uur voorgesteld.' : 'De keuken is tijdelijk gesloten op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
         { reason: 'item_unavailable', label: 'Artikel niet beschikbaar', message: 'Eén van de gevraagde artikelen is niet meer beschikbaar. De kaart werd bijgewerkt in uw app.' },
-        { reason: 'longer_delay', label: 'Langere wachttijd dan voorzien', message: 'De wachttijd is langer dan voorzien op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
+        { reason: 'longer_delay', label: 'Langere wachttijd dan voorzien', message: hasProposedTime ? 'De wachttijd is langer dan voorzien op het gevraagde uur. Wij hebben u een ander uur voorgesteld.' : 'De wachttijd is langer dan voorzien op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
       ];
     }
@@ -3359,9 +3415,9 @@ function getRequestActionPresets(isOrder, mode) {
 
     if (!isOrder && mode === 'modify') {
       return [
-        { reason: 'restaurant_full', label: 'Restaurant volzet', message: 'Het restaurant is volzet op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
-        { reason: 'slot_unavailable', label: 'Tijdslot niet beschikbaar', message: 'Het gevraagde tijdslot is niet meer beschikbaar. We kunnen u een ander uur voorstellen.' },
-        { reason: 'party_size_not_possible', label: 'Aantal personen niet mogelijk', message: 'Het spijt ons, maar we kunnen het gevraagde aantal personen op dat uur niet bevestigen. We kunnen u een ander uur voorstellen.' },
+        { reason: 'restaurant_full', label: 'Restaurant volzet', message: hasProposedTime ? 'Het restaurant is volzet op het gevraagde uur. Wij hebben u een ander uur voorgesteld.' : 'Het restaurant is volzet op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
+        { reason: 'slot_unavailable', label: 'Tijdslot niet beschikbaar', message: hasProposedTime ? 'Het gevraagde tijdslot is niet meer beschikbaar. Wij hebben u een ander uur voorgesteld.' : 'Het gevraagde tijdslot is niet meer beschikbaar. We kunnen u een ander uur voorstellen.' },
+        { reason: 'party_size_not_possible', label: 'Aantal personen niet mogelijk', message: hasProposedTime ? 'Het spijt ons, maar we kunnen het gevraagde aantal personen op dat uur niet bevestigen. Wij hebben u een ander uur voorgesteld.' : 'Het spijt ons, maar we kunnen het gevraagde aantal personen op dat uur niet bevestigen. We kunnen u een ander uur voorstellen.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
       ];
     }
@@ -3375,9 +3431,9 @@ function getRequestActionPresets(isOrder, mode) {
 
   if (isOrder && mode === 'modify') {
     return [
-      { reason: 'kitchen_temporary_closed', label: 'Cuisine fermée temporairement', message: 'La cuisine est fermée temporairement sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'kitchen_temporary_closed', label: 'Cuisine fermée temporairement', message: hasProposedTime ? 'La cuisine est fermée temporairement sur le créneau demandé. Nous vous avons proposé un autre horaire pour votre commande.' : 'La cuisine est fermée temporairement sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
       { reason: 'item_unavailable', label: 'Article indisponible', message: 'Un des articles demandés n’est plus disponible. La carte a été mise à jour dans votre application.' },
-      { reason: 'longer_delay', label: 'Délai plus long que prévu', message: 'Le délai est plus long que prévu sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'longer_delay', label: 'Délai plus long que prévu', message: hasProposedTime ? 'Le délai est plus long que prévu sur le créneau demandé. Nous vous avons proposé un autre horaire pour votre commande.' : 'Le délai est plus long que prévu sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
       { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
     ];
   }
@@ -3392,9 +3448,9 @@ function getRequestActionPresets(isOrder, mode) {
 
   if (!isOrder && mode === 'modify') {
     return [
-      { reason: 'restaurant_full', label: 'Restaurant complet', message: 'Le restaurant est complet sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
-      { reason: 'slot_unavailable', label: 'Créneau indisponible', message: 'Le créneau demandé n’est plus disponible. Nous pouvons vous proposer un autre horaire.' },
-      { reason: 'party_size_not_possible', label: 'Nombre de personnes non possible', message: 'Nous sommes désolés mais nous ne pouvons pas confirmer le nombre de personnes demandé sur ce créneau. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'restaurant_full', label: 'Restaurant complet', message: hasProposedTime ? 'Le restaurant est complet sur le créneau demandé. Nous vous avons proposé un autre horaire pour votre réservation.' : 'Le restaurant est complet sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'slot_unavailable', label: 'Créneau indisponible', message: hasProposedTime ? 'Le créneau demandé n’est plus disponible. Nous vous avons proposé un autre horaire pour votre réservation.' : 'Le créneau demandé n’est plus disponible. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'party_size_not_possible', label: 'Nombre de personnes non possible', message: hasProposedTime ? 'Nous sommes désolés mais nous ne pouvons pas confirmer le nombre de personnes demandé sur ce créneau. Nous vous avons proposé un autre horaire pour votre réservation.' : 'Nous sommes désolés mais nous ne pouvons pas confirmer le nombre de personnes demandé sur ce créneau. Nous pouvons vous proposer un autre horaire.' },
       { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
     ];
   }
@@ -3410,15 +3466,16 @@ function buildRequestActionModalHtml(item, mode) {
   const source = item.sourceRequest || {};
   const isOrder = !!source?.order;
   const texts = getRequestActionTexts();
-  const presets = getRequestActionPresets(isOrder, mode);
   const existingResponse = source.restaurantResponse || {};
   const existingProposal = existingResponse.proposal || {};
+  const currentTimeValue = isOrder ? (source.order?.time || '') : (source.booking?.time || '');
+  const proposedTimeValue = existingProposal.proposedTime || currentTimeValue || '';
+  const clientLang = source?.customer?.language || currentLang;
+  const presets = getRequestActionPresets(isOrder, mode, clientLang, !!proposedTimeValue);
   const selectedReason = presets.some((entry) => entry.reason === existingResponse.reason)
     ? existingResponse.reason
     : (presets[0]?.reason || 'other');
 
-  const currentTimeValue = isOrder ? (source.order?.time || '') : (source.booking?.time || '');
-  const proposedTimeValue = existingProposal.proposedTime || currentTimeValue || '';
   const messageValue = existingResponse.message || (presets.find((entry) => entry.reason === selectedReason)?.message || '');
 
   const title = mode === 'modify'
@@ -3530,14 +3587,20 @@ window.openRequestActionModal = function(requestId, mode) {
   const modal = document.getElementById('restaurant-request-action-modal');
   const reasonSelect = document.getElementById('restaurant-request-action-reason');
   const messageField = document.getElementById('restaurant-request-action-message');
+  const timeField = document.getElementById('restaurant-request-action-time');
   const source = item.sourceRequest || {};
   const isOrder = !!source?.order;
-  const presets = getRequestActionPresets(isOrder, mode);
+  const clientLang = source?.customer?.language || currentLang;
+
+  function getCurrentPresets() {
+    const proposedTime = timeField ? String(timeField.value || '').trim() : '';
+    return getRequestActionPresets(isOrder, mode, clientLang, !!proposedTime);
+  }
 
   function syncMessageWithReason(forceReplace = false) {
     if (!reasonSelect || !messageField) return;
 
-    const selectedPreset = presets.find((entry) => entry.reason === reasonSelect.value);
+    const selectedPreset = getCurrentPresets().find((entry) => entry.reason === reasonSelect.value);
     if (!selectedPreset) return;
 
     if (forceReplace || !messageField.value.trim()) {
@@ -3547,6 +3610,11 @@ window.openRequestActionModal = function(requestId, mode) {
 
   if (reasonSelect && messageField) {
     reasonSelect.addEventListener('change', () => syncMessageWithReason(true));
+  }
+
+  if (timeField && reasonSelect && messageField && mode === 'modify') {
+    timeField.addEventListener('change', () => syncMessageWithReason(true));
+    timeField.addEventListener('input', () => syncMessageWithReason(true));
   }
 
   if (modal) {
