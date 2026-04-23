@@ -2710,6 +2710,9 @@ function loadRestaurantRequests() {
     siteConfig?.identity?.id ||
     '';
 
+  const bookingActiveStatuses = ['pending', 'modified', 'accepted_by_client', 'rejected_by_client'];
+  const orderActiveStatuses = ['sent', 'modified', 'accepted_by_client', 'rejected_by_client'];
+
   function getHistoryReferenceTimestamp(item) {
     const rawValue =
       item?.historyUpdatedAt ||
@@ -2722,20 +2725,19 @@ function loadRestaurantRequests() {
     return Number.isFinite(parsedValue) ? parsedValue : Date.now();
   }
 
-  function isRequestStillActive(item, pendingStatus) {
+  function isRequestStillActive(item, activeStatuses) {
     if (!item) return false;
-
-    return item.status === pendingStatus;
+    return Array.isArray(activeStatuses) && activeStatuses.includes(item.status);
   }
 
-  function shouldAutoDeleteHistory(item, pendingStatus) {
-    if (!item || isRequestStillActive(item, pendingStatus)) return false;
+  function shouldAutoDeleteHistory(item, activeStatuses) {
+    if (!item || isRequestStillActive(item, activeStatuses)) return false;
     if (item.historyDeleted === true) return true;
     return (Date.now() - getHistoryReferenceTimestamp(item)) > historyRetentionMs;
   }
 
-  function normalizeRequestItem(item, requestType, pendingStatus, typeLabel) {
-    const isStillActive = isRequestStillActive(item, pendingStatus);
+  function normalizeRequestItem(item, requestType, activeStatuses, typeLabel) {
+    const isStillActive = isRequestStillActive(item, activeStatuses);
 
     return {
       id: item.requestId || `${requestType}_${Date.now()}`,
@@ -2758,8 +2760,8 @@ function loadRestaurantRequests() {
     const safeBookings = Array.isArray(parsedBookings) ? parsedBookings : [];
     const safeOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
 
-    const cleanedBookings = safeBookings.filter((item) => !shouldAutoDeleteHistory(item, 'pending'));
-    const cleanedOrders = safeOrders.filter((item) => !shouldAutoDeleteHistory(item, 'sent'));
+    const cleanedBookings = safeBookings.filter((item) => !shouldAutoDeleteHistory(item, bookingActiveStatuses));
+    const cleanedOrders = safeOrders.filter((item) => !shouldAutoDeleteHistory(item, orderActiveStatuses));
 
     if (cleanedBookings.length !== safeBookings.length) {
       localStorage.setItem(bookingStorageKey, JSON.stringify(cleanedBookings));
@@ -2776,7 +2778,7 @@ function loadRestaurantRequests() {
           item.requestType === 'booking' &&
           String(item.restaurantId || '') === String(activeRestaurantId)
       )
-      .map((item) => normalizeRequestItem(item, 'booking', 'pending', t.restaurantTypeBooking));
+      .map((item) => normalizeRequestItem(item, 'booking', bookingActiveStatuses, t.restaurantTypeBooking));
 
     const orders = cleanedOrders
       .filter(
@@ -2784,7 +2786,7 @@ function loadRestaurantRequests() {
           item &&
           String(item.restaurantId || '') === String(activeRestaurantId)
       )
-      .map((item) => normalizeRequestItem(item, 'order', 'sent', t.restaurantTypeOrder));
+      .map((item) => normalizeRequestItem(item, 'order', orderActiveStatuses, t.restaurantTypeOrder));
 
     return [...orders, ...bookings].sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
@@ -3854,6 +3856,39 @@ function getRequestDisplayStatusMeta(item) {
   const actionTexts = getRequestActionTexts();
 
   if (!treated) {
+    if (sourceStatus === 'modified') {
+      return {
+        label: actionTexts.statusModified,
+        className: 'bg-sky-500/15 text-sky-100 border-sky-400/30'
+      };
+    }
+
+    if (sourceStatus === 'accepted_by_client') {
+      return {
+        label: currentLang === 'es'
+          ? 'Aceptada por el cliente'
+          : currentLang === 'en'
+            ? 'Accepted by client'
+            : currentLang === 'nl'
+              ? 'Aanvaard door klant'
+              : 'Acceptée par le client',
+        className: 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
+      };
+    }
+
+    if (sourceStatus === 'rejected_by_client') {
+      return {
+        label: currentLang === 'es'
+          ? 'Rechazada por el cliente'
+          : currentLang === 'en'
+            ? 'Rejected by client'
+            : currentLang === 'nl'
+              ? 'Geweigerd door klant'
+              : 'Refusée par le client',
+        className: 'bg-red-500/15 text-red-200 border-red-400/30'
+      };
+    }
+
     return {
       label: t.restaurantStatusNew,
       className: 'bg-red-500/15 text-red-300 border-red-400/30'
@@ -3871,6 +3906,32 @@ function getRequestDisplayStatusMeta(item) {
     return {
       label: actionTexts.statusModified,
       className: 'bg-sky-500/15 text-sky-100 border-sky-400/30'
+    };
+  }
+
+  if (sourceStatus === 'accepted_by_client') {
+    return {
+      label: currentLang === 'es'
+        ? 'Aceptada por el cliente'
+        : currentLang === 'en'
+          ? 'Accepted by client'
+          : currentLang === 'nl'
+            ? 'Aanvaard door klant'
+            : 'Acceptée par le client',
+      className: 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
+    };
+  }
+
+  if (sourceStatus === 'rejected_by_client') {
+    return {
+      label: currentLang === 'es'
+        ? 'Rechazada por el cliente'
+        : currentLang === 'en'
+          ? 'Rejected by client'
+          : currentLang === 'nl'
+            ? 'Geweigerd door klant'
+            : 'Refusée par le client',
+      className: 'bg-red-500/15 text-red-200 border-red-400/30'
     };
   }
 
