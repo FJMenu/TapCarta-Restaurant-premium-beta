@@ -5707,28 +5707,9 @@ ${!item.treated ? `
   }
 
   window.tapCartaRestaurantRefreshState.requestsIntervalId = window.setInterval(async () => {
-    const requestsPanelEl = document.getElementById('restaurant-requests-panel');
-    const requestsCountEl = document.getElementById('restaurant-active-requests-count');
-    const requestsListEl = requestsPanelEl
-      ? requestsPanelEl.querySelector(':scope > .space-y-3')
-      : null;
-
-    if (!requestsPanelEl || !requestsCountEl || !requestsListEl) {
-      return;
-    }
-
     await syncLiveBookingsToLocalStorage();
     syncRequestsState();
-
-    requestsCountEl.textContent = String(activeRequests.length);
-
-    requestsListEl.innerHTML = activeRequests.length
-      ? activeRequests.map(renderRequestRow).join('')
-      : `
-        <div id="restaurant-active-requests-empty" class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 text-sm text-cream/70">
-          ${t.restaurantNoOrdersPending}
-        </div>
-      `;
+    renderMenu();
 
     if (window.lucide) {
       requestAnimationFrame(() => {
