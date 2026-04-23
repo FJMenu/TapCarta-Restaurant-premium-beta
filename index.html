@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.10';
+            const APP_VERSION = 'V1.1.11';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3145,6 +3145,13 @@ function removeRequestDetailsModal() {
   }
 }
 
+function removeRequestActionModal() {
+  const existingModal = document.getElementById('restaurant-request-action-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+}
+
 function formatRequestAmount(amount) {
   return typeof amount === 'number'
     ? `${amount.toFixed(2).replace('.', ',')} €`
@@ -3158,6 +3165,455 @@ function escapeRequestDetailsHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;');
 }
+
+function getRequestActionTexts() {
+  if (currentLang === 'es') {
+    return {
+      modifyButton: 'Modificar',
+      cancelButton: 'Cancelar',
+      closeButton: 'Cerrar',
+      modifyOrderTitle: 'Modificar el pedido',
+      modifyBookingTitle: 'Modificar la reserva',
+      cancelOrderTitle: 'Cancelar el pedido',
+      cancelBookingTitle: 'Cancelar la reserva',
+      reasonLabel: 'Motivo',
+      timeLabel: 'Nueva hora propuesta',
+      messageLabel: 'Mensaje para el cliente',
+      messagePlaceholder: 'Escriba un mensaje claro y breve para el cliente',
+      saveModifyButton: 'Enviar la modificación',
+      saveCancelButton: 'Confirmar la cancelación',
+      otherReason: 'Otro',
+      messageRequired: 'Añada un mensaje para el cliente.',
+      statusModified: 'Modificación enviada',
+      modifiedOrderDefault: 'El restaurante le propone una adaptación de su pedido.',
+      modifiedBookingDefault: 'El restaurante le propone una adaptación de su reserva.',
+      cancelledOrderDefault: 'Pedido cancelado por el restaurante.',
+      cancelledBookingDefault: 'Reserva cancelada por el restaurante.'
+    };
+  }
+
+  if (currentLang === 'en') {
+    return {
+      modifyButton: 'Modify',
+      cancelButton: 'Cancel',
+      closeButton: 'Close',
+      modifyOrderTitle: 'Modify the order',
+      modifyBookingTitle: 'Modify the booking',
+      cancelOrderTitle: 'Cancel the order',
+      cancelBookingTitle: 'Cancel the booking',
+      reasonLabel: 'Reason',
+      timeLabel: 'Proposed new time',
+      messageLabel: 'Message for the customer',
+      messagePlaceholder: 'Write a short and clear message for the customer',
+      saveModifyButton: 'Send modification',
+      saveCancelButton: 'Confirm cancellation',
+      otherReason: 'Other',
+      messageRequired: 'Add a message for the customer.',
+      statusModified: 'Modification sent',
+      modifiedOrderDefault: 'The restaurant proposes an adjustment to your order.',
+      modifiedBookingDefault: 'The restaurant proposes an adjustment to your booking.',
+      cancelledOrderDefault: 'Order cancelled by the restaurant.',
+      cancelledBookingDefault: 'Booking cancelled by the restaurant.'
+    };
+  }
+
+  if (currentLang === 'nl') {
+    return {
+      modifyButton: 'Wijzigen',
+      cancelButton: 'Annuleren',
+      closeButton: 'Sluiten',
+      modifyOrderTitle: 'Bestelling wijzigen',
+      modifyBookingTitle: 'Reservatie wijzigen',
+      cancelOrderTitle: 'Bestelling annuleren',
+      cancelBookingTitle: 'Reservatie annuleren',
+      reasonLabel: 'Reden',
+      timeLabel: 'Voorgesteld nieuw uur',
+      messageLabel: 'Bericht voor de klant',
+      messagePlaceholder: 'Schrijf een kort en duidelijk bericht voor de klant',
+      saveModifyButton: 'Wijziging versturen',
+      saveCancelButton: 'Annulering bevestigen',
+      otherReason: 'Andere',
+      messageRequired: 'Voeg een bericht voor de klant toe.',
+      statusModified: 'Wijziging verzonden',
+      modifiedOrderDefault: 'Het restaurant stelt een aanpassing van uw bestelling voor.',
+      modifiedBookingDefault: 'Het restaurant stelt een aanpassing van uw reservatie voor.',
+      cancelledOrderDefault: 'Bestelling geannuleerd door het restaurant.',
+      cancelledBookingDefault: 'Reservatie geannuleerd door het restaurant.'
+    };
+  }
+
+  return {
+    modifyButton: 'Modifier',
+    cancelButton: 'Annuler',
+    closeButton: 'Fermer',
+    modifyOrderTitle: 'Modifier la commande',
+    modifyBookingTitle: 'Modifier la réservation',
+    cancelOrderTitle: 'Annuler la commande',
+    cancelBookingTitle: 'Annuler la réservation',
+    reasonLabel: 'Motif',
+    timeLabel: 'Nouvel horaire proposé',
+    messageLabel: 'Message pour le client',
+    messagePlaceholder: 'Écrivez un message clair et court pour le client',
+    saveModifyButton: 'Envoyer la modification',
+    saveCancelButton: 'Confirmer l’annulation',
+    otherReason: 'Autre',
+    messageRequired: 'Ajoutez un message pour le client.',
+    statusModified: 'Modification envoyée',
+    modifiedOrderDefault: 'Le restaurant vous propose une adaptation de votre commande.',
+    modifiedBookingDefault: 'Le restaurant vous propose une adaptation de votre réservation.',
+    cancelledOrderDefault: 'Commande annulée par le restaurant.',
+    cancelledBookingDefault: 'Réservation annulée par le restaurant.'
+  };
+}
+
+function getRequestActionPresets(isOrder, mode) {
+  const texts = getRequestActionTexts();
+
+  if (currentLang === 'es') {
+    if (isOrder && mode === 'modify') {
+      return [
+        { reason: 'kitchen_temporary_closed', label: 'Cocina cerrada temporalmente', message: 'La cocina está cerrada temporalmente en el horario solicitado. Podemos proponerle otra hora.' },
+        { reason: 'item_unavailable', label: 'Artículo no disponible', message: 'Uno de los artículos solicitados ya no está disponible. La carta ha sido actualizada en su aplicación.' },
+        { reason: 'longer_delay', label: 'Plazo más largo de lo previsto', message: 'El plazo es más largo de lo previsto en el horario solicitado. Podemos proponerle otra hora.' },
+        { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
+      ];
+    }
+
+    if (isOrder && mode === 'cancel') {
+      return [
+        { reason: 'kitchen_closed', label: 'Cocina cerrada', message: 'Lo sentimos, pero la cocina está cerrada y no podemos atender su pedido.' },
+        { reason: 'service_unavailable', label: 'Servicio no disponible', message: 'Lo sentimos, pero no podemos atender su pedido en este momento.' },
+        { reason: 'other', label: texts.otherReason, message: texts.cancelledOrderDefault }
+      ];
+    }
+
+    if (!isOrder && mode === 'modify') {
+      return [
+        { reason: 'restaurant_full', label: 'Restaurante completo', message: 'El restaurante está completo en el horario solicitado. Podemos proponerle otra hora.' },
+        { reason: 'slot_unavailable', label: 'Horario no disponible', message: 'El horario solicitado ya no está disponible. Podemos proponerle otra hora.' },
+        { reason: 'party_size_not_possible', label: 'Número de personas no posible', message: 'Lo sentimos, pero no podemos confirmar el número de personas solicitado en ese horario. Podemos proponerle otra hora.' },
+        { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
+      ];
+    }
+
+    return [
+      { reason: 'restaurant_full', label: 'Restaurante completo', message: 'Lo sentimos, pero el restaurante está completo en el horario solicitado.' },
+      { reason: 'slot_unavailable', label: 'Horario no disponible', message: 'Lo sentimos, pero el horario solicitado ya no está disponible.' },
+      { reason: 'other', label: texts.otherReason, message: texts.cancelledBookingDefault }
+    ];
+  }
+
+  if (currentLang === 'en') {
+    if (isOrder && mode === 'modify') {
+      return [
+        { reason: 'kitchen_temporary_closed', label: 'Kitchen temporarily closed', message: 'The kitchen is temporarily closed at the requested time. We can offer you another time.' },
+        { reason: 'item_unavailable', label: 'Item unavailable', message: 'One of the requested items is no longer available. The menu has been updated in your app.' },
+        { reason: 'longer_delay', label: 'Longer delay than expected', message: 'The delay is longer than expected at the requested time. We can offer you another time.' },
+        { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
+      ];
+    }
+
+    if (isOrder && mode === 'cancel') {
+      return [
+        { reason: 'kitchen_closed', label: 'Kitchen closed', message: 'We are sorry, but the kitchen is closed and we cannot process your order.' },
+        { reason: 'service_unavailable', label: 'Service unavailable', message: 'We are sorry, but we cannot process your order at the moment.' },
+        { reason: 'other', label: texts.otherReason, message: texts.cancelledOrderDefault }
+      ];
+    }
+
+    if (!isOrder && mode === 'modify') {
+      return [
+        { reason: 'restaurant_full', label: 'Restaurant full', message: 'The restaurant is fully booked at the requested time. We can offer you another time.' },
+        { reason: 'slot_unavailable', label: 'Time slot unavailable', message: 'The requested time slot is no longer available. We can offer you another time.' },
+        { reason: 'party_size_not_possible', label: 'Party size not possible', message: 'We are sorry, but we cannot confirm the requested party size at that time. We can offer you another time.' },
+        { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
+      ];
+    }
+
+    return [
+      { reason: 'restaurant_full', label: 'Restaurant full', message: 'We are sorry, but the restaurant is fully booked at the requested time.' },
+      { reason: 'slot_unavailable', label: 'Time slot unavailable', message: 'We are sorry, but the requested time slot is no longer available.' },
+      { reason: 'other', label: texts.otherReason, message: texts.cancelledBookingDefault }
+    ];
+  }
+
+  if (currentLang === 'nl') {
+    if (isOrder && mode === 'modify') {
+      return [
+        { reason: 'kitchen_temporary_closed', label: 'Keuken tijdelijk gesloten', message: 'De keuken is tijdelijk gesloten op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
+        { reason: 'item_unavailable', label: 'Artikel niet beschikbaar', message: 'Eén van de gevraagde artikelen is niet meer beschikbaar. De kaart werd bijgewerkt in uw app.' },
+        { reason: 'longer_delay', label: 'Langere wachttijd dan voorzien', message: 'De wachttijd is langer dan voorzien op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
+        { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
+      ];
+    }
+
+    if (isOrder && mode === 'cancel') {
+      return [
+        { reason: 'kitchen_closed', label: 'Keuken gesloten', message: 'Het spijt ons, maar de keuken is gesloten en we kunnen uw bestelling niet verwerken.' },
+        { reason: 'service_unavailable', label: 'Service niet beschikbaar', message: 'Het spijt ons, maar we kunnen uw bestelling momenteel niet verwerken.' },
+        { reason: 'other', label: texts.otherReason, message: texts.cancelledOrderDefault }
+      ];
+    }
+
+    if (!isOrder && mode === 'modify') {
+      return [
+        { reason: 'restaurant_full', label: 'Restaurant volzet', message: 'Het restaurant is volzet op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
+        { reason: 'slot_unavailable', label: 'Tijdslot niet beschikbaar', message: 'Het gevraagde tijdslot is niet meer beschikbaar. We kunnen u een ander uur voorstellen.' },
+        { reason: 'party_size_not_possible', label: 'Aantal personen niet mogelijk', message: 'Het spijt ons, maar we kunnen het gevraagde aantal personen op dat uur niet bevestigen. We kunnen u een ander uur voorstellen.' },
+        { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
+      ];
+    }
+
+    return [
+      { reason: 'restaurant_full', label: 'Restaurant volzet', message: 'Het spijt ons, maar het restaurant is volzet op het gevraagde uur.' },
+      { reason: 'slot_unavailable', label: 'Tijdslot niet beschikbaar', message: 'Het spijt ons, maar het gevraagde tijdslot is niet meer beschikbaar.' },
+      { reason: 'other', label: texts.otherReason, message: texts.cancelledBookingDefault }
+    ];
+  }
+
+  if (isOrder && mode === 'modify') {
+    return [
+      { reason: 'kitchen_temporary_closed', label: 'Cuisine fermée temporairement', message: 'La cuisine est fermée temporairement sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'item_unavailable', label: 'Article indisponible', message: 'Un des articles demandés n’est plus disponible. La carte a été mise à jour dans votre application.' },
+      { reason: 'longer_delay', label: 'Délai plus long que prévu', message: 'Le délai est plus long que prévu sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
+    ];
+  }
+
+  if (isOrder && mode === 'cancel') {
+    return [
+      { reason: 'kitchen_closed', label: 'Cuisine fermée', message: 'Nous sommes désolés mais la cuisine est fermée et nous ne pouvons pas traiter votre commande.' },
+      { reason: 'service_unavailable', label: 'Service indisponible', message: 'Nous sommes désolés mais nous ne pouvons pas traiter votre commande pour le moment.' },
+      { reason: 'other', label: texts.otherReason, message: texts.cancelledOrderDefault }
+    ];
+  }
+
+  if (!isOrder && mode === 'modify') {
+    return [
+      { reason: 'restaurant_full', label: 'Restaurant complet', message: 'Le restaurant est complet sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'slot_unavailable', label: 'Créneau indisponible', message: 'Le créneau demandé n’est plus disponible. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'party_size_not_possible', label: 'Nombre de personnes non possible', message: 'Nous sommes désolés mais nous ne pouvons pas confirmer le nombre de personnes demandé sur ce créneau. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
+    ];
+  }
+
+  return [
+    { reason: 'restaurant_full', label: 'Restaurant complet', message: 'Nous sommes désolés mais le restaurant est complet sur le créneau demandé.' },
+    { reason: 'slot_unavailable', label: 'Créneau indisponible', message: 'Nous sommes désolés mais le créneau demandé n’est plus disponible.' },
+    { reason: 'other', label: texts.otherReason, message: texts.cancelledBookingDefault }
+  ];
+}
+
+function buildRequestActionModalHtml(item, mode) {
+  const source = item.sourceRequest || {};
+  const isOrder = !!source?.order;
+  const texts = getRequestActionTexts();
+  const presets = getRequestActionPresets(isOrder, mode);
+  const existingResponse = source.restaurantResponse || {};
+  const existingProposal = existingResponse.proposal || {};
+  const selectedReason = presets.some((entry) => entry.reason === existingResponse.reason)
+    ? existingResponse.reason
+    : (presets[0]?.reason || 'other');
+
+  const currentTimeValue = isOrder ? (source.order?.time || '') : (source.booking?.time || '');
+  const proposedTimeValue = existingProposal.proposedTime || currentTimeValue || '';
+  const messageValue = existingResponse.message || (presets.find((entry) => entry.reason === selectedReason)?.message || '');
+
+  const title = mode === 'modify'
+    ? (isOrder ? texts.modifyOrderTitle : texts.modifyBookingTitle)
+    : (isOrder ? texts.cancelOrderTitle : texts.cancelBookingTitle);
+
+  return `
+    <div id="restaurant-request-action-modal" class="fixed inset-0 z-[130] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-gold/20 bg-[#0D0D0D] shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+        <div class="sticky top-0 z-10 bg-[#0D0D0D]/95 backdrop-blur border-b border-white/8 px-5 py-4 flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <div class="text-xs uppercase tracking-[0.18em] text-gold/70 mb-1">${item.type}</div>
+            <h3 class="font-display text-xl font-bold text-cream">${title}</h3>
+          </div>
+
+          <button
+            type="button"
+            onclick="closeRequestActionModal()"
+            class="btn-action px-4 py-2 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+          >
+            ${texts.closeButton}
+          </button>
+        </div>
+
+        <div class="p-5 md:p-6 space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsCustomer}</div>
+              <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.name || '-')}</div>
+            </div>
+            <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPhone}</div>
+              <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.phone || '-')}</div>
+            </div>
+            <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${texts.reasonLabel}</div>
+              <select
+                id="restaurant-request-action-reason"
+                class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-cream outline-none"
+              >
+                ${presets.map((entry) => `
+                  <option value="${escapeRequestDetailsHtml(entry.reason)}" ${entry.reason === selectedReason ? 'selected' : ''}>
+                    ${escapeRequestDetailsHtml(entry.label)}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+
+            ${mode === 'modify' ? `
+              <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+                <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${texts.timeLabel}</div>
+                <input
+                  id="restaurant-request-action-time"
+                  type="time"
+                  value="${escapeRequestDetailsHtml(proposedTimeValue)}"
+                  class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-cream outline-none"
+                >
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+            <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${texts.messageLabel}</div>
+            <textarea
+              id="restaurant-request-action-message"
+              rows="4"
+              class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-cream outline-none resize-y"
+              placeholder="${texts.messagePlaceholder}"
+            >${escapeRequestDetailsHtml(messageValue)}</textarea>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onclick="closeRequestActionModal()"
+              class="btn-action px-4 py-3 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+            >
+              ${texts.closeButton}
+            </button>
+            <button
+              type="button"
+              onclick="submitRequestAction('${item.id}', '${mode}')"
+              class="btn-action px-4 py-3 rounded-xl border ${mode === 'modify' ? 'border-sky-400/30 text-sky-100 hover:bg-sky-500/10' : 'border-red-400/30 text-red-200 hover:bg-red-500/10'} text-sm font-semibold transition-all"
+            >
+              ${mode === 'modify' ? texts.saveModifyButton : texts.saveCancelButton}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.closeRequestActionModal = function() {
+  removeRequestActionModal();
+};
+
+window.openRequestActionModal = function(requestId, mode) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
+
+  if (!item || !item.sourceRequest) {
+    alert(t.restaurantRequestNotFound);
+    return;
+  }
+
+  removeRequestActionModal();
+  document.body.insertAdjacentHTML('beforeend', buildRequestActionModalHtml(item, mode));
+
+  const modal = document.getElementById('restaurant-request-action-modal');
+  const reasonSelect = document.getElementById('restaurant-request-action-reason');
+  const messageField = document.getElementById('restaurant-request-action-message');
+  const source = item.sourceRequest || {};
+  const isOrder = !!source?.order;
+  const presets = getRequestActionPresets(isOrder, mode);
+
+  function syncMessageWithReason(forceReplace = false) {
+    if (!reasonSelect || !messageField) return;
+
+    const selectedPreset = presets.find((entry) => entry.reason === reasonSelect.value);
+    if (!selectedPreset) return;
+
+    if (forceReplace || !messageField.value.trim()) {
+      messageField.value = selectedPreset.message || '';
+    }
+  }
+
+  if (reasonSelect && messageField) {
+    reasonSelect.addEventListener('change', () => syncMessageWithReason(true));
+  }
+
+  if (modal) {
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal) {
+        closeRequestActionModal();
+      }
+    });
+  }
+};
+
+window.submitRequestAction = function(requestId, mode) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
+
+  if (!item || !item.sourceRequest) {
+    alert(t.restaurantRequestNotFound);
+    return;
+  }
+
+  const reasonField = document.getElementById('restaurant-request-action-reason');
+  const messageField = document.getElementById('restaurant-request-action-message');
+  const timeField = document.getElementById('restaurant-request-action-time');
+  const texts = getRequestActionTexts();
+
+  const reason = reasonField ? String(reasonField.value || 'other') : 'other';
+  const message = messageField ? String(messageField.value || '').trim() : '';
+  const proposedTime = timeField ? String(timeField.value || '').trim() : '';
+
+  if (!message) {
+    alert(texts.messageRequired);
+    return;
+  }
+
+  const nowIso = new Date().toISOString();
+
+  item.treated = true;
+  item.status = t.restaurantStatusProcessed;
+
+  item.sourceRequest.status = mode === 'modify' ? 'modified' : 'cancelled';
+  item.sourceRequest.updatedAt = nowIso;
+
+  if (mode === 'modify') {
+    item.sourceRequest.modifiedAt = nowIso;
+  }
+
+  if (mode === 'cancel') {
+    item.sourceRequest.cancelledAt = nowIso;
+  }
+
+  item.sourceRequest.restaurantResponse = {
+    ...(item.sourceRequest.restaurantResponse || {}),
+    reason,
+    message,
+    updatedBy: 'restaurant',
+    actionType: mode,
+    proposal: mode === 'modify'
+      ? {
+          ...(item.sourceRequest.restaurantResponse?.proposal || {}),
+          proposedTime: proposedTime || null
+        }
+      : null
+  };
+
+  void persistRestaurantRequestUpdate(item.sourceRequest);
+
+  closeRequestActionModal();
+  closeRequestDetailsModal();
+  renderMenu();
+};
 
 function buildRequestDetailsRows(item) {
   const source = item.sourceRequest || {};
@@ -3253,6 +3709,8 @@ function buildRequestDetailsRows(item) {
 
 
 function buildRequestDetailsModalHtml(item) {
+  const actionTexts = getRequestActionTexts();
+
   return `
     <div id="restaurant-request-details-modal" class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
       <div class="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-gold/20 bg-[#0D0D0D] shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
@@ -3276,6 +3734,22 @@ function buildRequestDetailsModalHtml(item) {
 
           ${!item.treated ? `
             <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onclick="openRequestActionModal('${item.id}', 'cancel')"
+                class="btn-action px-4 py-3 rounded-xl border border-red-400/30 text-sm font-semibold text-red-200 hover:bg-red-500/10 transition-all"
+              >
+                ${actionTexts.cancelButton}
+              </button>
+
+              <button
+                type="button"
+                onclick="openRequestActionModal('${item.id}', 'modify')"
+                class="btn-action px-4 py-3 rounded-xl border border-sky-400/30 text-sm font-semibold text-sky-100 hover:bg-sky-500/10 transition-all"
+              >
+                ${actionTexts.modifyButton}
+              </button>
+
               <button
                 type="button"
                 onclick="closeRequestDetailsModal(); validateRequest('${item.id}');"
@@ -3377,6 +3851,7 @@ window.deleteRequestFromHistory = function(requestId) {
 function getRequestDisplayStatusMeta(item) {
   const sourceStatus = item?.sourceRequest?.status || '';
   const treated = item?.treated === true;
+  const actionTexts = getRequestActionTexts();
 
   if (!treated) {
     return {
@@ -3389,6 +3864,13 @@ function getRequestDisplayStatusMeta(item) {
     return {
       label: currentLang === 'es' ? 'Cancelada' : currentLang === 'en' ? 'Cancelled' : currentLang === 'nl' ? 'Geannuleerd' : 'Annulée',
       className: 'bg-red-500/15 text-red-200 border-red-400/30'
+    };
+  }
+
+  if (sourceStatus === 'modified') {
+    return {
+      label: actionTexts.statusModified,
+      className: 'bg-sky-500/15 text-sky-100 border-sky-400/30'
     };
   }
 
@@ -3426,6 +3908,11 @@ function renderRequestRow(item) {
           : 'Commande reçue')
       : `${source.booking?.date || '-'} · ${source.booking?.time || '-'}${bookingPeople ? ` · ${bookingPeople} pers.` : ''}`;
 
+    const responsePreviewLabel =
+      item.treated && source.restaurantResponse?.message
+        ? source.restaurantResponse.message
+        : '';
+
     const typeIcon = isOrder ? 'shopping-bag' : 'calendar-days';
     const typeBadgeClass = isOrder
       ? 'bg-gold text-black border-gold shadow-[0_0_0_1px_rgba(255,215,120,0.15)]'
@@ -3453,6 +3940,7 @@ function renderRequestRow(item) {
           <div class="text-sm font-semibold text-cream">${item.client}</div>
           <div class="text-xs text-cream/60 mt-1">${new Date(item.createdAt).toLocaleDateString()} · ${new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
           <div class="text-xs ${isOrder ? 'text-gold/90' : 'text-sky-200/85'} mt-1">${previewLabel}</div>
+          ${responsePreviewLabel ? `<div class="text-xs text-cream/65 mt-1">${escapeRequestDetailsHtml(responsePreviewLabel)}</div>` : ''}
           <div class="text-xs text-gold/80 mt-1">${getElapsedLabel(item)}</div>
         </div>
 
