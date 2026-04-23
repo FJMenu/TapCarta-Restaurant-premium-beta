@@ -3650,8 +3650,13 @@ window.submitRequestAction = function(requestId, mode) {
 
   const nowIso = new Date().toISOString();
 
-  item.treated = true;
-  item.status = t.restaurantStatusProcessed;
+  if (mode === 'modify') {
+    item.treated = false;
+    item.status = t.restaurantStatusPending || 'Pending client response';
+  } else {
+    item.treated = true;
+    item.status = t.restaurantStatusProcessed;
+  }
 
   item.sourceRequest.status = mode === 'modify' ? 'modified' : 'cancelled';
   item.sourceRequest.updatedAt = nowIso;
