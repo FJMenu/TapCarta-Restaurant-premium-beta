@@ -3852,17 +3852,6 @@ window.validateRequest = function(requestId) {
   renderMenu();
 };
 
-window.requestTargetedModification = function(requestId) {
-  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
-
-  if (!item || !item.sourceRequest) {
-    alert(t.restaurantRequestDetailsNotFound);
-    return false;
-  }
-
-  window.openRequestModificationModal(requestId);
-  return false;
-};
 
 window.submitRequestTargetedModification = async function() {
   const state = window.tapCartaRequestDetailsState || {};
