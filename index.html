@@ -3949,8 +3949,8 @@ window.submitRequestTargetedModification = async function() {
 
   await persistRestaurantRequestUpdate(item.sourceRequest);
   syncRequestsState();
-  removeRequestDetailsModal();
-  window.openRequestDetails(requestId, false);
+  renderMenu();
+  closeRequestDetailsModal();
 };
 
 window.deleteRequestFromHistory = function(requestId) {
