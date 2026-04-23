@@ -3708,14 +3708,6 @@ function buildRequestDetailsModalHtml(item) {
             <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
               <button
                 type="button"
-                onclick="requestTargetedModification('${item.id}')"
-                class="btn-action px-4 py-3 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
-              >
-                ${t.restaurantModifyButton}
-              </button>
-
-              <button
-                type="button"
                 onclick="closeRequestDetailsModal(); validateRequest('${item.id}');"
                 class="btn-action px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
               >
