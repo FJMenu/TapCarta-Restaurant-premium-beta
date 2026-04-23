@@ -3174,15 +3174,11 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
     }
 
     if (isLiveBookingRequest && updatedRequest?.liveRequestId) {
-      const targetedChange = updatedRequest?.restaurantResponse?.targetedChange || null;
       const livePayload = {
         status: updatedRequest.status || 'pending',
         updated_at: updatedRequest.updatedAt || new Date().toISOString(),
         restaurant_message: updatedRequest?.restaurantResponse?.message || null,
-        modified_booking_time:
-          targetedChange?.type === 'booking' && targetedChange?.proposedTime
-            ? targetedChange.proposedTime
-            : null
+        modified_booking_time: null
       };
 
       const { error } = await supabaseClient
@@ -3200,8 +3196,7 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
 }
 
 window.tapCartaRequestDetailsState = window.tapCartaRequestDetailsState || {
-  requestId: null,
-  editMode: false
+  requestId: null
 };
 
 function removeRequestDetailsModal() {
@@ -3324,81 +3319,7 @@ function buildRequestDetailsRows(item) {
   `;
 }
 
-function buildCurrentModificationBlock(item) {
-  const targetedChange = item?.sourceRequest?.restaurantResponse?.targetedChange;
-  if (!targetedChange) return '';
 
-  const rows = [];
-
-  if (targetedChange.proposedDate) {
-    rows.push(`
-      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
-        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsProposedDate}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(targetedChange.proposedDate)}</div>
-      </div>
-    `);
-  }
-
-  if (targetedChange.proposedTime) {
-    rows.push(`
-      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
-        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsProposedTime}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(targetedChange.proposedTime)}</div>
-      </div>
-    `);
-  }
-
-  if (targetedChange.proposedPeople) {
-    rows.push(`
-      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
-        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsProposedPeople}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(targetedChange.proposedPeople)}</div>
-      </div>
-    `);
-  }
-
-  if (targetedChange.unavailableItems) {
-    rows.push(`
-      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
-        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsUnavailableItems}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(targetedChange.unavailableItems)}</div>
-      </div>
-    `);
-  }
-
-  if (targetedChange.replacementProposal) {
-    rows.push(`
-      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
-        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsReplacement}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(targetedChange.replacementProposal)}</div>
-      </div>
-    `);
-  }
-
-  if (targetedChange.shortMessage) {
-    rows.push(`
-      <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 md:col-span-2">
-        <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsShortMessage}</div>
-        <div class="text-sm font-semibold text-cream">${escapeHtml(targetedChange.shortMessage)}</div>
-      </div>
-    `);
-  }
-
-  if (!rows.length) return '';
-
-  return `
-    <div class="rounded-2xl border border-gold/20 bg-gold/8 p-4">
-      <div class="text-sm font-semibold text-gold mb-3">${t.restaurantDetailsCurrentModification}</div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        ${rows.join('')}
-      </div>
-    </div>
-  `;
-}
-
-function buildModificationForm() {
-  return '';
-}
 
 function buildRequestDetailsModalHtml(item) {
   return `
@@ -3443,8 +3364,7 @@ function buildRequestDetailsModalHtml(item) {
 window.closeRequestDetailsModal = function() {
   removeRequestDetailsModal();
   window.tapCartaRequestDetailsState = {
-    requestId: null,
-    editMode: false
+    requestId: null
   };
 };
 
@@ -3457,8 +3377,7 @@ window.openRequestDetails = function(requestId) {
   }
 
   window.tapCartaRequestDetailsState = {
-    requestId: String(requestId),
-    editMode: false
+    requestId: String(requestId)
   };
 
   removeRequestDetailsModal();
