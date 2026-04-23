@@ -3177,10 +3177,15 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
     }
 
     if (isLiveBookingRequest && updatedRequest?.liveRequestId) {
+      const targetedChange = updatedRequest?.restaurantResponse?.targetedChange || null;
       const livePayload = {
         status: updatedRequest.status || 'pending',
         updated_at: updatedRequest.updatedAt || new Date().toISOString(),
-        restaurant_message: updatedRequest?.restaurantResponse?.message || null
+        restaurant_message: updatedRequest?.restaurantResponse?.message || null,
+        modified_booking_time:
+          targetedChange?.type === 'booking' && targetedChange?.proposedTime
+            ? targetedChange.proposedTime
+            : null
       };
 
       const { error } = await supabaseClient
