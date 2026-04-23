@@ -3721,45 +3721,6 @@ function buildRequestDetailsModalHtml(item) {
   `;
 }
 
-function buildRequestModificationModalHtml(item) {
-  return `
-    <div id="restaurant-request-details-modal" class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[28px] border border-gold/20 bg-[#0D0D0D] shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
-        <div class="sticky top-0 z-10 bg-[#0D0D0D]/95 backdrop-blur border-b border-white/8 px-5 py-4 flex items-center justify-between gap-4">
-          <div class="min-w-0">
-            <div class="text-xs uppercase tracking-[0.18em] text-gold/70 mb-1">${item.type}</div>
-            <h3 class="font-display text-xl font-bold text-cream">
-              ${t.restaurantDetailsModifyTitle || 'Proposer une modification'}
-            </h3>
-          </div>
-
-          <button
-            type="button"
-            onclick="closeRequestDetailsModal()"
-            class="btn-action px-4 py-2 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
-          >
-            ${t.restaurantDetailsCloseButton}
-          </button>
-        </div>
-
-        <div class="p-5 md:p-6 space-y-5">
-          ${buildRequestDetailsRows(item)}
-
-          <div class="rounded-2xl border border-gold/15 bg-gold/5 px-4 py-3">
-            <div class="text-sm font-semibold text-gold">
-              ${t.restaurantDetailsModifyTitle || 'Proposer une modification'}
-            </div>
-            <div class="text-xs text-cream/65 mt-1">
-              ${t.restaurantDetailsModifyHint || 'Une seule proposition claire sera envoyée au client.'}
-            </div>
-          </div>
-
-          ${buildModificationForm(item)}
-        </div>
-      </div>
-    </div>
-  `;
-}
 
 window.closeRequestDetailsModal = function() {
   removeRequestDetailsModal();
