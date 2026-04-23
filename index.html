@@ -1120,8 +1120,12 @@ restaurantHistoryDeselectAll: 'Tout désélectionner',
 restaurantHistoryDeleteSelected: 'Supprimer la sélection',
 restaurantHistoryConfirmDelete: 'Supprimer les éléments sélectionnés de l’historique ?',
 restaurantHistoryNothingSelected: 'Sélectionnez au moins un élément de l’historique.',
+restaurantActiveNothingSelected: 'Sélectionnez au moins une demande.',
+restaurantActiveConfirmValidateSelected: 'Confirmer {count} demande(s) sélectionnée(s) ?',
 restaurantHistoryViewDetail: 'Voir le détail',
 restaurantHistoryDeleteOne: 'Supprimer',
+restaurantHistoryDeleteOneConfirm: 'Supprimer cette demande de l’historique ?',
+restaurantStandardCategoriesAlreadyCreated: 'Toutes les catégories standard compatibles sont déjà créées.',
 allergens: ['Gluten', 'Crustacés', 'Œufs', 'Poisson', 'Lait / lactose', 'Fruits à coque', 'Céleri', 'Moutarde', 'Sésame', 'Sulfites', 'Mollusques'],
         items: {
           ailes_poulet: { name: 'Ailes de poulet', subtitle: 'croustillantes et moelleuses' },
@@ -1322,8 +1326,12 @@ restaurantHistoryDeselectAll: 'Deseleccionar todo',
 restaurantHistoryDeleteSelected: 'Eliminar selección',
 restaurantHistoryConfirmDelete: '¿Eliminar los elementos seleccionados del historial?',
 restaurantHistoryNothingSelected: 'Seleccione al menos un elemento del historial.',
+restaurantActiveNothingSelected: 'Seleccione al menos una solicitud.',
+restaurantActiveConfirmValidateSelected: '¿Confirmar {count} solicitud(es) seleccionada(s)?',
 restaurantHistoryViewDetail: 'Ver el detalle',
 restaurantHistoryDeleteOne: 'Eliminar',
+restaurantHistoryDeleteOneConfirm: '¿Eliminar esta solicitud del historial?',
+restaurantStandardCategoriesAlreadyCreated: 'Todas las categorías estándar compatibles ya están creadas.',
 allergens: ['Gluten', 'Crustáceos', 'Huevos', 'Pescado', 'Leche / lactosa', 'Frutos secos', 'Apio', 'Mostaza', 'Sésamo', 'Sulfitos', 'Moluscos'],
         items: {
           ailes_poulet: { name: 'Alitas de pollo', subtitle: 'crujientes y tiernas' },
@@ -1525,8 +1533,12 @@ restaurantHistoryDeselectAll: 'Deselect all',
 restaurantHistoryDeleteSelected: 'Delete selection',
 restaurantHistoryConfirmDelete: 'Delete selected items from history?',
 restaurantHistoryNothingSelected: 'Select at least one history item.',
+restaurantActiveNothingSelected: 'Select at least one request.',
+restaurantActiveConfirmValidateSelected: 'Confirm {count} selected request(s)?',
 restaurantHistoryViewDetail: 'View details',
 restaurantHistoryDeleteOne: 'Delete',
+restaurantHistoryDeleteOneConfirm: 'Delete this request from history?',
+restaurantStandardCategoriesAlreadyCreated: 'All compatible standard categories have already been created.',
 allergens: ['Gluten', 'Crustaceans', 'Eggs', 'Fish', 'Milk / lactose', 'Nuts', 'Celery', 'Mustard', 'Sesame', 'Sulfites', 'Molluscs'],
         items: {
           ailes_poulet: { name: 'Chicken wings', subtitle: 'crispy and tender' },
@@ -1728,8 +1740,12 @@ restaurantHistoryDeselectAll: 'Alles deselecteren',
 restaurantHistoryDeleteSelected: 'Selectie verwijderen',
 restaurantHistoryConfirmDelete: 'Geselecteerde items uit de geschiedenis verwijderen?',
 restaurantHistoryNothingSelected: 'Selecteer minstens één item uit de geschiedenis.',
+restaurantActiveNothingSelected: 'Selecteer minstens één aanvraag.',
+restaurantActiveConfirmValidateSelected: 'Bevestig {count} geselecteerde aanvraag(en)?',
 restaurantHistoryViewDetail: 'Details bekijken',
 restaurantHistoryDeleteOne: 'Verwijderen',
+restaurantHistoryDeleteOneConfirm: 'Deze aanvraag uit de geschiedenis verwijderen?',
+restaurantStandardCategoriesAlreadyCreated: 'Alle compatibele standaardcategorieën zijn al aangemaakt.',
 allergens: ['Gluten', 'Schaaldieren', 'Eieren', 'Vis', 'Melk / lactose', 'Noten', 'Selderij', 'Mosterd', 'Sesam', 'Sulfieten', 'Weekdieren'],
         items: {
           ailes_poulet: { name: 'Kipvleugels', subtitle: 'knapperig en mals' },
@@ -2907,11 +2923,13 @@ window.validateSelectedRequests = function() {
   const selectedItems = activeRequests.filter((item) => window.selectedRequestIds.has(String(item.id)));
 
   if (!selectedItems.length) {
-    alert('Sélectionnez au moins une demande.');
+    alert(t.restaurantActiveNothingSelected);
     return;
   }
 
-  const confirmedBatch = window.confirm(`Confirmer ${selectedItems.length} demande(s) sélectionnée(s) ?`);
+  const confirmedBatch = window.confirm(
+    t.restaurantActiveConfirmValidateSelected.replace('{count}', selectedItems.length)
+  );
 
   if (!confirmedBatch) {
     return;
@@ -2922,8 +2940,8 @@ window.validateSelectedRequests = function() {
   selectedItems.forEach((item) => {
     const isOrder = !!item.sourceRequest?.order;
     const confirmationMessage = isOrder
-      ? 'Commande confirmée par le restaurant.'
-      : 'Réservation confirmée par le restaurant.';
+      ? t.restaurantOrderConfirmedMessage
+      : t.restaurantBookingConfirmedMessage;
 
     item.treated = true;
     item.status = t.restaurantStatusProcessed;
@@ -2973,7 +2991,7 @@ window.deleteSelectedHistoryRequests = function() {
     return;
   }
 
-  const confirmedDelete = window.confirm(`${t.restaurantHistoryDeleteSelected} (${selectedItems.length}) ?`);
+  const confirmedDelete = window.confirm(t.restaurantHistoryConfirmDelete);
 
   if (!confirmedDelete) {
     return;
@@ -3336,11 +3354,11 @@ window.deleteRequestFromHistory = function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
   if (!item || !item.sourceRequest) {
-    alert('Demande introuvable.');
+    alert(t.restaurantRequestNotFound);
     return;
   }
 
-  const confirmedDelete = window.confirm('Supprimer cette demande de l’historique ?');
+  const confirmedDelete = window.confirm(t.restaurantHistoryDeleteOneConfirm);
 
   if (!confirmedDelete) {
     return;
@@ -4671,7 +4689,7 @@ ${!item.treated ? `
     const nextCategory = canonicalCategories.find((category) => !existingIds.has(category.id));
 
     if (!nextCategory) {
-      alert('Toutes les catégories standard compatibles sont déjà créées.');
+      alert(t.restaurantStandardCategoriesAlreadyCreated);
       return;
     }
 
