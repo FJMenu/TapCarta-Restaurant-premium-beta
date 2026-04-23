@@ -2785,10 +2785,7 @@ function loadRestaurantRequests() {
   function isRequestStillActive(item, pendingStatus) {
     if (!item) return false;
 
-    return (
-      item.status === pendingStatus ||
-      item.status === 'modification_requested'
-    );
+    return item.status === pendingStatus;
   }
 
   function shouldAutoDeleteHistory(item, pendingStatus) {
@@ -3417,128 +3414,7 @@ function buildModificationForm(item) {
   }
 
   if (isOrder) {
-    const reasonOptions = [
-      {
-        value: 'order_kitchen_closed',
-        label: getText('restaurantModifyReasonOrderKitchenClosed', 'Cuisine fermée temporairement')
-      },
-      {
-        value: 'order_item_unavailable',
-        label: getText('restaurantModifyReasonOrderItemUnavailable', 'Article indisponible')
-      },
-      {
-        value: 'order_time_unavailable',
-        label: getText('restaurantModifyReasonOrderTimeUnavailable', 'Horaire demandé impossible')
-      },
-      {
-        value: 'order_delay_adjusted',
-        label: getText('restaurantModifyReasonOrderDelayAdjusted', 'Délai plus long que prévu')
-      },
-      {
-        value: 'other',
-        label: getText('restaurantModifyReasonOther', 'Autre')
-      }
-    ];
-
-    return `
-      <div class="rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/10 to-transparent p-4 mt-4">
-        <div class="text-sm font-semibold text-gold mb-1">
-          ${escapeHtml(getText('restaurantDetailsModifyTitle', 'Proposer une modification'))}
-        </div>
-        <div class="text-xs text-cream/65 mb-4">
-          ${escapeHtml(getText('restaurantDetailsModifyHint', 'Une seule proposition claire sera envoyée au client.'))}
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3">
-            <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">
-              ${escapeHtml(getText('restaurantDetailsCustomer', 'Client'))}
-            </div>
-            <div class="text-sm font-semibold text-cream">
-              ${escapeHtml(source.order?.name || getText('restaurantDetailsNone', 'Aucune'))}
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3">
-            <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">
-              ${escapeHtml(getText('restaurantDetailsPhone', 'Téléphone'))}
-            </div>
-            <div class="text-sm font-semibold text-cream">
-              ${escapeHtml(source.order?.phone || getText('restaurantDetailsNone', 'Aucune'))}
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3 md:col-span-2">
-            <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">
-              ${escapeHtml(getText('restaurantDetailsLanguage', 'Langue client'))}
-            </div>
-            <div class="text-sm font-semibold text-cream">
-              ${escapeHtml((source.order?.lang || '').toUpperCase() || getText('restaurantDetailsNone', 'Aucune'))}
-            </div>
-          </div>
-
-          <label class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 block md:col-span-2">
-            <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-2">
-              ${escapeHtml(getText('restaurantDetailsReasonLabel', 'Motif'))}
-            </div>
-            <select id="request-modify-reason" class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none">
-              ${buildReasonOptions(reasonOptions)}
-            </select>
-          </label>
-
-          <label class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 block">
-            <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-2">
-              ${escapeHtml(getText('restaurantDetailsProposedTime', 'Heure proposée'))}
-            </div>
-            <input
-              id="request-modify-time"
-              type="text"
-              value="${escapeHtml(source.order?.time || '')}"
-              class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
-            >
-          </label>
-
-          <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3 block">
-            <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-2">
-              ${escapeHtml(getText('restaurantDetailsUnavailableItems', 'Article(s) indisponible(s)'))}
-            </div>
-            <div class="text-sm font-semibold text-cream/75">
-              ${escapeHtml(getText('restaurantDetailsUnchangedValue', 'Inchangé'))}
-            </div>
-          </div>
-
-          <label class="rounded-xl border border-white/8 bg-black/20 px-4 py-3 block md:col-span-2">
-            <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-2">
-              ${escapeHtml(getText('restaurantDetailsAdditionalMessage', 'Message complémentaire'))}
-            </div>
-            <textarea
-              id="request-modify-additional-message"
-              rows="3"
-              placeholder="${escapeHtml(getText('restaurantDetailsAdditionalMessagePlaceholder', 'Ajoutez une précision courte si nécessaire'))}"
-              class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none resize-none"
-            ></textarea>
-          </label>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-end gap-3 mt-4">
-          <button
-            type="button"
-            onclick="openRequestDetails('${item.id}', false)"
-            class="btn-action px-4 py-3 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
-          >
-            ${escapeHtml(getText('restaurantDetailsCloseButton', 'Fermer'))}
-          </button>
-
-          <button
-            type="button"
-            onclick="submitRequestTargetedModification()"
-            class="btn-action px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
-          >
-            ${escapeHtml(getText('restaurantDetailsSendModification', 'Envoyer la modification'))}
-          </button>
-        </div>
-      </div>
-    `;
+    return '';
   }
 
   const reasonOptions = [
