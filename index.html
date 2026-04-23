@@ -2711,6 +2711,8 @@ function loadRestaurantRequests() {
     '';
 
   function getHistoryReferenceTimestamp(item) {
+    const bookingActiveStatuses = ['pending', 'modified', 'accepted_by_client', 'rejected_by_client'];
+const orderActiveStatuses = ['sent', 'modified', 'accepted_by_client', 'rejected_by_client'];
     const rawValue =
       item?.historyUpdatedAt ||
       item?.updatedAt ||
@@ -3826,9 +3828,7 @@ function buildRequestDetailsModalHtml(item) {
                 type="button"
                 onclick="closeRequestDetailsModal(); validateRequest('${item.id}');"
                 class="btn-action px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
-              >
-                ${t.restaurantValidateButton}
-              </button>
+              >V1.1.11utton>
             </div>
           ` : ''}
         </div>
