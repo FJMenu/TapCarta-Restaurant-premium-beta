@@ -2938,7 +2938,7 @@ window.validateSelectedRequests = function() {
       updatedBy: 'restaurant'
     };
 
-    void void void void void persistRestaurantRequestUpdate(item.sourceRequest);
+    void persistRestaurantRequestUpdate(item.sourceRequest);
   });
 
   window.selectedRequestIds = new Set();
@@ -2988,7 +2988,7 @@ window.deleteSelectedHistoryRequests = function() {
     item.sourceRequest.historyUpdatedAt = nowIso;
     item.sourceRequest.updatedAt = nowIso;
 
-    void void void persistRestaurantRequestUpdate(item.sourceRequest);
+    void persistRestaurantRequestUpdate(item.sourceRequest);
   });
 
   window.selectedHistoryRequestIds = new Set();
@@ -3101,8 +3101,7 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
       const livePayload = {
         status: updatedRequest.status || 'pending',
         updated_at: updatedRequest.updatedAt || new Date().toISOString(),
-        restaurant_message: updatedRequest?.restaurantResponse?.message || null,
-        modified_booking_time: null
+        restaurant_message: updatedRequest?.restaurantResponse?.message || null
       };
 
       const { error } = await supabaseClient
@@ -3119,9 +3118,7 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
   }
 }
 
-window.tapCartaRequestDetailsState = window.tapCartaRequestDetailsState || {
-  requestId: null
-};
+
 
 function removeRequestDetailsModal() {
   const existingModal = document.getElementById('restaurant-request-details-modal');
@@ -3134,14 +3131,6 @@ function formatRequestAmount(amount) {
   return typeof amount === 'number'
     ? `${amount.toFixed(2).replace('.', ',')} €`
     : '-';
-}
-
-function escapeRequestDetailsHtml(value) {
-  return String(value || '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
 }
 
 function escapeRequestDetailsHtml(value) {
@@ -3287,9 +3276,6 @@ function buildRequestDetailsModalHtml(item) {
 
 window.closeRequestDetailsModal = function() {
   removeRequestDetailsModal();
-  window.tapCartaRequestDetailsState = {
-    requestId: null
-  };
 };
 
 window.openRequestDetails = function(requestId) {
@@ -3299,10 +3285,6 @@ window.openRequestDetails = function(requestId) {
     alert(t.restaurantRequestDetailsNotFound);
     return;
   }
-
-  window.tapCartaRequestDetailsState = {
-    requestId: String(requestId)
-  };
 
   removeRequestDetailsModal();
   document.body.insertAdjacentHTML('beforeend', buildRequestDetailsModalHtml(item));
@@ -3345,7 +3327,7 @@ window.validateRequest = function(requestId) {
     updatedBy: 'restaurant'
   };
 
-  void void void void void persistRestaurantRequestUpdate(item.sourceRequest);
+  void persistRestaurantRequestUpdate(item.sourceRequest);
   renderMenu();
 };
 
@@ -3370,7 +3352,7 @@ window.deleteRequestFromHistory = function(requestId) {
   item.sourceRequest.historyUpdatedAt = nowIso;
   item.sourceRequest.updatedAt = nowIso;
 
-  void void void void void persistRestaurantRequestUpdate(item.sourceRequest);
+  void persistRestaurantRequestUpdate(item.sourceRequest);
   renderMenu();
 };
 
