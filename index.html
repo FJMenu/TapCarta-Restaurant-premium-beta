@@ -2710,9 +2710,6 @@ function loadRestaurantRequests() {
     siteConfig?.identity?.id ||
     '';
 
- const bookingActiveStatuses = ['pending', 'modified'];
-const orderActiveStatuses = ['sent', 'modified'];
-
   function getHistoryReferenceTimestamp(item) {
     const rawValue =
       item?.historyUpdatedAt ||
@@ -3807,7 +3804,7 @@ function buildRequestDetailsModalHtml(item) {
         <div class="p-5 md:p-6 space-y-5">
           ${buildRequestDetailsRows(item)}
 
-          ${!item.treated ? `
+          ${isRequestAwaitingRestaurantAction(item) ? `
             <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
               <button
                 type="button"
@@ -4027,7 +4024,10 @@ function getRequestDisplayStatusMeta(item) {
     className: 'bg-white/10 text-cream border-white/15'
   };
 }
-
+function isRequestAwaitingRestaurantAction(item) {
+  const sourceStatus = item?.sourceRequest?.status || '';
+  return sourceStatus === 'pending' || sourceStatus === 'modified' || sourceStatus === 'sent';
+}
 function renderRequestRow(item) {
     const isOrder = item.type === t.restaurantTypeOrder;
     const source = item.sourceRequest || {};
@@ -4079,7 +4079,7 @@ function renderRequestRow(item) {
         </div>
 
         <div class="flex items-center gap-2 flex-wrap justify-end">
-${!item.treated ? `
+${isRequestAwaitingRestaurantAction(item) ? `
             <div class="flex items-center gap-2 flex-wrap justify-end">
               <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
                 ${t.restaurantViewButton}
