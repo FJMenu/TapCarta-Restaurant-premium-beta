@@ -2731,8 +2731,9 @@ function loadRestaurantRequests() {
   }
 
   function shouldAutoDeleteHistory(item, activeStatuses) {
-    if (!item || isRequestStillActive(item, activeStatuses)) return false;
-    if (item.historyDeleted === true) return true;
+    if (!item) return false;
+    if (item.historyDeleted === true) return false;
+    if (isRequestStillActive(item, activeStatuses)) return false;
     return (Date.now() - getHistoryReferenceTimestamp(item)) > historyRetentionMs;
   }
 
@@ -2775,6 +2776,7 @@ function loadRestaurantRequests() {
       .filter(
         (item) =>
           item &&
+          item.historyDeleted !== true &&
           item.requestType === 'booking' &&
           String(item.restaurantId || '') === String(activeRestaurantId)
       )
@@ -2784,6 +2786,7 @@ function loadRestaurantRequests() {
       .filter(
         (item) =>
           item &&
+          item.historyDeleted !== true &&
           String(item.restaurantId || '') === String(activeRestaurantId)
       )
       .map((item) => normalizeRequestItem(item, 'order', orderActiveStatuses, t.restaurantTypeOrder));
@@ -2982,8 +2985,20 @@ function getRestaurantRequestBucket(item) {
   const now = Date.now();
   const fortyFiveMinutesMs = 45 * 60 * 1000;
 
+  if (source.historyDeleted === true) {
+    return 'hidden';
+  }
+
   if (!isBooking) {
     return item?.treated ? 'history' : 'action';
+  }
+
+  const bookingTimeMs = getBookingDateTimeMs(source);
+  const isBookingTimeKnown = Number.isFinite(bookingTimeMs);
+  const isBookingObsolete = isBookingTimeKnown && now > bookingTimeMs + fortyFiveMinutesMs;
+
+  if (isBookingObsolete) {
+    return 'history';
   }
 
   if (status === 'pending' || status === 'modified') {
@@ -2995,14 +3010,12 @@ function getRestaurantRequestBucket(item) {
   }
 
   if (status === 'accepted_by_client' || status === 'confirmed') {
-    const bookingTimeMs = getBookingDateTimeMs(source);
-
-    if (!Number.isFinite(bookingTimeMs)) {
+    if (!isBookingTimeKnown) {
       return 'upcoming';
     }
 
     if (isSameLocalDay(bookingTimeMs, now)) {
-      return now <= bookingTimeMs + fortyFiveMinutesMs ? 'today' : 'history';
+      return 'today';
     }
 
     return bookingTimeMs > now ? 'upcoming' : 'history';
