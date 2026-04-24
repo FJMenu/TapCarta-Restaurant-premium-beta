@@ -2911,23 +2911,39 @@ function playRestaurantNotificationSound() {
 
     const masterGain = audioContext.createGain();
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.exponentialRampToValueAtTime(0.42, now + 0.03);
-    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.72);
+    masterGain.gain.linearRampToValueAtTime(1.0, now + 0.03);
+    masterGain.gain.linearRampToValueAtTime(1.0, now + 2.75);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.05);
     masterGain.connect(audioContext.destination);
 
-    const firstTone = audioContext.createOscillator();
-    firstTone.type = 'triangle';
-    firstTone.frequency.setValueAtTime(880, now);
-    firstTone.connect(masterGain);
-    firstTone.start(now);
-    firstTone.stop(now + 0.22);
+    const beepPattern = [
+      { start: 0.00, duration: 0.22, frequency: 950 },
+      { start: 0.32, duration: 0.22, frequency: 1320 },
+      { start: 0.64, duration: 0.22, frequency: 950 },
+      { start: 1.05, duration: 0.32, frequency: 1500 },
+      { start: 1.52, duration: 0.32, frequency: 1500 },
+      { start: 2.05, duration: 0.22, frequency: 950 },
+      { start: 2.37, duration: 0.42, frequency: 1320 }
+    ];
 
-    const secondTone = audioContext.createOscillator();
-    secondTone.type = 'triangle';
-    secondTone.frequency.setValueAtTime(1175, now + 0.26);
-    secondTone.connect(masterGain);
-    secondTone.start(now + 0.26);
-    secondTone.stop(now + 0.55);
+    beepPattern.forEach((beep) => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(beep.frequency, now + beep.start);
+
+      gain.gain.setValueAtTime(0.0001, now + beep.start);
+      gain.gain.linearRampToValueAtTime(1.0, now + beep.start + 0.02);
+      gain.gain.linearRampToValueAtTime(1.0, now + beep.start + beep.duration - 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + beep.start + beep.duration);
+
+      oscillator.connect(gain);
+      gain.connect(masterGain);
+
+      oscillator.start(now + beep.start);
+      oscillator.stop(now + beep.start + beep.duration);
+    });
 
   } catch (e) {
     console.warn('TapCarta sound failed', e);
@@ -2937,26 +2953,21 @@ function playRestaurantNotificationSound() {
 function updateRestaurantSoundToggleIcon() {
   const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled') !== 'false';
   const button = document.getElementById('tapcarta-sound-toggle');
-  const icon = document.querySelector('#tapcarta-sound-toggle i');
-  const label = document.getElementById('tapcarta-sound-toggle-label');
 
-  if (!button || !icon) return;
+  if (!button) return;
 
-  icon.setAttribute('data-lucide', enabled ? 'volume-2' : 'volume-x');
+  const label = enabled
+    ? (currentLang === 'es' ? 'Sonido activado' : currentLang === 'en' ? 'Sound on' : currentLang === 'nl' ? 'Geluid aan' : 'Son activé')
+    : (currentLang === 'es' ? 'Sonido cortado' : currentLang === 'en' ? 'Sound off' : currentLang === 'nl' ? 'Geluid uit' : 'Son coupé');
 
-  button.classList.toggle('border-gold/25', enabled);
-  button.classList.toggle('bg-black/15', enabled);
-  button.classList.toggle('text-cream', enabled);
+  button.className = enabled
+    ? 'btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-gold/25 bg-black/15 text-sm font-semibold text-cream hover:bg-gold/10 transition-all'
+    : 'btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-red-400/40 bg-red-500/15 text-sm font-semibold text-red-100 hover:bg-red-500/20 transition-all';
 
-  button.classList.toggle('border-red-400/25', !enabled);
-  button.classList.toggle('bg-red-500/10', !enabled);
-  button.classList.toggle('text-red-100', !enabled);
-
-  if (label) {
-    label.textContent = enabled
-      ? (currentLang === 'es' ? 'Sonido activado' : currentLang === 'en' ? 'Sound on' : currentLang === 'nl' ? 'Geluid aan' : 'Son activé')
-      : (currentLang === 'es' ? 'Sonido cortado' : currentLang === 'en' ? 'Sound off' : currentLang === 'nl' ? 'Geluid uit' : 'Son coupé');
-  }
+  button.innerHTML = `
+    <i data-lucide="${enabled ? 'volume-2' : 'volume-x'}" class="w-5 h-5 ${enabled ? 'text-gold' : 'text-red-200'}"></i>
+    <span id="tapcarta-sound-toggle-label" class="text-xs font-semibold ${enabled ? 'text-cream/80' : 'text-red-100'}">${label}</span>
+  `;
 
   if (window.lucide) {
     lucide.createIcons();
@@ -2981,6 +2992,7 @@ function toggleRestaurantSound() {
     'info'
   );
 }
+
 function showRestaurantNewRequestNotification(count) {
   const existingNotification = document.getElementById('restaurant-new-request-notification');
   if (existingNotification) {
@@ -2995,6 +3007,15 @@ function showRestaurantNewRequestNotification(count) {
         : currentLang === 'nl'
           ? (count > 1 ? `${count} nieuwe aanvragen te behandelen` : 'Nieuwe aanvraag te behandelen')
           : (count > 1 ? `${count} nouvelles demandes à traiter` : 'Nouvelle demande à traiter');
+
+  const subLabel =
+    currentLang === 'es'
+      ? 'TapCarta Resto · acción requerida'
+      : currentLang === 'en'
+        ? 'TapCarta Resto · action required'
+        : currentLang === 'nl'
+          ? 'TapCarta Resto · actie vereist'
+          : 'TapCarta Resto · action requise';
 
   const buttonLabel =
     currentLang === 'es'
@@ -3016,13 +3037,13 @@ function showRestaurantNewRequestNotification(count) {
       </div>
       <div class="min-w-0">
         <div class="text-base font-extrabold text-gold uppercase tracking-wide">${label}</div>
-        <div class="text-sm text-cream/85 mt-1">TapCarta Resto · action requise</div>
+        <div class="text-sm text-cream/85 mt-1">${subLabel}</div>
       </div>
     </div>
     <button
       type="button"
       class="btn-action px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all shadow-lg whitespace-nowrap"
-      onclick="document.getElementById('restaurant-requests-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('restaurant-new-request-notification')?.remove();"
+      onclick="document.getElementById('restaurant-requests-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });"
     >
       ${buttonLabel}
     </button>
@@ -3030,14 +3051,18 @@ function showRestaurantNewRequestNotification(count) {
 
   document.body.appendChild(notification);
 
-  window.setTimeout(() => {
-    document.getElementById('restaurant-new-request-notification')?.remove();
-  }, 15000);
+  if (window.lucide) {
+    lucide.createIcons();
+  }
 }
 
 function notifyIfNewActionRequests() {
   const actionIds = activeRequests.map((item) => String(item.id));
   const state = window.tapCartaRestaurantRequestNotificationState;
+
+  if (!actionIds.length) {
+    document.getElementById('restaurant-new-request-notification')?.remove();
+  }
 
   if (!state.knownActionRequestIds) {
     state.knownActionRequestIds = new Set(actionIds);
@@ -3054,18 +3079,22 @@ function notifyIfNewActionRequests() {
   const newIds = actionIds.filter((id) => !state.knownActionRequestIds.has(id));
   state.knownActionRequestIds = new Set(actionIds);
 
-  if (!newIds.length) {
+  if (newIds.length) {
+    const now = Date.now();
+
+    if (now - state.lastNotificationAt >= 5000) {
+      state.lastNotificationAt = now;
+      playRestaurantNotificationSound();
+    }
+
+    showRestaurantNewRequestNotification(actionIds.length);
     return;
   }
 
-  const now = Date.now();
-  if (now - state.lastNotificationAt < 5000) {
-    return;
+  const existingNotification = document.getElementById('restaurant-new-request-notification');
+  if (actionIds.length && !existingNotification) {
+    showRestaurantNewRequestNotification(actionIds.length);
   }
-
-  state.lastNotificationAt = now;
-  playRestaurantNotificationSound();
-  showRestaurantNewRequestNotification(newIds.length);
 }
 
 const googleReviewsData = window.tapCartaGoogleReviewsData;
@@ -4541,10 +4570,12 @@ function renderRequestRow(item, displayMode = 'active') {
         id="tapcarta-sound-toggle"
         onclick="toggleRestaurantSound()"
         class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-gold/25 bg-black/15 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
-        title="Notification sonore"
+        title="${currentLang === 'es' ? 'Notificación sonora' : currentLang === 'en' ? 'Sound notification' : currentLang === 'nl' ? 'Geluidsmelding' : 'Notification sonore'}"
       >
         <i data-lucide="volume-2" class="w-5 h-5 text-gold"></i>
-        <span id="tapcarta-sound-toggle-label" class="text-xs font-semibold text-cream/80">Son activé</span>
+        <span id="tapcarta-sound-toggle-label" class="text-xs font-semibold text-cream/80">
+          ${currentLang === 'es' ? 'Sonido activado' : currentLang === 'en' ? 'Sound on' : currentLang === 'nl' ? 'Geluid aan' : 'Son activé'}
+        </span>
       </button>
 
       <div class="inline-flex items-center gap-3 rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
