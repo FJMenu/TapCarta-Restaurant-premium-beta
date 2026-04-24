@@ -2710,8 +2710,8 @@ function loadRestaurantRequests() {
     siteConfig?.identity?.id ||
     '';
 
-  const bookingActiveStatuses = ['pending', 'modified', 'accepted_by_client', 'rejected_by_client'];
-  const orderActiveStatuses = ['sent', 'modified', 'accepted_by_client', 'rejected_by_client'];
+  const bookingActiveStatuses = ['pending', 'modified'];
+  const orderActiveStatuses = ['sent', 'modified'];
 
   function getHistoryReferenceTimestamp(item) {
     const rawValue =
