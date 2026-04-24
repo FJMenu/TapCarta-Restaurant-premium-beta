@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.4';
+            const APP_VERSION = 'V1.2.5';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3267,6 +3267,7 @@ const restaurantData = {
 let activeRequests = [];
 let todayRequests = [];
 let upcomingRequests = [];
+let verifyRequests = [];
 let treatedRequests = [];
 let activeOrders = [];
 let activeReservations = [];
@@ -3283,6 +3284,27 @@ function getBookingDateTimeMs(sourceRequest) {
   return Number.isFinite(timeMs) ? timeMs : NaN;
 }
 
+function getRequestReferenceDateTimeMs(sourceRequest) {
+  const rawValue =
+    sourceRequest?.confirmedAt ||
+    sourceRequest?.updatedAt ||
+    sourceRequest?.createdAt;
+
+  const parsed = rawValue ? new Date(rawValue).getTime() : NaN;
+  return Number.isFinite(parsed) ? parsed : Date.now();
+}
+
+function getNextFiveAMCleanupMs(referenceMs) {
+  const cleanupDate = new Date(referenceMs);
+  cleanupDate.setHours(5, 0, 0, 0);
+
+  if (referenceMs >= cleanupDate.getTime()) {
+    cleanupDate.setDate(cleanupDate.getDate() + 1);
+  }
+
+  return cleanupDate.getTime();
+}
+
 function isSameLocalDay(timestampA, timestampB) {
   const dateA = new Date(timestampA);
   const dateB = new Date(timestampB);
@@ -3294,35 +3316,87 @@ function isSameLocalDay(timestampA, timestampB) {
   );
 }
 
+function markRequestAsUnconfirmedHistory(source, isBooking) {
+  const nowIso = new Date().toISOString();
+
+  source.status = isBooking
+    ? 'presence_unknown_no_action'
+    : 'service_unknown_no_action';
+
+  source.autoClosedAt = nowIso;
+  source.updatedAt = nowIso;
+  source.treated = true;
+  source.restaurantResponse = {
+    ...(source.restaurantResponse || {}),
+    reason: isBooking
+      ? 'presence_or_absence_not_confirmed'
+      : 'service_not_confirmed',
+    message: isBooking
+      ? (currentLang === 'es'
+          ? 'Sin acción: presencia o ausencia no confirmada.'
+          : currentLang === 'en'
+            ? 'No action: presence or absence not confirmed.'
+            : currentLang === 'nl'
+              ? 'Geen actie: aanwezigheid of afwezigheid niet bevestigd.'
+              : 'Aucune action : présence ou absence non confirmée.')
+      : (currentLang === 'es'
+          ? 'Sin acción: servicio no confirmado.'
+          : currentLang === 'en'
+            ? 'No action: service not confirmed.'
+            : currentLang === 'nl'
+              ? 'Geen actie: bediening niet bevestigd.'
+              : 'Aucune action : service non confirmé.'),
+    updatedBy: 'system'
+  };
+
+  void persistRestaurantRequestUpdate(source);
+}
+
 function getRestaurantRequestBucket(item) {
   const source = item?.sourceRequest || {};
   const status = source.status || '';
   const isBooking = item?.type === t.restaurantTypeBooking;
   const now = Date.now();
-  const fortyFiveMinutesMs = 45 * 60 * 1000;
+
+  const bookingVerifyDelayMs = 60 * 60 * 1000;
+  const orderVerifyDelayMs = 45 * 60 * 1000;
 
   if (source.historyDeleted === true) {
     return 'hidden';
   }
 
+  if (
+    status === 'served' ||
+    status === 'arrived' ||
+    status === 'cancelled' ||
+    status === 'cancelled_by_client' ||
+    status === 'presence_unknown_no_action' ||
+    status === 'service_unknown_no_action'
+  ) {
+    return 'history';
+  }
+
   if (!isBooking) {
+    if (status === 'accepted_by_client' || status === 'confirmed') {
+      const referenceMs = getRequestReferenceDateTimeMs(source);
+      const cleanupMs = getNextFiveAMCleanupMs(referenceMs);
+
+      if (now >= cleanupMs) {
+        markRequestAsUnconfirmedHistory(source, false);
+        return 'history';
+      }
+
+      return now >= referenceMs + orderVerifyDelayMs ? 'verify' : 'action';
+    }
+
     return item?.treated ? 'history' : 'action';
   }
 
   const bookingTimeMs = getBookingDateTimeMs(source);
   const isBookingTimeKnown = Number.isFinite(bookingTimeMs);
-  const isBookingObsolete = isBookingTimeKnown && now > bookingTimeMs + fortyFiveMinutesMs;
 
-  if (isBookingObsolete) {
-    return 'history';
-  }
-
-  if (status === 'pending' || status === 'modified') {
+  if (status === 'pending' || status === 'modified' || status === 'rejected_by_client') {
     return 'action';
-  }
-
-  if (status === 'rejected_by_client' || status === 'cancelled' || status === 'cancelled_by_client') {
-    return 'history';
   }
 
   if (status === 'accepted_by_client' || status === 'confirmed') {
@@ -3330,11 +3404,22 @@ function getRestaurantRequestBucket(item) {
       return 'upcoming';
     }
 
+    const cleanupMs = getNextFiveAMCleanupMs(bookingTimeMs);
+
+    if (now >= cleanupMs) {
+      markRequestAsUnconfirmedHistory(source, true);
+      return 'history';
+    }
+
+    if (now >= bookingTimeMs + bookingVerifyDelayMs) {
+      return 'verify';
+    }
+
     if (isSameLocalDay(bookingTimeMs, now)) {
       return 'today';
     }
 
-    return bookingTimeMs > now ? 'upcoming' : 'history';
+    return bookingTimeMs > now ? 'upcoming' : 'verify';
   }
 
   return item?.treated ? 'history' : 'action';
@@ -3346,6 +3431,7 @@ function syncRequestsState() {
   activeRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'action');
   todayRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'today');
   upcomingRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'upcoming');
+  verifyRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'verify');
   treatedRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'history');
 
   selectedRequestIds = new Set(
@@ -4565,6 +4651,32 @@ function getRequestDisplayStatusMeta(item) {
     };
   }
 
+  if (sourceStatus === 'presence_unknown_no_action') {
+    return {
+      label: currentLang === 'es'
+        ? 'Sin acción: presencia o ausencia no confirmada'
+        : currentLang === 'en'
+          ? 'No action: presence or absence not confirmed'
+          : currentLang === 'nl'
+            ? 'Geen actie: aanwezigheid of afwezigheid niet bevestigd'
+            : 'Aucune action : présence ou absence non confirmée',
+      className: 'bg-orange-500/15 text-orange-200 border-orange-400/30'
+    };
+  }
+
+  if (sourceStatus === 'service_unknown_no_action') {
+    return {
+      label: currentLang === 'es'
+        ? 'Sin acción: servicio no confirmado'
+        : currentLang === 'en'
+          ? 'No action: service not confirmed'
+          : currentLang === 'nl'
+            ? 'Geen actie: bediening niet bevestigd'
+            : 'Aucune action : service non confirmé',
+      className: 'bg-orange-500/15 text-orange-200 border-orange-400/30'
+    };
+  }
+
   if (sourceStatus === 'cancelled' || sourceStatus === 'cancelled_by_client') {
     return {
       label: currentLang === 'es' ? 'Cancelada' : currentLang === 'en' ? 'Cancelled' : currentLang === 'nl' ? 'Geannuleerd' : 'Annulée',
@@ -4670,26 +4782,26 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
   }
 
   return `
-    <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-3xl">
-      <div class="rounded-xl border border-sky-300/18 bg-sky-500/8 px-3 py-2.5">
-        <div class="text-[10px] uppercase tracking-wide text-sky-200/65 font-bold">
+    <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-2xl">
+      <div class="rounded-lg border border-sky-300/16 bg-sky-500/7 px-2.5 py-2">
+        <div class="text-[9px] uppercase tracking-wide text-sky-200/60 font-bold">
           ${currentLang === 'es' ? 'Fecha' : currentLang === 'en' ? 'Date' : currentLang === 'nl' ? 'Datum' : 'Date'}
         </div>
-        <div class="text-sm font-bold text-cream mt-1">${source.booking?.date || '-'}</div>
+        <div class="text-xs md:text-sm font-bold text-cream mt-0.5">${source.booking?.date || '-'}</div>
       </div>
 
-      <div class="rounded-xl border border-gold/25 bg-gold/10 px-3 py-2.5">
-        <div class="text-[10px] uppercase tracking-wide text-gold/75 font-bold">
+      <div class="rounded-lg border border-gold/22 bg-gold/8 px-2.5 py-2">
+        <div class="text-[9px] uppercase tracking-wide text-gold/70 font-bold">
           ${currentLang === 'es' ? 'Hora' : currentLang === 'en' ? 'Time' : currentLang === 'nl' ? 'Uur' : 'Heure'}
         </div>
-        <div class="text-lg md:text-xl font-extrabold text-gold mt-1">${source.booking?.time || '-'}</div>
+        <div class="text-base md:text-lg font-extrabold text-gold mt-0.5">${source.booking?.time || '-'}</div>
       </div>
 
-      <div class="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2.5">
-        <div class="text-[10px] uppercase tracking-wide text-cream/55 font-bold">
+      <div class="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-2">
+        <div class="text-[9px] uppercase tracking-wide text-cream/50 font-bold">
           ${currentLang === 'es' ? 'Personas' : currentLang === 'en' ? 'People' : currentLang === 'nl' ? 'Personen' : 'Personnes'}
         </div>
-        <div class="text-lg md:text-xl font-extrabold text-cream mt-1">
+        <div class="text-base md:text-lg font-extrabold text-cream mt-0.5">
           ${bookingPeople || '-'}
         </div>
       </div>
@@ -4784,7 +4896,7 @@ function renderRequestRow(item, displayMode = 'active') {
   }
 
   function renderRequestsSection() {
-    const visibleRequestsCount = activeRequests.length + todayRequests.length + upcomingRequests.length;
+    const visibleRequestsCount = activeRequests.length + todayRequests.length + upcomingRequests.length + verifyRequests.length;
 
     const renderRequestGroup = (title, subtitle, items, emptyText, mode = 'active') => `
       <div class="rounded-[22px] border border-white/10 bg-black/12 p-4 md:p-5">
@@ -4904,6 +5016,20 @@ function renderRequestRow(item, displayMode = 'active') {
         upcomingRequests,
         currentLang === 'es' ? 'No hay reservas próximas.' : currentLang === 'en' ? 'No upcoming bookings.' : currentLang === 'nl' ? 'Geen toekomstige reservaties.' : 'Aucune réservation à venir.',
         'readonly'
+      )}
+
+      ${renderRequestGroup(
+        currentLang === 'es' ? 'Por verificar' : currentLang === 'en' ? 'To verify' : currentLang === 'nl' ? 'Te controleren' : 'À vérifier',
+        currentLang === 'es'
+          ? 'Solicitudes antiguas que siguen abiertas porque no fueron cerradas durante el servicio.'
+          : currentLang === 'en'
+            ? 'Older requests still open because they were not closed during service.'
+            : currentLang === 'nl'
+              ? 'Oudere aanvragen die nog openstaan omdat ze niet tijdens de service werden afgesloten.'
+              : 'Demandes anciennes encore ouvertes car elles n’ont pas été clôturées pendant le service.',
+        verifyRequests,
+        currentLang === 'es' ? 'No hay solicitudes por verificar.' : currentLang === 'en' ? 'No requests to verify.' : currentLang === 'nl' ? 'Geen aanvragen te controleren.' : 'Aucune demande à vérifier.',
+        'verify'
       )}
     </div>
 
