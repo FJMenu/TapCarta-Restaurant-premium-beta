@@ -2711,7 +2711,7 @@ function loadRestaurantRequests() {
     '';
 
   const bookingActiveStatuses = ['pending', 'modified'];
-  const orderActiveStatuses = ['sent', 'modified'];
+  const orderActiveStatuses = ['sent', 'modified', 'accepted_by_client', 'rejected_by_client'];
 
   function getHistoryReferenceTimestamp(item) {
     const rawValue =
@@ -4353,22 +4353,34 @@ window.validateRequest = function(requestId) {
 
   const nowIso = new Date().toISOString();
   const isOrder = !!item.sourceRequest?.order;
-  const confirmationMessage = isOrder
-    ? t.restaurantOrderConfirmedMessage
-    : t.restaurantBookingConfirmedMessage;
+  const sourceStatus = item.sourceRequest.status || '';
 
   item.treated = true;
   item.status = t.restaurantStatusProcessed;
-
-  item.sourceRequest.status = 'confirmed';
   item.sourceRequest.updatedAt = nowIso;
-  item.sourceRequest.confirmedAt = nowIso;
-  item.sourceRequest.restaurantResponse = {
-    ...(item.sourceRequest.restaurantResponse || {}),
-    reason: 'confirmed',
-    message: confirmationMessage,
-    updatedBy: 'restaurant'
-  };
+
+  if (sourceStatus === 'rejected_by_client') {
+    item.sourceRequest.status = 'cancelled_by_client';
+    item.sourceRequest.cancelledAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      reason: 'client_rejected_modification',
+      updatedBy: 'restaurant'
+    };
+  } else {
+    const confirmationMessage = isOrder
+      ? t.restaurantOrderConfirmedMessage
+      : t.restaurantBookingConfirmedMessage;
+
+    item.sourceRequest.status = 'confirmed';
+    item.sourceRequest.confirmedAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      reason: 'confirmed',
+      message: confirmationMessage,
+      updatedBy: 'restaurant'
+    };
+  }
 
   void persistRestaurantRequestUpdate(item.sourceRequest);
   syncRequestsState();
@@ -4514,7 +4526,13 @@ function getRequestDisplayStatusMeta(item) {
 }
 function isRequestAwaitingRestaurantAction(item) {
   const sourceStatus = item?.sourceRequest?.status || '';
-  return sourceStatus === 'pending' || sourceStatus === 'modified' || sourceStatus === 'sent';
+  return (
+    sourceStatus === 'pending' ||
+    sourceStatus === 'modified' ||
+    sourceStatus === 'sent' ||
+    sourceStatus === 'accepted_by_client' ||
+    sourceStatus === 'rejected_by_client'
+  );
 }
 function renderRequestRow(item, displayMode = 'active') {
     const isOrder = item.type === t.restaurantTypeOrder;
