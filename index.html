@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.18';
+            const APP_VERSION = 'V1.2.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -168,7 +168,7 @@
     }
 
   .language-selector {
-      position: fixed;
+      position: absolute;
       top: 24px;
       right: 24px;
       display: flex;
@@ -2928,26 +2928,36 @@ function playRestaurantNotificationSound() {
     console.warn('TapCarta sound failed', e);
   }
 }
-function toggleRestaurantSound() {
-  const current = localStorage.getItem('tapcarta_restaurant_sound_enabled');
-
-  const next = current === 'false' ? 'true' : 'false';
-
-  localStorage.setItem('tapcarta_restaurant_sound_enabled', next);
-
+function updateRestaurantSoundToggleIcon() {
+  const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled') !== 'false';
   const icon = document.querySelector('#tapcarta-sound-toggle i');
 
   if (!icon) return;
 
-  if (next === 'false') {
-    icon.setAttribute('data-lucide', 'volume-x');
-  } else {
-    icon.setAttribute('data-lucide', 'volume-2');
-  }
+  icon.setAttribute('data-lucide', enabled ? 'volume-2' : 'volume-x');
 
   if (window.lucide) {
     lucide.createIcons();
   }
+}
+
+function toggleRestaurantSound() {
+  const current = localStorage.getItem('tapcarta_restaurant_sound_enabled');
+  const next = current === 'false' ? 'true' : 'false';
+
+  localStorage.setItem('tapcarta_restaurant_sound_enabled', next);
+  updateRestaurantSoundToggleIcon();
+
+  if (next === 'true') {
+    playRestaurantNotificationSound();
+  }
+
+  showRestaurantToast(
+    next === 'true'
+      ? 'Notification sonore activée.'
+      : 'Notification sonore désactivée.',
+    'info'
+  );
 }
 function showRestaurantNewRequestNotification(count) {
   const existingNotification = document.getElementById('restaurant-new-request-notification');
@@ -3012,6 +3022,7 @@ function notifyIfNewActionRequests() {
 
     if (actionIds.length) {
       state.lastNotificationAt = Date.now();
+      playRestaurantNotificationSound();
       showRestaurantNewRequestNotification(actionIds.length);
     }
 
@@ -3031,6 +3042,7 @@ function notifyIfNewActionRequests() {
   }
 
   state.lastNotificationAt = now;
+  playRestaurantNotificationSound();
   showRestaurantNewRequestNotification(newIds.length);
 }
 
@@ -6098,6 +6110,8 @@ function renderRequestRow(item, displayMode = 'active') {
     syncRequestsState();
     notifyIfNewActionRequests();
     renderMenu();
+
+    updateRestaurantSoundToggleIcon();
 
     if (window.lucide) {
       requestAnimationFrame(() => {
