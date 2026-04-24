@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.14';
+            const APP_VERSION = 'V1.1.15';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2814,6 +2814,85 @@ window.tapCartaRestaurantRefreshState = window.tapCartaRestaurantRefreshState ||
   requestsIntervalId: null,
   googleIntervalId: null
 };
+
+window.tapCartaRestaurantRequestNotificationState = window.tapCartaRestaurantRequestNotificationState || {
+  knownActionRequestIds: null,
+  lastNotificationAt: 0
+};
+
+function showRestaurantNewRequestNotification(count) {
+  const existingNotification = document.getElementById('restaurant-new-request-notification');
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
+  const label =
+    currentLang === 'es'
+      ? (count > 1 ? `${count} nuevas solicitudes por tratar` : 'Nueva solicitud por tratar')
+      : currentLang === 'en'
+        ? (count > 1 ? `${count} new requests to handle` : 'New request to handle')
+        : currentLang === 'nl'
+          ? (count > 1 ? `${count} nieuwe aanvragen te behandelen` : 'Nieuwe aanvraag te behandelen')
+          : (count > 1 ? `${count} nouvelles demandes à traiter` : 'Nouvelle demande à traiter');
+
+  const buttonLabel =
+    currentLang === 'es'
+      ? 'Ver'
+      : currentLang === 'en'
+        ? 'View'
+        : currentLang === 'nl'
+          ? 'Bekijken'
+          : 'Voir';
+
+  const notification = document.createElement('div');
+  notification.id = 'restaurant-new-request-notification';
+  notification.className = 'fixed left-4 right-4 bottom-4 z-[9999] md:left-auto md:right-6 md:bottom-6 md:w-[360px] rounded-2xl border border-gold/40 bg-black/90 shadow-[0_18px_60px_rgba(0,0,0,0.45)] px-4 py-4 flex items-center justify-between gap-3';
+
+  notification.innerHTML = `
+    <div class="min-w-0">
+      <div class="text-sm font-semibold text-gold">${label}</div>
+      <div class="text-xs text-cream/65 mt-1">TapCarta Resto</div>
+    </div>
+    <button
+      type="button"
+      class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all"
+      onclick="document.getElementById('restaurant-requests-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('restaurant-new-request-notification')?.remove();"
+    >
+      ${buttonLabel}
+    </button>
+  `;
+
+  document.body.appendChild(notification);
+
+  window.setTimeout(() => {
+    document.getElementById('restaurant-new-request-notification')?.remove();
+  }, 15000);
+}
+
+function notifyIfNewActionRequests() {
+  const actionIds = activeRequests.map((item) => String(item.id));
+  const state = window.tapCartaRestaurantRequestNotificationState;
+
+  if (!state.knownActionRequestIds) {
+    state.knownActionRequestIds = new Set(actionIds);
+    return;
+  }
+
+  const newIds = actionIds.filter((id) => !state.knownActionRequestIds.has(id));
+  state.knownActionRequestIds = new Set(actionIds);
+
+  if (!newIds.length) {
+    return;
+  }
+
+  const now = Date.now();
+  if (now - state.lastNotificationAt < 5000) {
+    return;
+  }
+
+  state.lastNotificationAt = now;
+  showRestaurantNewRequestNotification(newIds.length);
+}
 
 const googleReviewsData = window.tapCartaGoogleReviewsData;
 
@@ -5817,6 +5896,7 @@ function renderRequestRow(item, displayMode = 'active') {
   window.tapCartaRestaurantRefreshState.requestsIntervalId = window.setInterval(async () => {
     await syncLiveBookingsToLocalStorage();
     syncRequestsState();
+    notifyIfNewActionRequests();
     renderMenu();
 
     if (window.lucide) {
