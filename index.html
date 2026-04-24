@@ -3321,6 +3321,8 @@ window.validateSelectedRequests = async function() {
   });
 
   window.selectedRequestIds = new Set();
+  syncRequestsState();
+  notifyIfNewActionRequests();
   renderMenu();
 };
 
@@ -4261,6 +4263,8 @@ window.validateRequest = function(requestId) {
   };
 
   void persistRestaurantRequestUpdate(item.sourceRequest);
+  syncRequestsState();
+  notifyIfNewActionRequests();
   renderMenu();
 };
 
@@ -4585,7 +4589,7 @@ function renderRequestRow(item, displayMode = 'active') {
         <div class="text-xs text-cream/70 leading-tight">
           ${siteConfig.orderReservationOptionEnabled
             ? (currentLang === 'es'
-                ? 'Demandas<br>visibles'
+                ? 'Solicitudes<br>visibles'
                 : currentLang === 'en'
                   ? 'Visible<br>requests'
                   : currentLang === 'nl'
