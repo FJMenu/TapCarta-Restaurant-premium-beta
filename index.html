@@ -2900,19 +2900,63 @@ function showRestaurantConfirmDialog({ title, message, confirmLabel, cancelLabel
     }
   });
 }
-function playRestaurantNotificationSound() {
-  const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled');
+window.tapCartaRestaurantAudioState = window.tapCartaRestaurantAudioState || {
+  context: null,
+  unlocked: false
+};
 
-  if (enabled === 'false') return;
+function getRestaurantAudioContext() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextClass) return null;
+
+  if (!window.tapCartaRestaurantAudioState.context) {
+    window.tapCartaRestaurantAudioState.context = new AudioContextClass();
+  }
+
+  return window.tapCartaRestaurantAudioState.context;
+}
+
+async function unlockRestaurantNotificationSound() {
+  const audioContext = getRestaurantAudioContext();
+
+  if (!audioContext) return false;
 
   try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
+
+    window.tapCartaRestaurantAudioState.unlocked = audioContext.state === 'running';
+    return window.tapCartaRestaurantAudioState.unlocked;
+  } catch (e) {
+    console.warn('TapCarta sound unlock failed', e);
+    window.tapCartaRestaurantAudioState.unlocked = false;
+    return false;
+  }
+}
+
+function playRestaurantNotificationSound({ force = false } = {}) {
+  const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled');
+
+  if (!force && enabled === 'false') return false;
+
+  try {
+    const audioContext = getRestaurantAudioContext();
+
+    if (!audioContext) return false;
+
+    if (audioContext.state !== 'running') {
+      console.warn('TapCarta sound blocked: audio context not running');
+      return false;
+    }
+
     const now = audioContext.currentTime;
 
     const masterGain = audioContext.createGain();
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.linearRampToValueAtTime(1.0, now + 0.03);
-    masterGain.gain.linearRampToValueAtTime(1.0, now + 2.75);
+    masterGain.gain.linearRampToValueAtTime(0.28, now + 0.03);
+    masterGain.gain.linearRampToValueAtTime(0.28, now + 2.75);
     masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.05);
     masterGain.connect(audioContext.destination);
 
@@ -2934,8 +2978,8 @@ function playRestaurantNotificationSound() {
       oscillator.frequency.setValueAtTime(beep.frequency, now + beep.start);
 
       gain.gain.setValueAtTime(0.0001, now + beep.start);
-      gain.gain.linearRampToValueAtTime(1.0, now + beep.start + 0.02);
-      gain.gain.linearRampToValueAtTime(1.0, now + beep.start + beep.duration - 0.03);
+      gain.gain.linearRampToValueAtTime(0.55, now + beep.start + 0.02);
+      gain.gain.linearRampToValueAtTime(0.55, now + beep.start + beep.duration - 0.03);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + beep.start + beep.duration);
 
       oscillator.connect(gain);
@@ -2945,8 +2989,10 @@ function playRestaurantNotificationSound() {
       oscillator.stop(now + beep.start + beep.duration);
     });
 
+    return true;
   } catch (e) {
     console.warn('TapCarta sound failed', e);
+    return false;
   }
 }
 
@@ -2960,13 +3006,20 @@ function updateRestaurantSoundToggleIcon() {
     ? (currentLang === 'es' ? 'Sonido activado' : currentLang === 'en' ? 'Sound on' : currentLang === 'nl' ? 'Geluid aan' : 'Son activé')
     : (currentLang === 'es' ? 'Sonido cortado' : currentLang === 'en' ? 'Sound off' : currentLang === 'nl' ? 'Geluid uit' : 'Son coupé');
 
+  const title = enabled
+    ? (currentLang === 'es' ? 'El sonido está activado. Haz clic para cortarlo.' : currentLang === 'en' ? 'Sound is on. Click to turn it off.' : currentLang === 'nl' ? 'Geluid staat aan. Klik om uit te zetten.' : 'Le son est activé. Cliquez pour le couper.')
+    : (currentLang === 'es' ? 'El sonido está cortado. Haz clic para activarlo.' : currentLang === 'en' ? 'Sound is off. Click to turn it on.' : currentLang === 'nl' ? 'Geluid staat uit. Klik om aan te zetten.' : 'Le son est coupé. Cliquez pour l’activer.');
+
+  button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+  button.setAttribute('title', title);
+
   button.className = enabled
-    ? 'btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-gold/25 bg-black/15 text-sm font-semibold text-cream hover:bg-gold/10 transition-all'
-    : 'btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-red-400/40 bg-red-500/15 text-sm font-semibold text-red-100 hover:bg-red-500/20 transition-all';
+    ? 'btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-gold bg-gold/15 text-sm font-semibold text-cream hover:bg-gold/20 transition-all shadow-[0_0_0_3px_rgba(212,175,55,0.12)]'
+    : 'btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-red-400/55 bg-red-500/18 text-sm font-semibold text-red-100 hover:bg-red-500/25 transition-all shadow-[0_0_0_3px_rgba(248,113,113,0.12)]';
 
   button.innerHTML = `
     <i data-lucide="${enabled ? 'volume-2' : 'volume-x'}" class="w-5 h-5 ${enabled ? 'text-gold' : 'text-red-200'}"></i>
-    <span id="tapcarta-sound-toggle-label" class="text-xs font-semibold ${enabled ? 'text-cream/80' : 'text-red-100'}">${label}</span>
+    <span id="tapcarta-sound-toggle-label" class="text-xs font-extrabold ${enabled ? 'text-gold' : 'text-red-100'}">${label}</span>
   `;
 
   if (window.lucide) {
@@ -2974,7 +3027,7 @@ function updateRestaurantSoundToggleIcon() {
   }
 }
 
-function toggleRestaurantSound() {
+async function toggleRestaurantSound() {
   const current = localStorage.getItem('tapcarta_restaurant_sound_enabled');
   const next = current === 'false' ? 'true' : 'false';
 
@@ -2982,13 +3035,27 @@ function toggleRestaurantSound() {
   updateRestaurantSoundToggleIcon();
 
   if (next === 'true') {
-    playRestaurantNotificationSound();
+    const unlocked = await unlockRestaurantNotificationSound();
+    const soundPlayed = unlocked ? playRestaurantNotificationSound({ force: true }) : false;
+
+    showRestaurantToast(
+      soundPlayed
+        ? (currentLang === 'es' ? 'Notificación sonora activada. Sonido de prueba enviado.' : currentLang === 'en' ? 'Sound notification enabled. Test sound played.' : currentLang === 'nl' ? 'Geluidsmelding ingeschakeld. Testgeluid afgespeeld.' : 'Notification sonore activée. Son de test envoyé.')
+        : (currentLang === 'es' ? 'Sonido activado, pero el navegador bloqueó la reproducción. Haz clic otra vez si no escuchas nada.' : currentLang === 'en' ? 'Sound enabled, but the browser blocked playback. Click again if you hear nothing.' : currentLang === 'nl' ? 'Geluid ingeschakeld, maar de browser blokkeerde het afspelen. Klik opnieuw als je niets hoort.' : 'Son activé, mais le navigateur a bloqué la lecture. Cliquez encore si vous n’entendez rien.'),
+      'info'
+    );
+
+    return;
   }
 
   showRestaurantToast(
-    next === 'true'
-      ? (currentLang === 'es' ? 'Notificación sonora activada.' : currentLang === 'en' ? 'Sound notification enabled.' : currentLang === 'nl' ? 'Geluidsmelding ingeschakeld.' : 'Notification sonore activée.')
-      : (currentLang === 'es' ? 'Notificación sonora desactivada.' : currentLang === 'en' ? 'Sound notification disabled.' : currentLang === 'nl' ? 'Geluidsmelding uitgeschakeld.' : 'Notification sonore désactivée.'),
+    currentLang === 'es'
+      ? 'Notificación sonora desactivada.'
+      : currentLang === 'en'
+        ? 'Sound notification disabled.'
+        : currentLang === 'nl'
+          ? 'Geluidsmelding uitgeschakeld.'
+          : 'Notification sonore désactivée.',
     'info'
   );
 }
