@@ -7227,7 +7227,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('Restaurant actif chargé :', activeRestaurantData);
 
   renderMenu();
-  initializeRestaurantAudioUnlockBridge();
+
+  if (typeof initializeRestaurantAudioUnlockBridge === 'function') {
+    initializeRestaurantAudioUnlockBridge();
+  }
 
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
