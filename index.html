@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.15';
+            const APP_VERSION = 'V1.1.16';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2846,16 +2846,21 @@ function showRestaurantNewRequestNotification(count) {
 
   const notification = document.createElement('div');
   notification.id = 'restaurant-new-request-notification';
-  notification.className = 'fixed left-4 right-4 bottom-4 z-[9999] md:left-auto md:right-6 md:bottom-6 md:w-[360px] rounded-2xl border border-gold/40 bg-black/90 shadow-[0_18px_60px_rgba(0,0,0,0.45)] px-4 py-4 flex items-center justify-between gap-3';
+  notification.className = 'fixed left-3 right-3 bottom-4 z-[9999] md:left-auto md:right-6 md:bottom-6 md:w-[430px] rounded-[24px] border-2 border-gold bg-gradient-to-br from-gold/25 via-black/95 to-black shadow-[0_0_0_4px_rgba(212,175,55,0.18),0_22px_80px_rgba(0,0,0,0.65)] px-5 py-5 flex items-center justify-between gap-4 animate-pulse';
 
   notification.innerHTML = `
-    <div class="min-w-0">
-      <div class="text-sm font-semibold text-gold">${label}</div>
-      <div class="text-xs text-cream/65 mt-1">TapCarta Resto</div>
+    <div class="flex items-center gap-4 min-w-0">
+      <div class="w-12 h-12 rounded-2xl bg-gold text-black flex items-center justify-center shadow-lg flex-shrink-0">
+        <i data-lucide="bell-ring" class="w-6 h-6"></i>
+      </div>
+      <div class="min-w-0">
+        <div class="text-base font-extrabold text-gold uppercase tracking-wide">${label}</div>
+        <div class="text-sm text-cream/85 mt-1">TapCarta Resto · action requise</div>
+      </div>
     </div>
     <button
       type="button"
-      class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all"
+      class="btn-action px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all shadow-lg whitespace-nowrap"
       onclick="document.getElementById('restaurant-requests-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('restaurant-new-request-notification')?.remove();"
     >
       ${buttonLabel}
@@ -4430,6 +4435,28 @@ function renderRequestRow(item, displayMode = 'active') {
             </div>
           </div>
         </summary>
+
+        <div class="mt-4 mb-4 rounded-2xl border border-white/10 bg-black/10 px-4 py-4">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <div class="text-sm font-semibold text-cream">
+                ${selectedHistoryRequestIds.size} ${t.restaurantHistorySelected}
+              </div>
+              <div class="text-xs text-cream/60 mt-1">
+                ${t.restaurantHistorySelectMultiple}
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="toggleAllHistoryRequests()" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
+                ${selectedHistoryRequestIds.size === treatedRequests.length && treatedRequests.length ? t.restaurantHistoryDeselectAll : t.restaurantHistorySelectAll}
+              </button>
+              <button onclick="deleteSelectedHistoryRequests()" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryDeleteSelected}">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <div id="restaurant-history-requests" class="mt-4 space-y-3">
           ${treatedRequests.length
