@@ -5307,10 +5307,10 @@ function renderRequestRow(item, displayMode = 'active') {
 
       ${renderRequestGroup(
         currentLang === 'es' ? 'Hoy' : currentLang === 'en' ? 'Today' : currentLang === 'nl' ? 'Vandaag' : 'Aujourd’hui',
-        currentLang === 'es' ? 'Reservas del día, visibles para el servicio.' : currentLang === 'en' ? 'Today’s bookings, visible for service.' : currentLang === 'nl' ? 'Reservaties van vandaag, zichtbaar voor de service.' : 'Réservations du jour, visibles pour le service.',
+        currentLang === 'es' ? 'Solicitudes del día, visibles para el servicio.' : currentLang === 'en' ? 'Today’s requests, visible for service.' : currentLang === 'nl' ? 'Aanvragen van vandaag, zichtbaar voor de service.' : 'Demandes du jour, visibles pour le service.',
         todayRequests,
-        currentLang === 'es' ? 'No hay reservas para hoy.' : currentLang === 'en' ? 'No bookings for today.' : currentLang === 'nl' ? 'Geen reservaties voor vandaag.' : 'Aucune réservation pour aujourd’hui.',
-        'readonly'
+        currentLang === 'es' ? 'No hay solicitudes para hoy.' : currentLang === 'en' ? 'No requests for today.' : currentLang === 'nl' ? 'Geen aanvragen voor vandaag.' : 'Aucune demande pour aujourd’hui.',
+        'active'
       )}
 
       ${renderRequestGroup(
