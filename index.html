@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.2';
+            const APP_VERSION = 'V1.2.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2907,34 +2907,56 @@ function playRestaurantNotificationSound() {
 
   try {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioContext.currentTime;
 
-    const o = audioContext.createOscillator();
-    const g = audioContext.createGain();
+    const masterGain = audioContext.createGain();
+    masterGain.gain.setValueAtTime(0.001, now);
+    masterGain.gain.exponentialRampToValueAtTime(0.42, now + 0.03);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.72);
+    masterGain.connect(audioContext.destination);
 
-    o.type = 'sine';
-    o.frequency.setValueAtTime(880, audioContext.currentTime);
+    const firstTone = audioContext.createOscillator();
+    firstTone.type = 'triangle';
+    firstTone.frequency.setValueAtTime(880, now);
+    firstTone.connect(masterGain);
+    firstTone.start(now);
+    firstTone.stop(now + 0.22);
 
-    g.gain.setValueAtTime(0.001, audioContext.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.35);
-
-    o.connect(g);
-    g.connect(audioContext.destination);
-
-    o.start();
-    o.stop(audioContext.currentTime + 0.35);
+    const secondTone = audioContext.createOscillator();
+    secondTone.type = 'triangle';
+    secondTone.frequency.setValueAtTime(1175, now + 0.26);
+    secondTone.connect(masterGain);
+    secondTone.start(now + 0.26);
+    secondTone.stop(now + 0.55);
 
   } catch (e) {
     console.warn('TapCarta sound failed', e);
   }
 }
+
 function updateRestaurantSoundToggleIcon() {
   const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled') !== 'false';
+  const button = document.getElementById('tapcarta-sound-toggle');
   const icon = document.querySelector('#tapcarta-sound-toggle i');
+  const label = document.getElementById('tapcarta-sound-toggle-label');
 
-  if (!icon) return;
+  if (!button || !icon) return;
 
   icon.setAttribute('data-lucide', enabled ? 'volume-2' : 'volume-x');
+
+  button.classList.toggle('border-gold/25', enabled);
+  button.classList.toggle('bg-black/15', enabled);
+  button.classList.toggle('text-cream', enabled);
+
+  button.classList.toggle('border-red-400/25', !enabled);
+  button.classList.toggle('bg-red-500/10', !enabled);
+  button.classList.toggle('text-red-100', !enabled);
+
+  if (label) {
+    label.textContent = enabled
+      ? (currentLang === 'es' ? 'Sonido activado' : currentLang === 'en' ? 'Sound on' : currentLang === 'nl' ? 'Geluid aan' : 'Son activé')
+      : (currentLang === 'es' ? 'Sonido cortado' : currentLang === 'en' ? 'Sound off' : currentLang === 'nl' ? 'Geluid uit' : 'Son coupé');
+  }
 
   if (window.lucide) {
     lucide.createIcons();
@@ -2954,8 +2976,8 @@ function toggleRestaurantSound() {
 
   showRestaurantToast(
     next === 'true'
-      ? 'Notification sonore activée.'
-      : 'Notification sonore désactivée.',
+      ? (currentLang === 'es' ? 'Notificación sonora activada.' : currentLang === 'en' ? 'Sound notification enabled.' : currentLang === 'nl' ? 'Geluidsmelding ingeschakeld.' : 'Notification sonore activée.')
+      : (currentLang === 'es' ? 'Notificación sonora desactivada.' : currentLang === 'en' ? 'Sound notification disabled.' : currentLang === 'nl' ? 'Geluidsmelding uitgeschakeld.' : 'Notification sonore désactivée.'),
     'info'
   );
 }
