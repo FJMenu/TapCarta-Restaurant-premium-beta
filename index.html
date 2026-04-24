@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.17';
+            const APP_VERSION = 'V1.1.18';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2900,6 +2900,55 @@ function showRestaurantConfirmDialog({ title, message, confirmLabel, cancelLabel
     }
   });
 }
+function playRestaurantNotificationSound() {
+  const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled');
+
+  if (enabled === 'false') return;
+
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+    const o = audioContext.createOscillator();
+    const g = audioContext.createGain();
+
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880, audioContext.currentTime);
+
+    g.gain.setValueAtTime(0.001, audioContext.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.35);
+
+    o.connect(g);
+    g.connect(audioContext.destination);
+
+    o.start();
+    o.stop(audioContext.currentTime + 0.35);
+
+  } catch (e) {
+    console.warn('TapCarta sound failed', e);
+  }
+}
+function toggleRestaurantSound() {
+  const current = localStorage.getItem('tapcarta_restaurant_sound_enabled');
+
+  const next = current === 'false' ? 'true' : 'false';
+
+  localStorage.setItem('tapcarta_restaurant_sound_enabled', next);
+
+  const icon = document.querySelector('#tapcarta-sound-toggle i');
+
+  if (!icon) return;
+
+  if (next === 'false') {
+    icon.setAttribute('data-lucide', 'volume-x');
+  } else {
+    icon.setAttribute('data-lucide', 'volume-2');
+  }
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
 function showRestaurantNewRequestNotification(count) {
   const existingNotification = document.getElementById('restaurant-new-request-notification');
   if (existingNotification) {
@@ -4435,7 +4484,17 @@ function renderRequestRow(item, displayMode = 'active') {
       </div>
     </div>
 
-    <div class="inline-flex items-center gap-3 self-start rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
+    <div class="flex items-center gap-2">
+  <button
+    id="tapcarta-sound-toggle"
+    onclick="toggleRestaurantSound()"
+    class="btn-action w-11 h-11 rounded-xl border border-white/10 text-cream hover:bg-white/5 transition-all flex items-center justify-center"
+    title="Notification sonore"
+  >
+    <i data-lucide="volume-2" class="w-5 h-5"></i>
+  </button>
+
+  <div class="inline-flex items-center gap-3 rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
       <div class="text-2xl font-bold text-gold">
         ${siteConfig.orderReservationOptionEnabled ? visibleRequestsCount : '—'}
       </div>
