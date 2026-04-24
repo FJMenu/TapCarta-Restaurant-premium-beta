@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.5';
+            const APP_VERSION = 'V1.2.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3112,6 +3112,33 @@ window.unlockRestaurantNotificationSound = unlockRestaurantNotificationSound;
 window.playRestaurantNotificationSound = playRestaurantNotificationSound;
 window.updateRestaurantSoundToggleIcon = updateRestaurantSoundToggleIcon;
 window.toggleRestaurantSound = toggleRestaurantSound;
+function initializeRestaurantAudioUnlockBridge() {
+  if (window.tapCartaRestaurantAudioState?.unlockBridgeInitialized) {
+    return;
+  }
+
+  window.tapCartaRestaurantAudioState.unlockBridgeInitialized = true;
+
+  const unlockOnce = async () => {
+    const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled') !== 'false';
+
+    if (!enabled) {
+      return;
+    }
+
+    await unlockRestaurantNotificationSound();
+
+    if (window.tapCartaRestaurantAudioState?.unlocked) {
+      document.removeEventListener('pointerdown', unlockOnce);
+      document.removeEventListener('keydown', unlockOnce);
+      document.removeEventListener('touchstart', unlockOnce);
+    }
+  };
+
+  document.addEventListener('pointerdown', unlockOnce, { passive: true });
+  document.addEventListener('keydown', unlockOnce);
+  document.addEventListener('touchstart', unlockOnce, { passive: true });
+}
 
 function isRestaurantRequestModalOpen() {
   return !!(
@@ -3578,50 +3605,97 @@ function isRequestIncludedInSlotLoad(item) {
   return bucket === 'today' || bucket === 'upcoming' || bucket === 'verify';
 }
 
-function getRequestSlotLoadMeta(item) {
-  const slotKey = getRequestSlotKey(item);
+function getRequestSlotLoadSummaries(items) {
+  const slotMap = new Map();
 
-  if (!slotKey) {
-    return null;
+  items.forEach((item) => {
+    const slotKey = getRequestSlotKey(item);
+    if (!slotKey) return;
+
+    const source = item?.sourceRequest || {};
+    const isBooking = item?.type === t.restaurantTypeBooking;
+    const date = isBooking ? source.booking?.date : source.order?.date;
+    const time = isBooking ? source.booking?.time : source.order?.time;
+
+    if (!date || !time) return;
+
+    if (!slotMap.has(slotKey)) {
+      slotMap.set(slotKey, {
+        key: slotKey,
+        isBooking,
+        date,
+        time,
+        count: 0,
+        totalQuantity: 0
+      });
+    }
+
+    const entry = slotMap.get(slotKey);
+    entry.count += 1;
+    entry.totalQuantity += getRequestSlotQuantity(item);
+  });
+
+  return [...slotMap.values()]
+    .filter((entry) => entry.count > 1 && entry.totalQuantity > 0)
+    .sort((a, b) => {
+      const parsedA = new Date(`${a.date}T${a.time}`).getTime();
+      const parsedB = new Date(`${b.date}T${b.time}`).getTime();
+
+      if (Number.isFinite(parsedA) && Number.isFinite(parsedB) && parsedA !== parsedB) {
+        return parsedA - parsedB;
+      }
+
+      return String(a.time).localeCompare(String(b.time));
+    });
+}
+
+function renderRequestSlotLoadSummary(items) {
+  const summaries = getRequestSlotLoadSummaries(items);
+
+  if (!summaries.length) {
+    return '';
   }
 
-  const slotItems = requestsData.filter((entry) =>
-    getRequestSlotKey(entry) === slotKey &&
-    isRequestIncludedInSlotLoad(entry)
-  );
+  return `
+    <div class="mb-3 rounded-2xl border border-gold/14 bg-black/16 px-3 py-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-[10px] uppercase tracking-wide text-gold/70 font-bold">
+          ${currentLang === 'es'
+            ? 'Carga por horario'
+            : currentLang === 'en'
+              ? 'Load by time'
+              : currentLang === 'nl'
+                ? 'Drukte per uur'
+                : 'Charge par créneau'}
+        </span>
 
-  if (slotItems.length <= 1) {
-    return null;
-  }
+        ${summaries.map((entry) => {
+          const label = entry.isBooking
+            ? (currentLang === 'es'
+                ? `${entry.totalQuantity} personas a las ${entry.time}`
+                : currentLang === 'en'
+                  ? `${entry.totalQuantity} guests at ${entry.time}`
+                  : currentLang === 'nl'
+                    ? `${entry.totalQuantity} personen om ${entry.time}`
+                    : `${entry.totalQuantity} couverts à ${entry.time}`)
+            : (currentLang === 'es'
+                ? `${entry.totalQuantity} artículos a las ${entry.time}`
+                : currentLang === 'en'
+                  ? `${entry.totalQuantity} items at ${entry.time}`
+                  : currentLang === 'nl'
+                    ? `${entry.totalQuantity} artikelen om ${entry.time}`
+                    : `${entry.totalQuantity} articles à ${entry.time}`);
 
-  const totalQuantity = slotItems.reduce((total, entry) => total + getRequestSlotQuantity(entry), 0);
-  const isBooking = item?.type === t.restaurantTypeBooking;
-  const source = item?.sourceRequest || {};
-  const time = isBooking ? source.booking?.time : source.order?.time;
-
-  if (!totalQuantity || !time) {
-    return null;
-  }
-
-  return {
-    count: slotItems.length,
-    totalQuantity,
-    label: isBooking
-      ? (currentLang === 'es'
-          ? `${totalQuantity} comensales a las ${time}`
-          : currentLang === 'en'
-            ? `${totalQuantity} guests at ${time}`
-            : currentLang === 'nl'
-              ? `${totalQuantity} gasten om ${time}`
-              : `${totalQuantity} couverts à ${time}`)
-      : (currentLang === 'es'
-          ? `${totalQuantity} artículos a las ${time}`
-          : currentLang === 'en'
-            ? `${totalQuantity} items at ${time}`
-            : currentLang === 'nl'
-              ? `${totalQuantity} artikelen om ${time}`
-              : `${totalQuantity} articles à ${time}`)
-  };
+          return `
+            <span class="inline-flex items-center gap-1.5 rounded-full border border-gold/18 bg-gold/8 px-2 py-1 text-[11px] font-bold text-cream/85">
+              <i data-lucide="${entry.isBooking ? 'users' : 'utensils'}" class="w-3 h-3 text-gold/75"></i>
+              ${label}
+            </span>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
 }
 
 function syncRequestsState() {
@@ -5151,39 +5225,29 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
   const source = item.sourceRequest || {};
   const sourceStatus = source.status || '';
   const shouldHideOldModificationMessage = sourceStatus === 'accepted_by_client' || sourceStatus === 'confirmed';
-  const slotLoadMeta = getRequestSlotLoadMeta(item);
-
-  const slotLoadBadge = slotLoadMeta
-    ? `
-      <div class="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-orange-300/30 bg-orange-400/10 px-2 py-0.5 text-[10px] font-bold text-orange-200">
-        <i data-lucide="${isOrder ? 'utensils' : 'users'}" class="w-3 h-3"></i>
-        <span>${slotLoadMeta.label}</span>
-      </div>
-    `
-    : '';
 
   if (isOrder) {
     const itemsHtml = orderItems.length
       ? orderItems.map((entry) => `
-          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/22 bg-gold/8 px-3 py-1.5">
-            <span class="text-sm font-bold text-cream">${escapeRequestDetailsHtml(entry.name || '-')}</span>
-            <span class="text-base font-extrabold text-gold">×${entry.quantity || 1}</span>
+          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/20 bg-gold/7 px-2.5 py-1.5">
+            <span class="text-xs md:text-sm font-bold text-cream">${escapeRequestDetailsHtml(entry.name || '-')}</span>
+            <span class="text-sm md:text-base font-extrabold text-gold">×${entry.quantity || 1}</span>
           </div>
         `).join('')
       : `
-          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/22 bg-gold/8 px-3 py-1.5">
-            <span class="text-sm font-bold text-cream">
+          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/20 bg-gold/7 px-2.5 py-1.5">
+            <span class="text-xs md:text-sm font-bold text-cream">
               ${currentLang === 'es' ? 'Pedido recibido' : currentLang === 'en' ? 'Order received' : currentLang === 'nl' ? 'Bestelling ontvangen' : 'Commande reçue'}
             </span>
           </div>
         `;
 
     return `
-      <div class="mt-3 rounded-2xl border border-gold/18 bg-black/16 px-3 py-2.5 max-w-4xl">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+      <div class="mt-3 max-w-2xl">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div class="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-2">
             <div class="text-[9px] uppercase tracking-wide text-cream/50 font-bold">
-              ${currentLang === 'es' ? 'Fecha pedido' : currentLang === 'en' ? 'Order date' : currentLang === 'nl' ? 'Besteldatum' : 'Date commande'}
+              ${currentLang === 'es' ? 'Fecha' : currentLang === 'en' ? 'Date' : currentLang === 'nl' ? 'Datum' : 'Date'}
             </div>
             <div class="text-xs md:text-sm font-bold text-cream mt-0.5">${source.order?.date || '-'}</div>
           </div>
@@ -5193,26 +5257,27 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
               ${currentLang === 'es' ? 'Hora' : currentLang === 'en' ? 'Time' : currentLang === 'nl' ? 'Uur' : 'Heure'}
             </div>
             <div class="text-base md:text-lg font-extrabold text-gold mt-0.5">${source.order?.time || '-'}</div>
-            ${slotLoadBadge}
           </div>
 
-          <div class="rounded-lg border border-gold/25 bg-gold/10 px-2.5 py-2">
-            <div class="text-[9px] uppercase tracking-wide text-gold/75 font-bold">
+          <div class="rounded-lg border border-gold/22 bg-gold/8 px-2.5 py-2">
+            <div class="text-[9px] uppercase tracking-wide text-gold/70 font-bold">
               ${currentLang === 'es' ? 'Total' : currentLang === 'en' ? 'Total' : currentLang === 'nl' ? 'Totaal' : 'Total'}
             </div>
             <div class="text-base md:text-lg font-extrabold text-gold mt-0.5">${formatRequestAmount(source.order?.totalAmount)}</div>
           </div>
         </div>
 
-        <div class="text-[10px] uppercase tracking-wide text-gold/75 font-bold mb-2">
-          ${currentLang === 'es' ? 'Contenido del pedido' : currentLang === 'en' ? 'Order content' : currentLang === 'nl' ? 'Inhoud bestelling' : 'Contenu commande'}
+        <div class="mt-2 rounded-lg border border-gold/14 bg-black/14 px-2.5 py-2">
+          <div class="text-[9px] uppercase tracking-wide text-gold/65 font-bold mb-1.5">
+            ${currentLang === 'es' ? 'Pedido' : currentLang === 'en' ? 'Order' : currentLang === 'nl' ? 'Bestelling' : 'Commande'}
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            ${itemsHtml}
+          </div>
+          ${!shouldHideOldModificationMessage && source.restaurantResponse?.message
+            ? `<div class="text-xs text-cream/60 mt-2">${escapeRequestDetailsHtml(source.restaurantResponse.message)}</div>`
+            : ''}
         </div>
-        <div class="flex flex-wrap gap-2">
-          ${itemsHtml}
-        </div>
-        ${!shouldHideOldModificationMessage && source.restaurantResponse?.message
-          ? `<div class="text-xs text-cream/60 mt-2">${escapeRequestDetailsHtml(source.restaurantResponse.message)}</div>`
-          : ''}
       </div>
     `;
   }
@@ -5231,7 +5296,6 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
           ${currentLang === 'es' ? 'Hora' : currentLang === 'en' ? 'Time' : currentLang === 'nl' ? 'Uur' : 'Heure'}
         </div>
         <div class="text-base md:text-lg font-extrabold text-gold mt-0.5">${source.booking?.time || '-'}</div>
-        ${slotLoadBadge}
       </div>
 
       <div class="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-2">
@@ -5381,6 +5445,8 @@ function renderRequestRow(item, displayMode = 'active') {
             </div>
           </div>
         </div>
+
+        ${items.length ? renderRequestSlotLoadSummary(items) : ''}
 
         <div class="space-y-3">
           ${items.length
@@ -7161,6 +7227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('Restaurant actif chargé :', activeRestaurantData);
 
   renderMenu();
+  initializeRestaurantAudioUnlockBridge();
 
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
