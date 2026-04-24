@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.11';
+            const APP_VERSION = 'V1.1.12';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2862,15 +2862,78 @@ const restaurantData = {
 };
 
 let activeRequests = [];
+let todayRequests = [];
+let upcomingRequests = [];
 let treatedRequests = [];
 let activeOrders = [];
 let activeReservations = [];
 
+function getBookingDateTimeMs(sourceRequest) {
+  const bookingDate = sourceRequest?.booking?.date || '';
+  const bookingTime = sourceRequest?.booking?.time || '00:00';
+
+  if (!bookingDate) return NaN;
+
+  const parsed = new Date(`${bookingDate}T${bookingTime}`);
+  const timeMs = parsed.getTime();
+
+  return Number.isFinite(timeMs) ? timeMs : NaN;
+}
+
+function isSameLocalDay(timestampA, timestampB) {
+  const dateA = new Date(timestampA);
+  const dateB = new Date(timestampB);
+
+  return (
+    dateA.getFullYear() === dateB.getFullYear() &&
+    dateA.getMonth() === dateB.getMonth() &&
+    dateA.getDate() === dateB.getDate()
+  );
+}
+
+function getRestaurantRequestBucket(item) {
+  const source = item?.sourceRequest || {};
+  const status = source.status || '';
+  const isBooking = item?.type === t.restaurantTypeBooking;
+  const now = Date.now();
+  const fortyFiveMinutesMs = 45 * 60 * 1000;
+
+  if (!isBooking) {
+    return item?.treated ? 'history' : 'action';
+  }
+
+  if (status === 'pending' || status === 'modified') {
+    return 'action';
+  }
+
+  if (status === 'rejected_by_client' || status === 'cancelled' || status === 'cancelled_by_client') {
+    return 'history';
+  }
+
+  if (status === 'accepted_by_client' || status === 'confirmed') {
+    const bookingTimeMs = getBookingDateTimeMs(source);
+
+    if (!Number.isFinite(bookingTimeMs)) {
+      return 'upcoming';
+    }
+
+    if (isSameLocalDay(bookingTimeMs, now)) {
+      return now <= bookingTimeMs + fortyFiveMinutesMs ? 'today' : 'history';
+    }
+
+    return bookingTimeMs > now ? 'upcoming' : 'history';
+  }
+
+  return item?.treated ? 'history' : 'action';
+}
+
 function syncRequestsState() {
   requestsData = loadRestaurantRequests();
 
-  activeRequests = requestsData.filter(item => !item.treated);
-  treatedRequests = requestsData.filter(item => item.treated);
+  activeRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'action');
+  todayRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'today');
+  upcomingRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'upcoming');
+  treatedRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'history');
 
   selectedRequestIds = new Set(
     [...selectedRequestIds].filter((id) =>
