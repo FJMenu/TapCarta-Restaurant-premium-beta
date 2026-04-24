@@ -3084,10 +3084,21 @@ window.playRestaurantNotificationSound = playRestaurantNotificationSound;
 window.updateRestaurantSoundToggleIcon = updateRestaurantSoundToggleIcon;
 window.toggleRestaurantSound = toggleRestaurantSound;
 
+function isRestaurantRequestModalOpen() {
+  return !!(
+    document.getElementById('restaurant-request-details-modal') ||
+    document.getElementById('restaurant-request-action-modal')
+  );
+}
+
 function showRestaurantNewRequestNotification(count) {
   const existingNotification = document.getElementById('restaurant-new-request-notification');
   if (existingNotification) {
     existingNotification.remove();
+  }
+
+  if (isRestaurantRequestModalOpen()) {
+    return;
   }
 
   const label =
@@ -3119,7 +3130,7 @@ function showRestaurantNewRequestNotification(count) {
 
   const notification = document.createElement('div');
   notification.id = 'restaurant-new-request-notification';
-  notification.className = 'fixed left-3 right-3 bottom-4 z-[9999] md:left-auto md:right-6 md:bottom-6 md:w-[430px] rounded-[24px] border-2 border-gold bg-gradient-to-br from-gold/25 via-black/95 to-black shadow-[0_0_0_4px_rgba(212,175,55,0.18),0_22px_80px_rgba(0,0,0,0.65)] px-5 py-5 flex items-center justify-between gap-4 animate-pulse';
+  notification.className = 'fixed left-3 right-3 bottom-4 z-[90] md:left-auto md:right-6 md:bottom-6 md:w-[430px] rounded-[24px] border-2 border-gold bg-gradient-to-br from-gold/25 via-black/95 to-black shadow-[0_0_0_4px_rgba(212,175,55,0.18),0_22px_80px_rgba(0,0,0,0.65)] px-5 py-5 flex items-center justify-between gap-4 animate-pulse';
 
   notification.innerHTML = `
     <div class="flex items-center gap-4 min-w-0">
@@ -3151,7 +3162,7 @@ function notifyIfNewActionRequests() {
   const actionIds = activeRequests.map((item) => String(item.id));
   const state = window.tapCartaRestaurantRequestNotificationState;
 
-  if (!actionIds.length) {
+  if (!actionIds.length || isRestaurantRequestModalOpen()) {
     document.getElementById('restaurant-new-request-notification')?.remove();
   }
 
@@ -3161,7 +3172,10 @@ function notifyIfNewActionRequests() {
     if (actionIds.length) {
       state.lastNotificationAt = Date.now();
       playRestaurantNotificationSound();
-      showRestaurantNewRequestNotification(actionIds.length);
+
+      if (!isRestaurantRequestModalOpen()) {
+        showRestaurantNewRequestNotification(actionIds.length);
+      }
     }
 
     return;
@@ -3178,12 +3192,15 @@ function notifyIfNewActionRequests() {
       playRestaurantNotificationSound();
     }
 
-    showRestaurantNewRequestNotification(actionIds.length);
+    if (!isRestaurantRequestModalOpen()) {
+      showRestaurantNewRequestNotification(actionIds.length);
+    }
+
     return;
   }
 
   const existingNotification = document.getElementById('restaurant-new-request-notification');
-  if (actionIds.length && !existingNotification) {
+  if (actionIds.length && !existingNotification && !isRestaurantRequestModalOpen()) {
     showRestaurantNewRequestNotification(actionIds.length);
   }
 }
