@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.1';
+            const APP_VERSION = 'V1.2.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -4481,179 +4481,157 @@ function renderRequestRow(item, displayMode = 'active') {
 
     return `
 <section id="restaurant-requests-section" class="rounded-[28px] border border-gold/22 bg-gradient-to-br from-white/[0.045] to-white/[0.015] shadow-[0_24px_70px_rgba(0,0,0,0.32)] p-5 md:p-7 mb-8">
-  <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
-    <div>
-      <div class="flex items-center gap-3 mb-2">
-        <div class="w-11 h-11 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center">
-          <i data-lucide="inbox" class="w-5 h-5 text-gold"></i>
-        </div>
-        <div>
-          <h2 class="font-display text-xl md:text-2xl font-bold text-cream">${t.restaurantRequestsTitle}</h2>
-          <p class="text-sm text-cream/65 mt-1">
-            ${siteConfig.orderReservationOptionEnabled ? 'Gérez ici les demandes et le suivi de votre établissement.' : t.optionInactiveStatus}
-          </p>
-        </div>
-      </div>
-    </div>
 
-    <div class="flex items-center gap-2">
-  <button
-    id="tapcarta-sound-toggle"
-    onclick="toggleRestaurantSound()"
-    class="btn-action w-11 h-11 rounded-xl border border-white/10 text-cream hover:bg-white/5 transition-all flex items-center justify-center"
-    title="Notification sonore"
-  >
-    <i data-lucide="volume-2" class="w-5 h-5"></i>
-  </button>
-
-  <div class="inline-flex items-center gap-3 rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
-      <div class="text-2xl font-bold text-gold">
-        ${siteConfig.orderReservationOptionEnabled ? visibleRequestsCount : '—'}
+  <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5 mb-6">
+    <div class="min-w-0">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/25 bg-black/15 mb-3">
+        <i data-lucide="inbox" class="w-4 h-4 text-gold"></i>
+        <span class="text-xs font-semibold text-gold">
+          ${currentLang === 'es'
+            ? 'Interface restaurante'
+            : currentLang === 'en'
+              ? 'Restaurant interface'
+              : currentLang === 'nl'
+                ? 'Restaurantinterface'
+                : 'Interface restaurant'}
+        </span>
       </div>
-      <div class="text-xs text-cream/70 leading-tight">
+
+      <h2 class="font-display text-xl md:text-2xl font-bold text-cream">
+        ${t.restaurantOrdersTitle} · ${t.restaurantBookingsTitle}
+      </h2>
+
+      <p class="text-sm text-cream/70 mt-2 leading-relaxed max-w-4xl">
         ${siteConfig.orderReservationOptionEnabled
           ? (currentLang === 'es'
-              ? 'Flux reserva<br>activo'
-              : currentLang === 'en'
-                ? 'Booking flow<br>active'
-                : currentLang === 'nl'
-                  ? 'Reservatieflow<br>actief'
-                  : 'Flux réservation<br>actif')
-          : `${t.optionInactiveCounterLine1}<br>${t.optionInactiveCounterLine2}`}
-      </div>
-    </div>
-  </div>
-
-  ${siteConfig.orderReservationOptionEnabled ? `
-    <div id="restaurant-requests-panel" class="rounded-[22px] border border-gold/25 bg-gradient-to-br from-gold/10 to-transparent p-4 md:p-5">
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
-        <div class="min-w-0">
-          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-gold/25 bg-black/15 mb-3">
-            <i data-lucide="inbox" class="w-4 h-4 text-gold"></i>
-            <span class="text-xs font-semibold text-gold">
-              ${currentLang === 'es'
-                ? 'Interface restaurante'
-                : currentLang === 'en'
-                  ? 'Restaurant interface'
-                  : currentLang === 'nl'
-                    ? 'Restaurantinterface'
-                    : 'Interface restaurant'}
-            </span>
-          </div>
-
-          <h3 class="font-display text-lg md:text-xl font-bold text-cream mb-2">
-            ${t.restaurantOrdersTitle} · ${t.restaurantBookingsTitle}
-          </h3>
-
-          <p class="text-sm text-cream/75 leading-relaxed max-w-3xl">
-            ${currentLang === 'es'
               ? 'Solicitudes organizadas por prioridad operativa: por tratar, hoy, próximas e historial.'
               : currentLang === 'en'
                 ? 'Requests organized by operational priority: to handle, today, upcoming and history.'
                 : currentLang === 'nl'
                   ? 'Aanvragen geordend per operationele prioriteit: te behandelen, vandaag, later en geschiedenis.'
-                  : 'Demandes organisées par priorité opérationnelle : à traiter, aujourd’hui, à venir et historique.'}
-          </p>
-        </div>
-
-        <div class="inline-flex items-center gap-3 self-start rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
-          <div id="restaurant-active-requests-count" class="text-2xl font-bold text-gold">
-            ${visibleRequestsCount}
-          </div>
-          <div class="text-xs text-cream/70 leading-tight">
-            ${currentLang === 'es' ? 'Demandas<br>visibles' : currentLang === 'en' ? 'Visible<br>requests' : currentLang === 'nl' ? 'Zichtbare<br>aanvragen' : 'Demandes<br>visibles'}
-          </div>
-        </div>
-      </div>
-
-      <div id="restaurant-active-requests" class="space-y-4">
-        ${renderRequestGroup(
-          currentLang === 'es' ? 'A tratar' : currentLang === 'en' ? 'To handle' : currentLang === 'nl' ? 'Te behandelen' : 'À traiter',
-          currentLang === 'es' ? 'Demandas que necesitan una acción del restaurante.' : currentLang === 'en' ? 'Requests requiring restaurant action.' : currentLang === 'nl' ? 'Aanvragen die actie van het restaurant vragen.' : 'Demandes qui nécessitent une action du restaurant.',
-          activeRequests,
-          currentLang === 'es' ? 'No hay solicitudes por tratar.' : currentLang === 'en' ? 'No requests to handle.' : currentLang === 'nl' ? 'Geen aanvragen te behandelen.' : 'Aucune demande à traiter.',
-          'active'
-        )}
-
-        ${renderRequestGroup(
-          currentLang === 'es' ? 'Hoy' : currentLang === 'en' ? 'Today' : currentLang === 'nl' ? 'Vandaag' : 'Aujourd’hui',
-          currentLang === 'es' ? 'Reservas del día, visibles para el servicio.' : currentLang === 'en' ? 'Today’s bookings, visible for service.' : currentLang === 'nl' ? 'Reservaties van vandaag, zichtbaar voor de service.' : 'Réservations du jour, visibles pour le service.',
-          todayRequests,
-          currentLang === 'es' ? 'No hay reservas para hoy.' : currentLang === 'en' ? 'No bookings for today.' : currentLang === 'nl' ? 'Geen reservaties voor vandaag.' : 'Aucune réservation pour aujourd’hui.',
-          'readonly'
-        )}
-
-        ${renderRequestGroup(
-          currentLang === 'es' ? 'Próximas' : currentLang === 'en' ? 'Upcoming' : currentLang === 'nl' ? 'Later' : 'À venir',
-          currentLang === 'es' ? 'Reservas futuras ya aceptadas o confirmadas.' : currentLang === 'en' ? 'Future bookings already accepted or confirmed.' : currentLang === 'nl' ? 'Toekomstige reservaties die al aanvaard of bevestigd zijn.' : 'Réservations futures déjà acceptées ou confirmées.',
-          upcomingRequests,
-          currentLang === 'es' ? 'No hay reservas próximas.' : currentLang === 'en' ? 'No upcoming bookings.' : currentLang === 'nl' ? 'Geen toekomstige reservaties.' : 'Aucune réservation à venir.',
-          'readonly'
-        )}
-      </div>
-
-      <details ${window.historyPanelOpen ? 'open' : ''} ontoggle="window.historyPanelOpen=this.open" class="mt-6 rounded-[22px] border border-white/10 bg-black/15 p-4 md:p-5 group">
-        <summary class="list-none cursor-pointer">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div class="min-w-0">
-              <h4 class="font-display text-lg md:text-xl font-bold text-cream mb-1">
-                ${currentLang === 'es' ? 'Historial' : currentLang === 'en' ? 'History' : currentLang === 'nl' ? 'Geschiedenis' : 'Historique'}
-              </h4>
-              <p class="text-sm text-cream/65 leading-relaxed">
-                ${currentLang === 'es'
-                  ? 'Consultar pedidos y reservas terminados sin eliminarlos.'
-                  : currentLang === 'en'
-                    ? 'Consult completed orders and bookings without deleting them.'
-                    : currentLang === 'nl'
-                      ? 'Bekijk afgewerkte bestellingen en reservaties zonder ze te verwijderen.'
-                      : 'Consulter les commandes et réservations terminées sans les supprimer.'}
-              </p>
-            </div>
-
-            <div class="inline-flex items-center gap-3 self-start rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-              <div class="text-2xl font-bold text-cream">
-                ${treatedRequests.length}
-              </div>
-              <div class="text-xs text-cream/65 leading-tight">
-                ${currentLang === 'es' ? 'Total<br>historial' : currentLang === 'en' ? 'Total<br>history' : currentLang === 'nl' ? 'Totaal<br>geschiedenis' : 'Total<br>historique'}
-              </div>
-            </div>
-          </div>
-        </summary>
-
-        <div class="mt-4 mb-4 rounded-2xl border border-white/10 bg-black/10 px-4 py-4">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <div class="text-sm font-semibold text-cream">
-                ${selectedHistoryRequestIds.size} ${t.restaurantHistorySelected}
-              </div>
-              <div class="text-xs text-cream/60 mt-1">
-                ${t.restaurantHistorySelectMultiple}
-              </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-              <button onclick="toggleAllHistoryRequests()" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
-                ${selectedHistoryRequestIds.size === treatedRequests.length && treatedRequests.length ? t.restaurantHistoryDeselectAll : t.restaurantHistorySelectAll}
-              </button>
-              <button onclick="deleteSelectedHistoryRequests()" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryDeleteSelected}">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div id="restaurant-history-requests" class="mt-4 space-y-3">
-          ${treatedRequests.length
-            ? treatedRequests.map((item) => renderRequestRow(item, 'history')).join('')
-            : `
-              <div class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 text-sm text-cream/70">
-                ${t.restaurantNoProcessed}
-              </div>
-            `}
-        </div>
-      </details>
+                  : 'Demandes organisées par priorité opérationnelle : à traiter, aujourd’hui, à venir et historique.')
+          : t.optionInactiveStatus}
+      </p>
     </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        id="tapcarta-sound-toggle"
+        onclick="toggleRestaurantSound()"
+        class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-gold/25 bg-black/15 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
+        title="Notification sonore"
+      >
+        <i data-lucide="volume-2" class="w-5 h-5 text-gold"></i>
+        <span id="tapcarta-sound-toggle-label" class="text-xs font-semibold text-cream/80">Son activé</span>
+      </button>
+
+      <div class="inline-flex items-center gap-3 rounded-2xl border border-gold/25 bg-black/15 px-4 py-3">
+        <div id="restaurant-active-requests-count" class="text-2xl font-bold text-gold">
+          ${siteConfig.orderReservationOptionEnabled ? visibleRequestsCount : '—'}
+        </div>
+        <div class="text-xs text-cream/70 leading-tight">
+          ${siteConfig.orderReservationOptionEnabled
+            ? (currentLang === 'es'
+                ? 'Demandas<br>visibles'
+                : currentLang === 'en'
+                  ? 'Visible<br>requests'
+                  : currentLang === 'nl'
+                    ? 'Zichtbare<br>aanvragen'
+                    : 'Demandes<br>visibles')
+            : `${t.optionInactiveCounterLine1}<br>${t.optionInactiveCounterLine2}`}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  ${siteConfig.orderReservationOptionEnabled ? `
+    <div id="restaurant-active-requests" class="space-y-4">
+      ${renderRequestGroup(
+        currentLang === 'es' ? 'A tratar' : currentLang === 'en' ? 'To handle' : currentLang === 'nl' ? 'Te behandelen' : 'À traiter',
+        currentLang === 'es' ? 'Demandas que necesitan una acción del restaurante.' : currentLang === 'en' ? 'Requests requiring restaurant action.' : currentLang === 'nl' ? 'Aanvragen die actie van het restaurant vragen.' : 'Demandes qui nécessitent une action du restaurant.',
+        activeRequests,
+        currentLang === 'es' ? 'No hay solicitudes por tratar.' : currentLang === 'en' ? 'No requests to handle.' : currentLang === 'nl' ? 'Geen aanvragen te behandelen.' : 'Aucune demande à traiter.',
+        'active'
+      )}
+
+      ${renderRequestGroup(
+        currentLang === 'es' ? 'Hoy' : currentLang === 'en' ? 'Today' : currentLang === 'nl' ? 'Vandaag' : 'Aujourd’hui',
+        currentLang === 'es' ? 'Reservas del día, visibles para el servicio.' : currentLang === 'en' ? 'Today’s bookings, visible for service.' : currentLang === 'nl' ? 'Reservaties van vandaag, zichtbaar voor de service.' : 'Réservations du jour, visibles pour le service.',
+        todayRequests,
+        currentLang === 'es' ? 'No hay reservas para hoy.' : currentLang === 'en' ? 'No bookings for today.' : currentLang === 'nl' ? 'Geen reservaties voor vandaag.' : 'Aucune réservation pour aujourd’hui.',
+        'readonly'
+      )}
+
+      ${renderRequestGroup(
+        currentLang === 'es' ? 'Próximas' : currentLang === 'en' ? 'Upcoming' : currentLang === 'nl' ? 'Later' : 'À venir',
+        currentLang === 'es' ? 'Reservas futuras ya aceptadas o confirmadas.' : currentLang === 'en' ? 'Future bookings already accepted or confirmed.' : currentLang === 'nl' ? 'Toekomstige reservaties die al aanvaard of bevestigd zijn.' : 'Réservations futures déjà acceptées ou confirmées.',
+        upcomingRequests,
+        currentLang === 'es' ? 'No hay reservas próximas.' : currentLang === 'en' ? 'No upcoming bookings.' : currentLang === 'nl' ? 'Geen toekomstige reservaties.' : 'Aucune réservation à venir.',
+        'readonly'
+      )}
+    </div>
+
+    <details ${window.historyPanelOpen ? 'open' : ''} ontoggle="window.historyPanelOpen=this.open" class="mt-6 rounded-[22px] border border-white/10 bg-black/15 p-4 md:p-5 group">
+      <summary class="list-none cursor-pointer">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div class="min-w-0">
+            <h4 class="font-display text-lg md:text-xl font-bold text-cream mb-1">
+              ${currentLang === 'es' ? 'Historial' : currentLang === 'en' ? 'History' : currentLang === 'nl' ? 'Geschiedenis' : 'Historique'}
+            </h4>
+            <p class="text-sm text-cream/65 leading-relaxed">
+              ${currentLang === 'es'
+                ? 'Consultar pedidos y reservas terminados sin eliminarlos.'
+                : currentLang === 'en'
+                  ? 'Consult completed orders and bookings without deleting them.'
+                  : currentLang === 'nl'
+                    ? 'Bekijk afgewerkte bestellingen en reservaties zonder ze te verwijderen.'
+                    : 'Consulter les commandes et réservations terminées sans les supprimer.'}
+            </p>
+          </div>
+
+          <div class="inline-flex items-center gap-3 self-start rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+            <div class="text-2xl font-bold text-cream">
+              ${treatedRequests.length}
+            </div>
+            <div class="text-xs text-cream/65 leading-tight">
+              ${currentLang === 'es' ? 'Total<br>historial' : currentLang === 'en' ? 'Total<br>history' : currentLang === 'nl' ? 'Totaal<br>geschiedenis' : 'Total<br>historique'}
+            </div>
+          </div>
+        </div>
+      </summary>
+
+      <div class="mt-4 mb-4 rounded-2xl border border-white/10 bg-black/10 px-4 py-4">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <div class="text-sm font-semibold text-cream">
+              ${selectedHistoryRequestIds.size} ${t.restaurantHistorySelected}
+            </div>
+            <div class="text-xs text-cream/60 mt-1">
+              ${t.restaurantHistorySelectMultiple}
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="toggleAllHistoryRequests()" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
+              ${selectedHistoryRequestIds.size === treatedRequests.length && treatedRequests.length ? t.restaurantHistoryDeselectAll : t.restaurantHistorySelectAll}
+            </button>
+            <button onclick="deleteSelectedHistoryRequests()" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryDeleteSelected}">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="restaurant-history-requests" class="mt-4 space-y-3">
+        ${treatedRequests.length
+          ? treatedRequests.map((item) => renderRequestRow(item, 'history')).join('')
+          : `
+            <div class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 text-sm text-cream/70">
+              ${t.restaurantNoProcessed}
+            </div>
+          `}
+      </div>
+    </details>
   ` : `
     <div class="rounded-[22px] border border-gold/25 bg-gradient-to-br from-gold/10 to-transparent p-4 md:p-5">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
