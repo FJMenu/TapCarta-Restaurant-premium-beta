@@ -3368,6 +3368,8 @@ function getRestaurantRequestBucket(item) {
   if (
     status === 'served' ||
     status === 'arrived' ||
+    status === 'not_arrived' ||
+    status === 'not_served' ||
     status === 'cancelled' ||
     status === 'cancelled_by_client' ||
     status === 'presence_unknown_no_action' ||
@@ -4526,6 +4528,154 @@ window.validateRequest = function(requestId) {
   renderMenu();
 };
 
+window.closeRequestWithoutCompletion = async function(requestId) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
+
+  if (!item || !item.sourceRequest) {
+    alert(t.restaurantRequestNotFound);
+    return;
+  }
+
+  const isOrder = !!item.sourceRequest?.order;
+
+  const confirmed = await showRestaurantConfirmDialog({
+    title: isOrder
+      ? (currentLang === 'es' ? 'Confirmar pedido no servido' : currentLang === 'en' ? 'Confirm order not served' : currentLang === 'nl' ? 'Niet-geserveerde bestelling bevestigen' : 'Confirmer commande non servie')
+      : (currentLang === 'es' ? 'Confirmar cliente no presentado' : currentLang === 'en' ? 'Confirm client did not come' : currentLang === 'nl' ? 'Bevestigen dat klant niet gekomen is' : 'Confirmer client non venu'),
+    message: isOrder
+      ? (currentLang === 'es' ? 'Esta acción enviará el pedido al historial como no servido.' : currentLang === 'en' ? 'This will move the order to history as not served.' : currentLang === 'nl' ? 'Deze actie zet de bestelling in de geschiedenis als niet geserveerd.' : 'Cette action enverra la commande en historique comme non servie.')
+      : (currentLang === 'es' ? 'Esta acción enviará la reserva al historial como cliente no presentado.' : currentLang === 'en' ? 'This will move the booking to history as client did not come.' : currentLang === 'nl' ? 'Deze actie zet de reservatie in de geschiedenis als klant niet gekomen.' : 'Cette action enverra la réservation en historique comme client non venu.'),
+    confirmLabel: isOrder
+      ? (currentLang === 'es' ? 'Pedido no servido' : currentLang === 'en' ? 'Order not served' : currentLang === 'nl' ? 'Bestelling niet geserveerd' : 'Commande non servie')
+      : (currentLang === 'es' ? 'Cliente no presentado' : currentLang === 'en' ? 'Client did not come' : currentLang === 'nl' ? 'Klant niet gekomen' : 'Client non venu'),
+    cancelLabel: currentLang === 'es' ? 'Cancelar' : currentLang === 'en' ? 'Cancel' : currentLang === 'nl' ? 'Annuleren' : 'Annuler',
+    danger: true
+  });
+
+  if (!confirmed) {
+    return;
+  }
+
+  const nowIso = new Date().toISOString();
+
+  item.treated = true;
+  item.status = t.restaurantStatusProcessed;
+  item.sourceRequest.updatedAt = nowIso;
+
+  if (isOrder) {
+    item.sourceRequest.status = 'not_served';
+    item.sourceRequest.notServedAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      reason: 'not_served',
+      message:
+        currentLang === 'es'
+          ? 'Pedido no servido.'
+          : currentLang === 'en'
+            ? 'Order not served.'
+            : currentLang === 'nl'
+              ? 'Bestelling niet geserveerd.'
+              : 'Commande non servie.',
+      updatedBy: 'restaurant'
+    };
+  } else {
+    item.sourceRequest.status = 'not_arrived';
+    item.sourceRequest.notArrivedAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      reason: 'client_not_arrived',
+      message:
+        currentLang === 'es'
+          ? 'Cliente no presentado.'
+          : currentLang === 'en'
+            ? 'Client did not come.'
+            : currentLang === 'nl'
+              ? 'Klant niet gekomen.'
+              : 'Client non venu.',
+      updatedBy: 'restaurant'
+    };
+  }
+
+  void persistRestaurantRequestUpdate(item.sourceRequest);
+  syncRequestsState();
+  notifyIfNewActionRequests();
+  renderMenu();
+};
+
+window.closeRequestWithoutCompletion = async function(requestId) {
+  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
+
+  if (!item || !item.sourceRequest) {
+    alert(t.restaurantRequestNotFound);
+    return;
+  }
+
+  const isOrder = !!item.sourceRequest?.order;
+
+  const confirmed = await showRestaurantConfirmDialog({
+    title: isOrder
+      ? (currentLang === 'es' ? 'Confirmar pedido no servido' : currentLang === 'en' ? 'Confirm order not served' : currentLang === 'nl' ? 'Niet-geserveerde bestelling bevestigen' : 'Confirmer commande non servie')
+      : (currentLang === 'es' ? 'Confirmar cliente no presentado' : currentLang === 'en' ? 'Confirm client did not come' : currentLang === 'nl' ? 'Bevestigen dat klant niet gekomen is' : 'Confirmer client non venu'),
+    message: isOrder
+      ? (currentLang === 'es' ? 'Esta acción enviará el pedido al historial como no servido.' : currentLang === 'en' ? 'This will move the order to history as not served.' : currentLang === 'nl' ? 'Deze actie zet de bestelling in de geschiedenis als niet geserveerd.' : 'Cette action enverra la commande en historique comme non servie.')
+      : (currentLang === 'es' ? 'Esta acción enviará la reserva al historial como cliente no presentado.' : currentLang === 'en' ? 'This will move the booking to history as client did not come.' : currentLang === 'nl' ? 'Deze actie zet de reservatie in de geschiedenis als klant niet gekomen.' : 'Cette action enverra la réservation en historique comme client non venu.'),
+    confirmLabel: isOrder
+      ? (currentLang === 'es' ? 'Pedido no servido' : currentLang === 'en' ? 'Order not served' : currentLang === 'nl' ? 'Bestelling niet geserveerd' : 'Commande non servie')
+      : (currentLang === 'es' ? 'Cliente no presentado' : currentLang === 'en' ? 'Client did not come' : currentLang === 'nl' ? 'Klant niet gekomen' : 'Client non venu'),
+    cancelLabel: currentLang === 'es' ? 'Cancelar' : currentLang === 'en' ? 'Cancel' : currentLang === 'nl' ? 'Annuleren' : 'Annuler',
+    danger: true
+  });
+
+  if (!confirmed) {
+    return;
+  }
+
+  const nowIso = new Date().toISOString();
+
+  item.treated = true;
+  item.status = t.restaurantStatusProcessed;
+  item.sourceRequest.updatedAt = nowIso;
+
+  if (isOrder) {
+    item.sourceRequest.status = 'not_served';
+    item.sourceRequest.notServedAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      reason: 'not_served',
+      message:
+        currentLang === 'es'
+          ? 'Pedido no servido.'
+          : currentLang === 'en'
+            ? 'Order not served.'
+            : currentLang === 'nl'
+              ? 'Bestelling niet geserveerd.'
+              : 'Commande non servie.',
+      updatedBy: 'restaurant'
+    };
+  } else {
+    item.sourceRequest.status = 'not_arrived';
+    item.sourceRequest.notArrivedAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      reason: 'client_not_arrived',
+      message:
+        currentLang === 'es'
+          ? 'Cliente no presentado.'
+          : currentLang === 'en'
+            ? 'Client did not come.'
+            : currentLang === 'nl'
+              ? 'Klant niet gekomen.'
+              : 'Client non venu.',
+      updatedBy: 'restaurant'
+    };
+  }
+
+  void persistRestaurantRequestUpdate(item.sourceRequest);
+  syncRequestsState();
+  notifyIfNewActionRequests();
+  renderMenu();
+};
+
 
 window.deleteRequestFromHistory = async function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
@@ -4648,6 +4798,32 @@ function getRequestDisplayStatusMeta(item) {
             ? 'Klant aangekomen'
             : 'Client arrivé',
       className: 'bg-white/10 text-cream border-white/15'
+    };
+  }
+
+  if (sourceStatus === 'not_arrived') {
+    return {
+      label: currentLang === 'es'
+        ? 'Cliente no presentado'
+        : currentLang === 'en'
+          ? 'Client did not come'
+          : currentLang === 'nl'
+            ? 'Klant niet gekomen'
+            : 'Client non venu',
+      className: 'bg-red-500/15 text-red-200 border-red-400/30'
+    };
+  }
+
+  if (sourceStatus === 'not_served') {
+    return {
+      label: currentLang === 'es'
+        ? 'Pedido no servido'
+        : currentLang === 'en'
+          ? 'Order not served'
+          : currentLang === 'nl'
+            ? 'Bestelling niet geserveerd'
+            : 'Commande non servie',
+      className: 'bg-red-500/15 text-red-200 border-red-400/30'
     };
   }
 
@@ -4850,11 +5026,35 @@ function renderRequestRow(item, displayMode = 'active') {
       }
 
       if (isRequestAwaitingRestaurantAction(item)) {
+        const isVerifyMode = displayMode === 'verify';
+        const secondaryLabel = isOrder
+          ? (currentLang === 'es'
+              ? 'Pedido no servido'
+              : currentLang === 'en'
+                ? 'Order not served'
+                : currentLang === 'nl'
+                  ? 'Bestelling niet geserveerd'
+                  : 'Commande non servie')
+          : (currentLang === 'es'
+              ? 'Cliente no presentado'
+              : currentLang === 'en'
+                ? 'Client did not come'
+                : currentLang === 'nl'
+                  ? 'Klant niet gekomen'
+                  : 'Client non venu');
+
         return `
           <div class="flex items-center gap-2 flex-wrap justify-end">
             <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
               ${t.restaurantViewButton}
             </button>
+
+            ${isVerifyMode ? `
+              <button onclick="closeRequestWithoutCompletion('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-red-400/35 bg-red-500/10 text-xs font-extrabold text-red-200 hover:bg-red-500/15 transition-all">
+                ${secondaryLabel}
+              </button>
+            ` : ''}
+
             <button onclick="validateRequest('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 bg-gold/10 text-xs font-extrabold text-gold hover:bg-gold/15 transition-all">
               ${getRequestPrimaryActionLabel(item)}
             </button>
