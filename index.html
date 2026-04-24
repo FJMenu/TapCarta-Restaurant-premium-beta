@@ -2654,12 +2654,38 @@ async function syncLiveBookingsToLocalStorage() {
       }
     });
 
+    const finalLocalStatuses = [
+      'served',
+      'arrived',
+      'not_served',
+      'not_arrived',
+      'cancelled',
+      'cancelled_by_client',
+      'presence_unknown_no_action',
+      'service_unknown_no_action'
+    ];
+
     const liveBookings = Array.isArray(data)
       ? data
           .map(mapLiveBookingRowToRequest)
           .filter(Boolean)
           .map((liveItem) => {
             const existingItem = bookingMap.get(String(liveItem.requestId));
+            const shouldKeepLocalFinalStatus =
+              existingItem &&
+              finalLocalStatuses.includes(existingItem.status) &&
+              !finalLocalStatuses.includes(liveItem.status);
+
+            if (shouldKeepLocalFinalStatus) {
+              return {
+                ...liveItem,
+                ...existingItem,
+                restaurantResponse: {
+                  ...(liveItem.restaurantResponse || {}),
+                  ...(existingItem.restaurantResponse || {})
+                }
+              };
+            }
 
             return {
               ...(existingItem || {}),
@@ -2670,6 +2696,9 @@ async function syncLiveBookingsToLocalStorage() {
               cancelledAt:
                 existingItem?.cancelledAt ||
                 (liveItem.status === 'cancelled' ? liveItem.updatedAt : null),
+              arrivedAt: existingItem?.arrivedAt || null,
+              notArrivedAt: existingItem?.notArrivedAt || null,
+              autoClosedAt: existingItem?.autoClosedAt || null,
               historyDeleted: existingItem?.historyDeleted === true,
               historyUpdatedAt: existingItem?.historyUpdatedAt || null,
               restaurantResponse: {
@@ -3294,6 +3323,18 @@ function getRequestReferenceDateTimeMs(sourceRequest) {
   return Number.isFinite(parsed) ? parsed : Date.now();
 }
 
+function getOrderDateTimeMs(sourceRequest) {
+  const orderDate = sourceRequest?.order?.date || '';
+  const orderTime = sourceRequest?.order?.time || '00:00';
+
+  if (!orderDate) return NaN;
+
+  const parsed = new Date(`${orderDate}T${orderTime}`);
+  const timeMs = parsed.getTime();
+
+  return Number.isFinite(timeMs) ? timeMs : NaN;
+}
+
 function getNextFiveAMCleanupMs(referenceMs) {
   const cleanupDate = new Date(referenceMs);
   cleanupDate.setHours(5, 0, 0, 0);
@@ -3379,8 +3420,11 @@ function getRestaurantRequestBucket(item) {
   }
 
   if (!isBooking) {
+    const orderTimeMs = getOrderDateTimeMs(source);
+    const isOrderTimeKnown = Number.isFinite(orderTimeMs);
+
     if (status === 'accepted_by_client' || status === 'confirmed') {
-      const referenceMs = getRequestReferenceDateTimeMs(source);
+      const referenceMs = isOrderTimeKnown ? orderTimeMs : getRequestReferenceDateTimeMs(source);
       const cleanupMs = getNextFiveAMCleanupMs(referenceMs);
 
       if (now >= cleanupMs) {
@@ -3388,7 +3432,15 @@ function getRestaurantRequestBucket(item) {
         return 'history';
       }
 
-      return now >= referenceMs + orderVerifyDelayMs ? 'verify' : 'action';
+      if (isOrderTimeKnown && orderTimeMs > now && !isSameLocalDay(orderTimeMs, now)) {
+        return 'upcoming';
+      }
+
+      if (now >= referenceMs + orderVerifyDelayMs) {
+        return 'verify';
+      }
+
+      return 'action';
     }
 
     return item?.treated ? 'history' : 'action';
@@ -3413,6 +3465,10 @@ function getRestaurantRequestBucket(item) {
       return 'history';
     }
 
+    if (bookingTimeMs > now && !isSameLocalDay(bookingTimeMs, now)) {
+      return 'upcoming';
+    }
+
     if (now >= bookingTimeMs + bookingVerifyDelayMs) {
       return 'verify';
     }
@@ -3421,7 +3477,7 @@ function getRestaurantRequestBucket(item) {
       return 'today';
     }
 
-    return bookingTimeMs > now ? 'upcoming' : 'verify';
+    return 'upcoming';
   }
 
   return item?.treated ? 'history' : 'action';
@@ -3660,6 +3716,11 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
           updatedAt: updatedRequest.updatedAt || entry.updatedAt || new Date().toISOString(),
           confirmedAt: updatedRequest.confirmedAt || entry.confirmedAt,
           cancelledAt: updatedRequest.cancelledAt || entry.cancelledAt,
+          servedAt: updatedRequest.servedAt || entry.servedAt,
+          arrivedAt: updatedRequest.arrivedAt || entry.arrivedAt,
+          notServedAt: updatedRequest.notServedAt || entry.notServedAt,
+          notArrivedAt: updatedRequest.notArrivedAt || entry.notArrivedAt,
+          autoClosedAt: updatedRequest.autoClosedAt || entry.autoClosedAt,
           historyDeleted: updatedRequest.historyDeleted === true ? true : entry.historyDeleted === true,
           historyUpdatedAt: updatedRequest.historyUpdatedAt || entry.historyUpdatedAt,
           restaurantResponse: {
@@ -3684,6 +3745,11 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
           updatedAt: updatedRequest.updatedAt || lastParsed.updatedAt || new Date().toISOString(),
           confirmedAt: updatedRequest.confirmedAt || lastParsed.confirmedAt,
           cancelledAt: updatedRequest.cancelledAt || lastParsed.cancelledAt,
+          servedAt: updatedRequest.servedAt || lastParsed.servedAt,
+          arrivedAt: updatedRequest.arrivedAt || lastParsed.arrivedAt,
+          notServedAt: updatedRequest.notServedAt || lastParsed.notServedAt,
+          notArrivedAt: updatedRequest.notArrivedAt || lastParsed.notArrivedAt,
+          autoClosedAt: updatedRequest.autoClosedAt || lastParsed.autoClosedAt,
           historyDeleted: updatedRequest.historyDeleted === true ? true : lastParsed.historyDeleted === true,
           historyUpdatedAt: updatedRequest.historyUpdatedAt || lastParsed.historyUpdatedAt,
           restaurantResponse: {
@@ -4926,7 +4992,7 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
   const sourceStatus = source.status || '';
   const shouldHideOldModificationMessage = sourceStatus === 'accepted_by_client' || sourceStatus === 'confirmed';
 
-  if (isOrder) {
+   if (isOrder) {
     const itemsHtml = orderItems.length
       ? orderItems.map((entry) => `
           <div class="inline-flex items-center gap-2 rounded-xl border border-gold/22 bg-gold/8 px-3 py-1.5">
@@ -4944,6 +5010,29 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
 
     return `
       <div class="mt-3 rounded-2xl border border-gold/18 bg-black/16 px-3 py-2.5 max-w-4xl">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+          <div class="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-2">
+            <div class="text-[9px] uppercase tracking-wide text-cream/50 font-bold">
+              ${currentLang === 'es' ? 'Fecha pedido' : currentLang === 'en' ? 'Order date' : currentLang === 'nl' ? 'Besteldatum' : 'Date commande'}
+            </div>
+            <div class="text-xs md:text-sm font-bold text-cream mt-0.5">${source.order?.date || '-'}</div>
+          </div>
+
+          <div class="rounded-lg border border-gold/22 bg-gold/8 px-2.5 py-2">
+            <div class="text-[9px] uppercase tracking-wide text-gold/70 font-bold">
+              ${currentLang === 'es' ? 'Hora' : currentLang === 'en' ? 'Time' : currentLang === 'nl' ? 'Uur' : 'Heure'}
+            </div>
+            <div class="text-base md:text-lg font-extrabold text-gold mt-0.5">${source.order?.time || '-'}</div>
+          </div>
+
+          <div class="rounded-lg border border-gold/25 bg-gold/10 px-2.5 py-2">
+            <div class="text-[9px] uppercase tracking-wide text-gold/75 font-bold">
+              ${currentLang === 'es' ? 'Total' : currentLang === 'en' ? 'Total' : currentLang === 'nl' ? 'Totaal' : 'Total'}
+            </div>
+            <div class="text-base md:text-lg font-extrabold text-gold mt-0.5">${formatRequestAmount(source.order?.totalAmount)}</div>
+          </div>
+        </div>
+
         <div class="text-[10px] uppercase tracking-wide text-gold/75 font-bold mb-2">
           ${currentLang === 'es' ? 'Contenido del pedido' : currentLang === 'en' ? 'Order content' : currentLang === 'nl' ? 'Inhoud bestelling' : 'Contenu commande'}
         </div>
@@ -5022,6 +5111,14 @@ function renderRequestRow(item, displayMode = 'active') {
               <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
             </button>
           </div>
+        `;
+      }
+
+      if (displayMode === 'readonly') {
+        return `
+          <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
+            ${t.restaurantViewButton}
+          </button>
         `;
       }
 
