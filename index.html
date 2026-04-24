@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.12';
+            const APP_VERSION = 'V1.1.13';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -4094,7 +4094,7 @@ function isRequestAwaitingRestaurantAction(item) {
   const sourceStatus = item?.sourceRequest?.status || '';
   return sourceStatus === 'pending' || sourceStatus === 'modified' || sourceStatus === 'sent';
 }
-function renderRequestRow(item) {
+function renderRequestRow(item, displayMode = 'active') {
     const isOrder = item.type === t.restaurantTypeOrder;
     const source = item.sourceRequest || {};
     const orderItems = Array.isArray(source.order?.items) ? source.order.items : [];
@@ -4109,7 +4109,7 @@ function renderRequestRow(item) {
       : `${source.booking?.date || '-'} · ${source.booking?.time || '-'}${bookingPeople ? ` · ${bookingPeople} pers.` : ''}`;
 
     const responsePreviewLabel =
-      item.treated && source.restaurantResponse?.message
+      source.restaurantResponse?.message
         ? source.restaurantResponse.message
         : '';
 
@@ -4125,6 +4125,45 @@ function renderRequestRow(item) {
     const cardGlowClass = isOrder
       ? 'bg-gradient-to-br from-gold/10 to-black/10'
       : 'bg-gradient-to-br from-sky-500/10 to-black/10';
+
+    const actionButtons = (() => {
+      if (displayMode === 'history') {
+        return `
+          <div class="flex items-center gap-2">
+            <label class="inline-flex items-center justify-center w-11 h-11 rounded-xl border ${isHistorySelected ? 'border-gold/45 bg-gold/10' : 'border-white/10 bg-black/15'} cursor-pointer">
+              <input
+                type="checkbox"
+                class="w-4 h-4 accent-[#D4AF37]"
+                ${isHistorySelected ? 'checked' : ''}
+                onchange="toggleHistoryRequestSelection('${item.id}')"
+              >
+            </label>
+            <button onclick="openRequestDetails('${item.id}')" class="btn-action w-11 h-11 rounded-xl border border-white/10 text-cream hover:bg-white/5 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryViewDetail}">
+              <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      if (isRequestAwaitingRestaurantAction(item)) {
+        return `
+          <div class="flex items-center gap-2 flex-wrap justify-end">
+            <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
+              ${t.restaurantViewButton}
+            </button>
+            <button onclick="validateRequest('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
+              ${t.restaurantValidateButton}
+            </button>
+          </div>
+        `;
+      }
+
+      return `
+        <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
+          ${t.restaurantViewButton}
+        </button>
+      `;
+    })();
 
     return `
       <div class="rounded-2xl border ${cardBorderClass} ${cardGlowClass} px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
@@ -4145,33 +4184,7 @@ function renderRequestRow(item) {
         </div>
 
         <div class="flex items-center gap-2 flex-wrap justify-end">
-${isRequestAwaitingRestaurantAction(item) ? `
-            <div class="flex items-center gap-2 flex-wrap justify-end">
-              <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
-                ${t.restaurantViewButton}
-              </button>
-              <button onclick="validateRequest('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
-                ${t.restaurantValidateButton}
-              </button>
-            </div>
-          ` : `
-            <div class="flex items-center gap-2">
-              <label class="inline-flex items-center justify-center w-11 h-11 rounded-xl border ${isHistorySelected ? 'border-gold/45 bg-gold/10' : 'border-white/10 bg-black/15'} cursor-pointer">
-                <input
-                  type="checkbox"
-                  class="w-4 h-4 accent-[#D4AF37]"
-                  ${isHistorySelected ? 'checked' : ''}
-                  onchange="toggleHistoryRequestSelection('${item.id}')"
-                >
-              </label>
-              <button onclick="openRequestDetails('${item.id}')" class="btn-action w-11 h-11 rounded-xl border border-white/10 text-cream hover:bg-white/5 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryViewDetail}">
-                <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
-              </button>
-              <button onclick="deleteRequestFromHistory('${item.id}')" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryDeleteOne}">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
-          `}
+          ${actionButtons}
         </div>
       </div>
     `;
