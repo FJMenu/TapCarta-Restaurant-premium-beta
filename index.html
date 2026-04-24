@@ -3489,14 +3489,168 @@ function getRestaurantRequestBucket(item) {
   return item?.treated ? 'history' : 'action';
 }
 
+function getRequestCreatedTimeMs(item) {
+  const parsed = item?.createdAt ? new Date(item.createdAt).getTime() : NaN;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getRequestUpdatedTimeMs(item) {
+  const source = item?.sourceRequest || {};
+  const rawValue =
+    source.servedAt ||
+    source.arrivedAt ||
+    source.notServedAt ||
+    source.notArrivedAt ||
+    source.autoClosedAt ||
+    source.updatedAt ||
+    item?.updatedAt ||
+    item?.createdAt;
+
+  const parsed = rawValue ? new Date(rawValue).getTime() : NaN;
+  return Number.isFinite(parsed) ? parsed : getRequestCreatedTimeMs(item);
+}
+
+function getRequestScheduledDateTimeMs(item) {
+  const source = item?.sourceRequest || {};
+  const isBooking = item?.type === t.restaurantTypeBooking;
+
+  return isBooking
+    ? getBookingDateTimeMs(source)
+    : getOrderDateTimeMs(source);
+}
+
+function sortRequestsForBucket(items, bucket) {
+  return [...items].sort((a, b) => {
+    if (bucket === 'history') {
+      return getRequestUpdatedTimeMs(b) - getRequestUpdatedTimeMs(a);
+    }
+
+    if (bucket === 'action') {
+      return getRequestCreatedTimeMs(b) - getRequestCreatedTimeMs(a);
+    }
+
+    const timeA = getRequestScheduledDateTimeMs(a);
+    const timeB = getRequestScheduledDateTimeMs(b);
+
+    const hasTimeA = Number.isFinite(timeA);
+    const hasTimeB = Number.isFinite(timeB);
+
+    if (hasTimeA && hasTimeB && timeA !== timeB) {
+      return timeA - timeB;
+    }
+
+    if (hasTimeA && !hasTimeB) return -1;
+    if (!hasTimeA && hasTimeB) return 1;
+
+    return getRequestCreatedTimeMs(a) - getRequestCreatedTimeMs(b);
+  });
+}
+
+function getRequestSlotKey(item) {
+  const source = item?.sourceRequest || {};
+  const isBooking = item?.type === t.restaurantTypeBooking;
+  const date = isBooking ? source.booking?.date : source.order?.date;
+  const time = isBooking ? source.booking?.time : source.order?.time;
+
+  if (!date || !time) return '';
+
+  return `${isBooking ? 'booking' : 'order'}|${date}|${time}`;
+}
+
+function getRequestSlotQuantity(item) {
+  const source = item?.sourceRequest || {};
+  const isBooking = item?.type === t.restaurantTypeBooking;
+
+  if (isBooking) {
+    const people = Number(source.booking?.people || 0);
+    return Number.isFinite(people) && people > 0 ? people : 0;
+  }
+
+  const items = Array.isArray(source.order?.items) ? source.order.items : [];
+  return items.reduce((total, entry) => {
+    const quantity = Number(entry?.quantity || 0);
+    return total + (Number.isFinite(quantity) && quantity > 0 ? quantity : 0);
+  }, 0);
+}
+
+function isRequestIncludedInSlotLoad(item) {
+  const bucket = getRestaurantRequestBucket(item);
+  return bucket === 'today' || bucket === 'upcoming' || bucket === 'verify';
+}
+
+function getRequestSlotLoadMeta(item) {
+  const slotKey = getRequestSlotKey(item);
+
+  if (!slotKey) {
+    return null;
+  }
+
+  const slotItems = requestsData.filter((entry) =>
+    getRequestSlotKey(entry) === slotKey &&
+    isRequestIncludedInSlotLoad(entry)
+  );
+
+  if (slotItems.length <= 1) {
+    return null;
+  }
+
+  const totalQuantity = slotItems.reduce((total, entry) => total + getRequestSlotQuantity(entry), 0);
+  const isBooking = item?.type === t.restaurantTypeBooking;
+  const source = item?.sourceRequest || {};
+  const time = isBooking ? source.booking?.time : source.order?.time;
+
+  if (!totalQuantity || !time) {
+    return null;
+  }
+
+  return {
+    count: slotItems.length,
+    totalQuantity,
+    label: isBooking
+      ? (currentLang === 'es'
+          ? `${totalQuantity} comensales a las ${time}`
+          : currentLang === 'en'
+            ? `${totalQuantity} guests at ${time}`
+            : currentLang === 'nl'
+              ? `${totalQuantity} gasten om ${time}`
+              : `${totalQuantity} couverts à ${time}`)
+      : (currentLang === 'es'
+          ? `${totalQuantity} artículos a las ${time}`
+          : currentLang === 'en'
+            ? `${totalQuantity} items at ${time}`
+            : currentLang === 'nl'
+              ? `${totalQuantity} artikelen om ${time}`
+              : `${totalQuantity} articles à ${time}`)
+  };
+}
+
 function syncRequestsState() {
   requestsData = loadRestaurantRequests();
 
-  activeRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'action');
-  todayRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'today');
-  upcomingRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'upcoming');
-  verifyRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'verify');
-  treatedRequests = requestsData.filter(item => getRestaurantRequestBucket(item) === 'history');
+  activeRequests = sortRequestsForBucket(
+    requestsData.filter(item => getRestaurantRequestBucket(item) === 'action'),
+    'action'
+  );
+
+  todayRequests = sortRequestsForBucket(
+    requestsData.filter(item => getRestaurantRequestBucket(item) === 'today'),
+    'today'
+  );
+
+  upcomingRequests = sortRequestsForBucket(
+    requestsData.filter(item => getRestaurantRequestBucket(item) === 'upcoming'),
+    'upcoming'
+  );
+
+  verifyRequests = sortRequestsForBucket(
+    requestsData.filter(item => getRestaurantRequestBucket(item) === 'verify'),
+    'verify'
+  );
+
+  treatedRequests = sortRequestsForBucket(
+    requestsData.filter(item => getRestaurantRequestBucket(item) === 'history'),
+    'history'
+  );
 
   selectedRequestIds = new Set(
     [...selectedRequestIds].filter((id) =>
@@ -4997,8 +5151,18 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
   const source = item.sourceRequest || {};
   const sourceStatus = source.status || '';
   const shouldHideOldModificationMessage = sourceStatus === 'accepted_by_client' || sourceStatus === 'confirmed';
+  const slotLoadMeta = getRequestSlotLoadMeta(item);
 
-   if (isOrder) {
+  const slotLoadBadge = slotLoadMeta
+    ? `
+      <div class="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-orange-300/30 bg-orange-400/10 px-2 py-0.5 text-[10px] font-bold text-orange-200">
+        <i data-lucide="${isOrder ? 'utensils' : 'users'}" class="w-3 h-3"></i>
+        <span>${slotLoadMeta.label}</span>
+      </div>
+    `
+    : '';
+
+  if (isOrder) {
     const itemsHtml = orderItems.length
       ? orderItems.map((entry) => `
           <div class="inline-flex items-center gap-2 rounded-xl border border-gold/22 bg-gold/8 px-3 py-1.5">
@@ -5029,6 +5193,7 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
               ${currentLang === 'es' ? 'Hora' : currentLang === 'en' ? 'Time' : currentLang === 'nl' ? 'Uur' : 'Heure'}
             </div>
             <div class="text-base md:text-lg font-extrabold text-gold mt-0.5">${source.order?.time || '-'}</div>
+            ${slotLoadBadge}
           </div>
 
           <div class="rounded-lg border border-gold/25 bg-gold/10 px-2.5 py-2">
@@ -5066,6 +5231,7 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
           ${currentLang === 'es' ? 'Hora' : currentLang === 'en' ? 'Time' : currentLang === 'nl' ? 'Uur' : 'Heure'}
         </div>
         <div class="text-base md:text-lg font-extrabold text-gold mt-0.5">${source.booking?.time || '-'}</div>
+        ${slotLoadBadge}
       </div>
 
       <div class="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-2">
