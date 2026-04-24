@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.1.16';
+            const APP_VERSION = 'V1.1.17';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2822,7 +2822,84 @@ window.tapCartaRestaurantRequestNotificationState = window.tapCartaRestaurantReq
   knownActionRequestIds: null,
   lastNotificationAt: 0
 };
+function showRestaurantToast(message, variant = 'info') {
+  const existingToast = document.getElementById('restaurant-toast-message');
+  if (existingToast) existingToast.remove();
 
+  const isDanger = variant === 'danger';
+  const toast = document.createElement('div');
+  toast.id = 'restaurant-toast-message';
+  toast.className = `fixed left-3 right-3 bottom-4 z-[9999] md:left-auto md:right-6 md:bottom-6 md:w-[380px] rounded-2xl border ${isDanger ? 'border-red-400/45 bg-red-950/90' : 'border-gold/40 bg-black/90'} shadow-[0_18px_60px_rgba(0,0,0,0.45)] px-4 py-4 text-sm font-semibold ${isDanger ? 'text-red-100' : 'text-cream'}`;
+
+  toast.innerHTML = `
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl ${isDanger ? 'bg-red-500/20 text-red-100' : 'bg-gold text-black'} flex items-center justify-center flex-shrink-0">
+        <i data-lucide="${isDanger ? 'triangle-alert' : 'info'}" class="w-5 h-5"></i>
+      </div>
+      <div>${message}</div>
+    </div>
+  `;
+
+  document.body.appendChild(toast);
+
+  if (window.lucide) {
+    requestAnimationFrame(() => lucide.createIcons());
+  }
+
+  window.setTimeout(() => {
+    document.getElementById('restaurant-toast-message')?.remove();
+  }, 4500);
+}
+
+function showRestaurantConfirmDialog({ title, message, confirmLabel, cancelLabel, danger = false }) {
+  return new Promise((resolve) => {
+    document.getElementById('restaurant-confirm-dialog')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'restaurant-confirm-dialog';
+    overlay.className = 'fixed inset-0 z-[10000] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4';
+
+    overlay.innerHTML = `
+      <div class="w-full max-w-md rounded-[28px] border ${danger ? 'border-red-400/40' : 'border-gold/35'} bg-[#11100d] shadow-[0_24px_90px_rgba(0,0,0,0.65)] p-5">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-2xl ${danger ? 'bg-red-500/18 text-red-100' : 'bg-gold text-black'} flex items-center justify-center flex-shrink-0">
+            <i data-lucide="${danger ? 'trash-2' : 'check-circle-2'}" class="w-6 h-6"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 class="font-display text-xl font-bold text-cream">${title}</h3>
+            <p class="text-sm text-cream/70 mt-2 leading-relaxed">${message}</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-end mt-6">
+          <button type="button" data-confirm-cancel class="btn-action px-4 py-3 rounded-2xl border border-white/10 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
+            ${cancelLabel}
+          </button>
+          <button type="button" data-confirm-ok class="btn-action px-4 py-3 rounded-2xl border-2 ${danger ? 'border-red-400/55 bg-red-500/15 text-red-100 hover:bg-red-500/25' : 'border-gold bg-gold text-black hover:bg-gold/90'} text-sm font-extrabold transition-all">
+            ${confirmLabel}
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const close = (result) => {
+      overlay.remove();
+      resolve(result);
+    };
+
+    overlay.querySelector('[data-confirm-cancel]')?.addEventListener('click', () => close(false));
+    overlay.querySelector('[data-confirm-ok]')?.addEventListener('click', () => close(true));
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) close(false);
+    });
+
+    if (window.lucide) {
+      requestAnimationFrame(() => lucide.createIcons());
+    }
+  });
+}
 function showRestaurantNewRequestNotification(count) {
   const existingNotification = document.getElementById('restaurant-new-request-notification');
   if (existingNotification) {
@@ -2883,6 +2960,12 @@ function notifyIfNewActionRequests() {
 
   if (!state.knownActionRequestIds) {
     state.knownActionRequestIds = new Set(actionIds);
+
+    if (actionIds.length) {
+      state.lastNotificationAt = Date.now();
+      showRestaurantNewRequestNotification(actionIds.length);
+    }
+
     return;
   }
 
@@ -3081,17 +3164,21 @@ window.toggleAllActiveRequests = function() {
   renderMenu();
 };
 
-window.validateSelectedRequests = function() {
+window.validateSelectedRequests = async function() {
   const selectedItems = activeRequests.filter((item) => window.selectedRequestIds.has(String(item.id)));
 
   if (!selectedItems.length) {
-    alert(t.restaurantActiveNothingSelected);
+    showRestaurantToast(t.restaurantActiveNothingSelected, 'info');
     return;
   }
 
-  const confirmedBatch = window.confirm(
-    t.restaurantActiveConfirmValidateSelected.replace('{count}', selectedItems.length)
-  );
+  const confirmedBatch = await showRestaurantConfirmDialog({
+    title: currentLang === 'es' ? 'Confirmar selección' : currentLang === 'en' ? 'Confirm selection' : currentLang === 'nl' ? 'Selectie bevestigen' : 'Confirmer la sélection',
+    message: t.restaurantActiveConfirmValidateSelected.replace('{count}', selectedItems.length),
+    confirmLabel: currentLang === 'es' ? 'Confirmar' : currentLang === 'en' ? 'Confirm' : currentLang === 'nl' ? 'Bevestigen' : 'Confirmer',
+    cancelLabel: currentLang === 'es' ? 'Cancelar' : currentLang === 'en' ? 'Cancel' : currentLang === 'nl' ? 'Annuleren' : 'Annuler',
+    danger: false
+  });
 
   if (!confirmedBatch) {
     return;
@@ -3145,15 +3232,21 @@ window.toggleAllHistoryRequests = function() {
   renderMenu();
 };
 
-window.deleteSelectedHistoryRequests = function() {
+window.deleteSelectedHistoryRequests = async function() {
   const selectedItems = treatedRequests.filter((item) => window.selectedHistoryRequestIds.has(String(item.id)));
 
   if (!selectedItems.length) {
-    alert(t.restaurantHistoryNothingSelected);
+    showRestaurantToast(t.restaurantHistoryNothingSelected, 'info');
     return;
   }
 
-  const confirmedDelete = window.confirm(t.restaurantHistoryConfirmDelete);
+  const confirmedDelete = await showRestaurantConfirmDialog({
+    title: currentLang === 'es' ? 'Retirar del historial visible' : currentLang === 'en' ? 'Remove from visible history' : currentLang === 'nl' ? 'Verwijderen uit zichtbare geschiedenis' : 'Retirer de l’historique visible',
+    message: t.restaurantHistoryConfirmDelete,
+    confirmLabel: currentLang === 'es' ? 'Retirar' : currentLang === 'en' ? 'Remove' : currentLang === 'nl' ? 'Verwijderen' : 'Retirer',
+    cancelLabel: currentLang === 'es' ? 'Cancelar' : currentLang === 'en' ? 'Cancel' : currentLang === 'nl' ? 'Annuleren' : 'Annuler',
+    danger: true
+  });
 
   if (!confirmedDelete) {
     return;
@@ -3172,6 +3265,7 @@ window.deleteSelectedHistoryRequests = function() {
   });
 
   window.selectedHistoryRequestIds = new Set();
+  showRestaurantToast(currentLang === 'es' ? 'Retirado del historial visible.' : currentLang === 'en' ? 'Removed from visible history.' : currentLang === 'nl' ? 'Verwijderd uit zichtbare geschiedenis.' : 'Retiré de l’historique visible.', 'info');
   renderMenu();
 };
 
@@ -4059,15 +4153,21 @@ window.validateRequest = function(requestId) {
 };
 
 
-window.deleteRequestFromHistory = function(requestId) {
+window.deleteRequestFromHistory = async function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
   if (!item || !item.sourceRequest) {
-    alert(t.restaurantRequestNotFound);
+    showRestaurantToast(t.restaurantRequestNotFound, 'danger');
     return;
   }
 
-  const confirmedDelete = window.confirm(t.restaurantHistoryDeleteOneConfirm);
+  const confirmedDelete = await showRestaurantConfirmDialog({
+    title: currentLang === 'es' ? 'Retirar del historial visible' : currentLang === 'en' ? 'Remove from visible history' : currentLang === 'nl' ? 'Verwijderen uit zichtbare geschiedenis' : 'Retirer de l’historique visible',
+    message: t.restaurantHistoryDeleteOneConfirm,
+    confirmLabel: currentLang === 'es' ? 'Retirar' : currentLang === 'en' ? 'Remove' : currentLang === 'nl' ? 'Verwijderen' : 'Retirer',
+    cancelLabel: currentLang === 'es' ? 'Cancelar' : currentLang === 'en' ? 'Cancel' : currentLang === 'nl' ? 'Annuleren' : 'Annuler',
+    danger: true
+  });
 
   if (!confirmedDelete) {
     return;
@@ -4080,6 +4180,7 @@ window.deleteRequestFromHistory = function(requestId) {
   item.sourceRequest.updatedAt = nowIso;
 
   void persistRestaurantRequestUpdate(item.sourceRequest);
+  showRestaurantToast(currentLang === 'es' ? 'Retirado del historial visible.' : currentLang === 'en' ? 'Removed from visible history.' : currentLang === 'nl' ? 'Verwijderd uit zichtbare geschiedenis.' : 'Retiré de l’historique visible.', 'info');
   renderMenu();
 };
 
