@@ -3432,15 +3432,21 @@ function getRestaurantRequestBucket(item) {
         return 'history';
       }
 
-      if (isOrderTimeKnown && orderTimeMs > now && !isSameLocalDay(orderTimeMs, now)) {
-        return 'upcoming';
+      if (isOrderTimeKnown) {
+        if (now >= orderTimeMs + orderVerifyDelayMs) {
+          return 'verify';
+        }
+
+        if (isSameLocalDay(orderTimeMs, now)) {
+          return 'today';
+        }
+
+        if (orderTimeMs > now) {
+          return 'upcoming';
+        }
       }
 
-      if (now >= referenceMs + orderVerifyDelayMs) {
-        return 'verify';
-      }
-
-      return 'action';
+      return now >= referenceMs + orderVerifyDelayMs ? 'verify' : 'today';
     }
 
     return item?.treated ? 'history' : 'action';
