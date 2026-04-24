@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.3';
+            const APP_VERSION = 'V1.2.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2710,8 +2710,8 @@ function loadRestaurantRequests() {
     siteConfig?.identity?.id ||
     '';
 
-  const bookingActiveStatuses = ['pending', 'modified'];
-  const orderActiveStatuses = ['sent', 'modified', 'accepted_by_client', 'rejected_by_client'];
+  const bookingActiveStatuses = ['pending', 'modified', 'accepted_by_client', 'rejected_by_client', 'confirmed'];
+  const orderActiveStatuses = ['sent', 'modified', 'accepted_by_client', 'rejected_by_client', 'confirmed'];
 
   function getHistoryReferenceTimestamp(item) {
     const rawValue =
@@ -4355,11 +4355,11 @@ window.validateRequest = function(requestId) {
   const isOrder = !!item.sourceRequest?.order;
   const sourceStatus = item.sourceRequest.status || '';
 
-  item.treated = true;
-  item.status = t.restaurantStatusProcessed;
   item.sourceRequest.updatedAt = nowIso;
 
   if (sourceStatus === 'rejected_by_client') {
+    item.treated = true;
+    item.status = t.restaurantStatusProcessed;
     item.sourceRequest.status = 'cancelled_by_client';
     item.sourceRequest.cancelledAt = nowIso;
     item.sourceRequest.restaurantResponse = {
@@ -4367,10 +4367,49 @@ window.validateRequest = function(requestId) {
       reason: 'client_rejected_modification',
       updatedBy: 'restaurant'
     };
+  } else if (isOrder && (sourceStatus === 'accepted_by_client' || sourceStatus === 'confirmed')) {
+    item.treated = true;
+    item.status = t.restaurantStatusProcessed;
+    item.sourceRequest.status = 'served';
+    item.sourceRequest.servedAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      reason: 'served',
+      message:
+        currentLang === 'es'
+          ? 'Pedido servido.'
+          : currentLang === 'en'
+            ? 'Order served.'
+            : currentLang === 'nl'
+              ? 'Bestelling geserveerd.'
+              : 'Commande servie.',
+      updatedBy: 'restaurant'
+    };
+  } else if (!isOrder && (sourceStatus === 'accepted_by_client' || sourceStatus === 'confirmed')) {
+    item.treated = true;
+    item.status = t.restaurantStatusProcessed;
+    item.sourceRequest.status = 'arrived';
+    item.sourceRequest.arrivedAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      reason: 'client_arrived',
+      message:
+        currentLang === 'es'
+          ? 'Cliente llegado.'
+          : currentLang === 'en'
+            ? 'Client arrived.'
+            : currentLang === 'nl'
+              ? 'Klant aangekomen.'
+              : 'Client arrivé.',
+      updatedBy: 'restaurant'
+    };
   } else {
     const confirmationMessage = isOrder
       ? t.restaurantOrderConfirmedMessage
       : t.restaurantBookingConfirmedMessage;
+
+    item.treated = false;
+    item.status = t.restaurantStatusPending;
 
     item.sourceRequest.status = 'confirmed';
     item.sourceRequest.confirmedAt = nowIso;
@@ -4422,55 +4461,8 @@ window.deleteRequestFromHistory = async function(requestId) {
 
 function getRequestDisplayStatusMeta(item) {
   const sourceStatus = item?.sourceRequest?.status || '';
-  const treated = item?.treated === true;
+  const isOrder = item?.type === t.restaurantTypeOrder;
   const actionTexts = getRequestActionTexts();
-
-  if (!treated) {
-    if (sourceStatus === 'modified') {
-      return {
-        label: actionTexts.statusModified,
-        className: 'bg-sky-500/15 text-sky-100 border-sky-400/30'
-      };
-    }
-
-    if (sourceStatus === 'accepted_by_client') {
-      return {
-        label: currentLang === 'es'
-          ? 'Aceptada por el cliente'
-          : currentLang === 'en'
-            ? 'Accepted by client'
-            : currentLang === 'nl'
-              ? 'Aanvaard door klant'
-              : 'Acceptée par le client',
-        className: 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
-      };
-    }
-
-    if (sourceStatus === 'rejected_by_client') {
-      return {
-        label: currentLang === 'es'
-          ? 'Rechazada por el cliente'
-          : currentLang === 'en'
-            ? 'Rejected by client'
-            : currentLang === 'nl'
-              ? 'Geweigerd door klant'
-              : 'Refusée par le client',
-        className: 'bg-red-500/15 text-red-200 border-red-400/30'
-      };
-    }
-
-    return {
-      label: t.restaurantStatusNew,
-      className: 'bg-red-500/15 text-red-300 border-red-400/30'
-    };
-  }
-
-  if (sourceStatus === 'cancelled') {
-    return {
-      label: currentLang === 'es' ? 'Cancelada' : currentLang === 'en' ? 'Cancelled' : currentLang === 'nl' ? 'Geannuleerd' : 'Annulée',
-      className: 'bg-red-500/15 text-red-200 border-red-400/30'
-    };
-  }
 
   if (sourceStatus === 'modified') {
     return {
@@ -4481,13 +4473,21 @@ function getRequestDisplayStatusMeta(item) {
 
   if (sourceStatus === 'accepted_by_client') {
     return {
-      label: currentLang === 'es'
-        ? 'Aceptada por el cliente'
-        : currentLang === 'en'
-          ? 'Accepted by client'
-          : currentLang === 'nl'
-            ? 'Aanvaard door klant'
-            : 'Acceptée par le client',
+      label: isOrder
+        ? (currentLang === 'es'
+            ? 'Pedido validado'
+            : currentLang === 'en'
+              ? 'Order validated'
+              : currentLang === 'nl'
+                ? 'Bestelling bevestigd'
+                : 'Commande validée')
+        : (currentLang === 'es'
+            ? 'Reserva validada'
+            : currentLang === 'en'
+              ? 'Booking validated'
+              : currentLang === 'nl'
+                ? 'Reservatie bevestigd'
+                : 'Réservation validée'),
       className: 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
     };
   }
@@ -4495,20 +4495,67 @@ function getRequestDisplayStatusMeta(item) {
   if (sourceStatus === 'rejected_by_client') {
     return {
       label: currentLang === 'es'
-        ? 'Rechazada por el cliente'
+        ? 'Cliente rechazó'
         : currentLang === 'en'
-          ? 'Rejected by client'
+          ? 'Client rejected'
           : currentLang === 'nl'
-            ? 'Geweigerd door klant'
-            : 'Refusée par le client',
+            ? 'Klant geweigerd'
+            : 'Client a refusé',
       className: 'bg-red-500/15 text-red-200 border-red-400/30'
     };
   }
 
   if (sourceStatus === 'confirmed') {
     return {
-      label: currentLang === 'es' ? 'Confirmada' : currentLang === 'en' ? 'Confirmed' : currentLang === 'nl' ? 'Bevestigd' : 'Confirmée',
+      label: isOrder
+        ? (currentLang === 'es'
+            ? 'Pedido confirmado'
+            : currentLang === 'en'
+              ? 'Order confirmed'
+              : currentLang === 'nl'
+                ? 'Bestelling bevestigd'
+                : 'Commande confirmée')
+        : (currentLang === 'es'
+            ? 'Reserva confirmada'
+            : currentLang === 'en'
+              ? 'Booking confirmed'
+              : currentLang === 'nl'
+                ? 'Reservatie bevestigd'
+                : 'Réservation confirmée'),
       className: 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
+    };
+  }
+
+  if (sourceStatus === 'served') {
+    return {
+      label: currentLang === 'es'
+        ? 'Pedido servido'
+        : currentLang === 'en'
+          ? 'Order served'
+          : currentLang === 'nl'
+            ? 'Bestelling geserveerd'
+            : 'Commande servie',
+      className: 'bg-white/10 text-cream border-white/15'
+    };
+  }
+
+  if (sourceStatus === 'arrived') {
+    return {
+      label: currentLang === 'es'
+        ? 'Cliente llegado'
+        : currentLang === 'en'
+          ? 'Client arrived'
+          : currentLang === 'nl'
+            ? 'Klant aangekomen'
+            : 'Client arrivé',
+      className: 'bg-white/10 text-cream border-white/15'
+    };
+  }
+
+  if (sourceStatus === 'cancelled' || sourceStatus === 'cancelled_by_client') {
+    return {
+      label: currentLang === 'es' ? 'Cancelada' : currentLang === 'en' ? 'Cancelled' : currentLang === 'nl' ? 'Geannuleerd' : 'Annulée',
+      className: 'bg-red-500/15 text-red-200 border-red-400/30'
     };
   }
 
@@ -4520,8 +4567,8 @@ function getRequestDisplayStatusMeta(item) {
   }
 
   return {
-    label: t.restaurantStatusProcessed,
-    className: 'bg-white/10 text-cream border-white/15'
+    label: t.restaurantStatusNew,
+    className: 'bg-red-500/15 text-red-300 border-red-400/30'
   };
 }
 function isRequestAwaitingRestaurantAction(item) {
@@ -4531,9 +4578,112 @@ function isRequestAwaitingRestaurantAction(item) {
     sourceStatus === 'modified' ||
     sourceStatus === 'sent' ||
     sourceStatus === 'accepted_by_client' ||
-    sourceStatus === 'rejected_by_client'
+    sourceStatus === 'rejected_by_client' ||
+    sourceStatus === 'confirmed'
   );
 }
+
+function getRequestPrimaryActionLabel(item) {
+  const sourceStatus = item?.sourceRequest?.status || '';
+  const isOrder = item?.type === t.restaurantTypeOrder;
+
+  if (sourceStatus === 'accepted_by_client' || sourceStatus === 'confirmed') {
+    if (isOrder) {
+      return currentLang === 'es'
+        ? 'Pedido servido'
+        : currentLang === 'en'
+          ? 'Order served'
+          : currentLang === 'nl'
+            ? 'Bestelling geserveerd'
+            : 'Commande servie';
+    }
+
+    return currentLang === 'es'
+      ? 'Cliente llegado'
+      : currentLang === 'en'
+        ? 'Client arrived'
+        : currentLang === 'nl'
+          ? 'Klant aangekomen'
+          : 'Client arrivé';
+  }
+
+  if (sourceStatus === 'rejected_by_client') {
+    return currentLang === 'es'
+      ? 'Cerrar'
+      : currentLang === 'en'
+        ? 'Close'
+        : currentLang === 'nl'
+          ? 'Afsluiten'
+          : 'Clôturer';
+  }
+
+  return t.restaurantValidateButton;
+}
+
+function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
+  const source = item.sourceRequest || {};
+  const sourceStatus = source.status || '';
+  const shouldHideOldModificationMessage = sourceStatus === 'accepted_by_client' || sourceStatus === 'confirmed';
+
+  if (isOrder) {
+    const itemsHtml = orderItems.length
+      ? orderItems.map((entry) => `
+          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/10 px-3 py-2">
+            <span class="text-sm md:text-base font-extrabold text-cream">${escapeRequestDetailsHtml(entry.name || '-')}</span>
+            <span class="text-lg md:text-xl font-black text-gold">×${entry.quantity || 1}</span>
+          </div>
+        `).join('')
+      : `
+          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/10 px-3 py-2">
+            <span class="text-sm md:text-base font-extrabold text-cream">
+              ${currentLang === 'es' ? 'Pedido recibido' : currentLang === 'en' ? 'Order received' : currentLang === 'nl' ? 'Bestelling ontvangen' : 'Commande reçue'}
+            </span>
+          </div>
+        `;
+
+    return `
+      <div class="mt-3 rounded-2xl border border-gold/20 bg-black/20 px-3 py-3">
+        <div class="text-[11px] uppercase tracking-wide text-gold/80 font-bold mb-2">
+          ${currentLang === 'es' ? 'Contenido del pedido' : currentLang === 'en' ? 'Order content' : currentLang === 'nl' ? 'Inhoud bestelling' : 'Contenu commande'}
+        </div>
+        <div class="flex flex-wrap gap-2">
+          ${itemsHtml}
+        </div>
+        ${!shouldHideOldModificationMessage && source.restaurantResponse?.message
+          ? `<div class="text-xs text-cream/65 mt-3">${escapeRequestDetailsHtml(source.restaurantResponse.message)}</div>`
+          : ''}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div class="rounded-2xl border border-sky-300/20 bg-sky-500/10 px-3 py-3">
+        <div class="text-[10px] uppercase tracking-wide text-sky-200/70 font-bold">
+          ${currentLang === 'es' ? 'Fecha' : currentLang === 'en' ? 'Date' : currentLang === 'nl' ? 'Datum' : 'Date'}
+        </div>
+        <div class="text-sm md:text-base font-extrabold text-cream mt-1">${source.booking?.date || '-'}</div>
+      </div>
+
+      <div class="rounded-2xl border border-gold/30 bg-gold/12 px-3 py-3">
+        <div class="text-[10px] uppercase tracking-wide text-gold/80 font-bold">
+          ${currentLang === 'es' ? 'Hora' : currentLang === 'en' ? 'Time' : currentLang === 'nl' ? 'Uur' : 'Heure'}
+        </div>
+        <div class="text-xl md:text-2xl font-black text-gold mt-1">${source.booking?.time || '-'}</div>
+      </div>
+
+      <div class="rounded-2xl border border-white/12 bg-white/[0.04] px-3 py-3">
+        <div class="text-[10px] uppercase tracking-wide text-cream/60 font-bold">
+          ${currentLang === 'es' ? 'Personas' : currentLang === 'en' ? 'People' : currentLang === 'nl' ? 'Personen' : 'Personnes'}
+        </div>
+        <div class="text-xl md:text-2xl font-black text-cream mt-1">
+          ${bookingPeople || '-'}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderRequestRow(item, displayMode = 'active') {
     const isOrder = item.type === t.restaurantTypeOrder;
     const source = item.sourceRequest || {};
@@ -4541,17 +4691,6 @@ function renderRequestRow(item, displayMode = 'active') {
     const bookingPeople = source.booking?.people ?? null;
     const isHistorySelected = selectedHistoryRequestIds.has(String(item.id));
     const statusMeta = getRequestDisplayStatusMeta(item);
-
-    const previewLabel = isOrder
-      ? (orderItems.length
-          ? orderItems.map((entry) => `${entry.name} x${entry.quantity}`).join(' · ')
-          : 'Commande reçue')
-      : `${source.booking?.date || '-'} · ${source.booking?.time || '-'}${bookingPeople ? ` · ${bookingPeople} pers.` : ''}`;
-
-    const responsePreviewLabel =
-      source.restaurantResponse?.message
-        ? source.restaurantResponse.message
-        : '';
 
     const typeIcon = isOrder ? 'shopping-bag' : 'calendar-days';
     const typeBadgeClass = isOrder
@@ -4591,8 +4730,8 @@ function renderRequestRow(item, displayMode = 'active') {
             <button onclick="openRequestDetails('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-cream hover:bg-gold/10 transition-all">
               ${t.restaurantViewButton}
             </button>
-            <button onclick="validateRequest('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 text-xs font-semibold text-gold hover:bg-gold/10 transition-all">
-              ${t.restaurantValidateButton}
+            <button onclick="validateRequest('${item.id}')" class="btn-action px-3 py-2 rounded-xl border border-gold/35 bg-gold/10 text-xs font-extrabold text-gold hover:bg-gold/15 transition-all">
+              ${getRequestPrimaryActionLabel(item)}
             </button>
           </div>
         `;
@@ -4606,8 +4745,8 @@ function renderRequestRow(item, displayMode = 'active') {
     })();
 
     return `
-      <div class="rounded-2xl border ${cardBorderClass} ${cardGlowClass} px-4 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <div class="min-w-0">
+      <div class="rounded-2xl border ${cardBorderClass} ${cardGlowClass} px-4 py-4 flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
+        <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center gap-2 mb-2">
             <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${typeBadgeClass}">
               <i data-lucide="${typeIcon}" class="w-3.5 h-3.5"></i>
@@ -4616,14 +4755,15 @@ function renderRequestRow(item, displayMode = 'active') {
             <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full border ${statusMeta.className}">${statusMeta.label}</span>
           </div>
 
-          <div class="text-sm font-semibold text-cream">${item.client}</div>
+          <div class="text-base font-extrabold text-cream">${item.client}</div>
           <div class="text-xs text-cream/60 mt-1">${new Date(item.createdAt).toLocaleDateString()} · ${new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-          <div class="text-xs ${isOrder ? 'text-gold/90' : 'text-sky-200/85'} mt-1">${previewLabel}</div>
-          ${responsePreviewLabel ? `<div class="text-xs text-cream/65 mt-1">${escapeRequestDetailsHtml(responsePreviewLabel)}</div>` : ''}
-          <div class="text-xs text-gold/80 mt-1">${getElapsedLabel(item)}</div>
+
+          ${renderRequestMainInfo(item, isOrder, orderItems, bookingPeople)}
+
+          <div class="text-xs text-gold/80 mt-2">${getElapsedLabel(item)}</div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap justify-end">
+        <div class="flex items-center gap-2 flex-wrap justify-end xl:pt-8">
           ${actionButtons}
         </div>
       </div>
