@@ -3158,31 +3158,43 @@ function showRestaurantNewRequestNotification(count) {
   }
 }
 
+function isRequestEligibleForPopupNotification(item) {
+  const sourceStatus = item?.sourceRequest?.status || '';
+
+  return (
+    sourceStatus === 'pending' ||
+    sourceStatus === 'sent' ||
+    sourceStatus === 'modified' ||
+    sourceStatus === 'rejected_by_client'
+  );
+}
+
 function notifyIfNewActionRequests() {
-  const actionIds = activeRequests.map((item) => String(item.id));
+  const popupRequests = activeRequests.filter(isRequestEligibleForPopupNotification);
+  const popupIds = popupRequests.map((item) => String(item.id));
   const state = window.tapCartaRestaurantRequestNotificationState;
 
-  if (!actionIds.length || isRestaurantRequestModalOpen()) {
+  if (!popupIds.length || isRestaurantRequestModalOpen()) {
     document.getElementById('restaurant-new-request-notification')?.remove();
   }
 
   if (!state.knownActionRequestIds) {
-    state.knownActionRequestIds = new Set(actionIds);
+    state.knownActionRequestIds = new Set(popupIds);
 
-    if (actionIds.length) {
+    if (popupIds.length) {
       state.lastNotificationAt = Date.now();
       playRestaurantNotificationSound();
 
       if (!isRestaurantRequestModalOpen()) {
-        showRestaurantNewRequestNotification(actionIds.length);
+        showRestaurantNewRequestNotification(popupIds.length);
       }
     }
 
     return;
   }
 
-  const newIds = actionIds.filter((id) => !state.knownActionRequestIds.has(id));
-  state.knownActionRequestIds = new Set(actionIds);
+  const newIds = popupIds.filter((id) => !state.knownActionRequestIds.has(id));
+  state.knownActionRequestIds = new Set(popupIds);
 
   if (newIds.length) {
     const now = Date.now();
@@ -3193,15 +3205,16 @@ function notifyIfNewActionRequests() {
     }
 
     if (!isRestaurantRequestModalOpen()) {
-      showRestaurantNewRequestNotification(actionIds.length);
+      showRestaurantNewRequestNotification(popupIds.length);
     }
 
     return;
   }
 
   const existingNotification = document.getElementById('restaurant-new-request-notification');
-  if (actionIds.length && !existingNotification && !isRestaurantRequestModalOpen()) {
-    showRestaurantNewRequestNotification(actionIds.length);
+
+  if (!popupIds.length && existingNotification) {
+    existingNotification.remove();
   }
 }
 
@@ -4628,55 +4641,55 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
   if (isOrder) {
     const itemsHtml = orderItems.length
       ? orderItems.map((entry) => `
-          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/10 px-3 py-2">
-            <span class="text-sm md:text-base font-extrabold text-cream">${escapeRequestDetailsHtml(entry.name || '-')}</span>
-            <span class="text-lg md:text-xl font-black text-gold">×${entry.quantity || 1}</span>
+          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/22 bg-gold/8 px-3 py-1.5">
+            <span class="text-sm font-bold text-cream">${escapeRequestDetailsHtml(entry.name || '-')}</span>
+            <span class="text-base font-extrabold text-gold">×${entry.quantity || 1}</span>
           </div>
         `).join('')
       : `
-          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/10 px-3 py-2">
-            <span class="text-sm md:text-base font-extrabold text-cream">
+          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/22 bg-gold/8 px-3 py-1.5">
+            <span class="text-sm font-bold text-cream">
               ${currentLang === 'es' ? 'Pedido recibido' : currentLang === 'en' ? 'Order received' : currentLang === 'nl' ? 'Bestelling ontvangen' : 'Commande reçue'}
             </span>
           </div>
         `;
 
     return `
-      <div class="mt-3 rounded-2xl border border-gold/20 bg-black/20 px-3 py-3">
-        <div class="text-[11px] uppercase tracking-wide text-gold/80 font-bold mb-2">
+      <div class="mt-3 rounded-2xl border border-gold/18 bg-black/16 px-3 py-2.5 max-w-4xl">
+        <div class="text-[10px] uppercase tracking-wide text-gold/75 font-bold mb-2">
           ${currentLang === 'es' ? 'Contenido del pedido' : currentLang === 'en' ? 'Order content' : currentLang === 'nl' ? 'Inhoud bestelling' : 'Contenu commande'}
         </div>
         <div class="flex flex-wrap gap-2">
           ${itemsHtml}
         </div>
         ${!shouldHideOldModificationMessage && source.restaurantResponse?.message
-          ? `<div class="text-xs text-cream/65 mt-3">${escapeRequestDetailsHtml(source.restaurantResponse.message)}</div>`
+          ? `<div class="text-xs text-cream/60 mt-2">${escapeRequestDetailsHtml(source.restaurantResponse.message)}</div>`
           : ''}
       </div>
     `;
   }
 
   return `
-    <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-      <div class="rounded-2xl border border-sky-300/20 bg-sky-500/10 px-3 py-3">
-        <div class="text-[10px] uppercase tracking-wide text-sky-200/70 font-bold">
+    <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-3xl">
+      <div class="rounded-xl border border-sky-300/18 bg-sky-500/8 px-3 py-2.5">
+        <div class="text-[10px] uppercase tracking-wide text-sky-200/65 font-bold">
           ${currentLang === 'es' ? 'Fecha' : currentLang === 'en' ? 'Date' : currentLang === 'nl' ? 'Datum' : 'Date'}
         </div>
-        <div class="text-sm md:text-base font-extrabold text-cream mt-1">${source.booking?.date || '-'}</div>
+        <div class="text-sm font-bold text-cream mt-1">${source.booking?.date || '-'}</div>
       </div>
 
-      <div class="rounded-2xl border border-gold/30 bg-gold/12 px-3 py-3">
-        <div class="text-[10px] uppercase tracking-wide text-gold/80 font-bold">
+      <div class="rounded-xl border border-gold/25 bg-gold/10 px-3 py-2.5">
+        <div class="text-[10px] uppercase tracking-wide text-gold/75 font-bold">
           ${currentLang === 'es' ? 'Hora' : currentLang === 'en' ? 'Time' : currentLang === 'nl' ? 'Uur' : 'Heure'}
         </div>
-        <div class="text-xl md:text-2xl font-black text-gold mt-1">${source.booking?.time || '-'}</div>
+        <div class="text-lg md:text-xl font-extrabold text-gold mt-1">${source.booking?.time || '-'}</div>
       </div>
 
-      <div class="rounded-2xl border border-white/12 bg-white/[0.04] px-3 py-3">
-        <div class="text-[10px] uppercase tracking-wide text-cream/60 font-bold">
+      <div class="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2.5">
+        <div class="text-[10px] uppercase tracking-wide text-cream/55 font-bold">
           ${currentLang === 'es' ? 'Personas' : currentLang === 'en' ? 'People' : currentLang === 'nl' ? 'Personen' : 'Personnes'}
         </div>
-        <div class="text-xl md:text-2xl font-black text-cream mt-1">
+        <div class="text-lg md:text-xl font-extrabold text-cream mt-1">
           ${bookingPeople || '-'}
         </div>
       </div>
