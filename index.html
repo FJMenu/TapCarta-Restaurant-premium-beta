@@ -3145,18 +3145,18 @@ function playRestaurantManualConfirmationTone() {
     const masterGain = audioContext.createGain();
 
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.linearRampToValueAtTime(0.48, now + 0.01);
-    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+    masterGain.gain.linearRampToValueAtTime(0.95, now + 0.008);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.46);
     masterGain.connect(audioContext.destination);
 
     const firstOscillator = audioContext.createOscillator();
     const firstGain = audioContext.createGain();
 
-    firstOscillator.type = 'sine';
-    firstOscillator.frequency.setValueAtTime(880, now);
+    firstOscillator.type = 'square';
+    firstOscillator.frequency.setValueAtTime(1320, now);
 
     firstGain.gain.setValueAtTime(0.0001, now);
-    firstGain.gain.linearRampToValueAtTime(0.95, now + 0.01);
+    firstGain.gain.linearRampToValueAtTime(1, now + 0.008);
     firstGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
 
     firstOscillator.connect(firstGain);
@@ -3169,18 +3169,18 @@ function playRestaurantManualConfirmationTone() {
     const secondOscillator = audioContext.createOscillator();
     const secondGain = audioContext.createGain();
 
-    secondOscillator.type = 'sine';
-    secondOscillator.frequency.setValueAtTime(1175, secondStart);
+    secondOscillator.type = 'square';
+    secondOscillator.frequency.setValueAtTime(1760, secondStart);
 
     secondGain.gain.setValueAtTime(0.0001, secondStart);
-    secondGain.gain.linearRampToValueAtTime(0.9, secondStart + 0.01);
-    secondGain.gain.exponentialRampToValueAtTime(0.0001, secondStart + 0.17);
+    secondGain.gain.linearRampToValueAtTime(1, secondStart + 0.008);
+    secondGain.gain.exponentialRampToValueAtTime(0.0001, secondStart + 0.18);
 
     secondOscillator.connect(secondGain);
     secondGain.connect(masterGain);
 
     secondOscillator.start(secondStart);
-    secondOscillator.stop(secondStart + 0.18);
+    secondOscillator.stop(secondStart + 0.19);
 
     return true;
   } catch (e) {
