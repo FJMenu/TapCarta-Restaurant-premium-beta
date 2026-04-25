@@ -3133,6 +3133,59 @@ async function notifyRestaurantNewRequestSound() {
   return playRestaurantNotificationSound({ force: false });
 }
 
+function playRestaurantManualConfirmationTone() {
+  const audioContext = getRestaurantAudioContext();
+
+  if (!audioContext || audioContext.state !== 'running') {
+    return false;
+  }
+
+  try {
+    const now = audioContext.currentTime;
+    const masterGain = audioContext.createGain();
+
+    masterGain.gain.setValueAtTime(0.001, now);
+    masterGain.gain.linearRampToValueAtTime(0.12, now + 0.015);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+    masterGain.connect(audioContext.destination);
+
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, now);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.linearRampToValueAtTime(0.5, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+    oscillator.connect(gain);
+    gain.connect(masterGain);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.2);
+
+    return true;
+  } catch (e) {
+    console.warn('TapCarta manual confirmation sound failed', e);
+    return false;
+  }
+}
+
+async function playRestaurantManualConfirmationSound() {
+  if (!isRestaurantSoundEnabled()) {
+    return false;
+  }
+
+  const unlocked = await unlockRestaurantNotificationSound();
+
+  if (!unlocked) {
+    return false;
+  }
+
+  return playRestaurantManualConfirmationTone();
+}
+
 function updateRestaurantSoundToggleIcon() {
   const enabled = isRestaurantSoundEnabled();
   const button = document.getElementById('tapcarta-sound-toggle');
@@ -4467,6 +4520,11 @@ function openManualBookingModal() {
 
       <form id="restaurant-manual-booking-form" novalidate class="flex flex-col min-h-0">
         <div class="px-4 sm:px-5 py-4 overflow-y-auto">
+          <div
+            data-manual-booking-error
+            class="hidden mb-3 rounded-2xl border border-red-400/45 bg-red-950/80 px-4 py-3 text-sm font-semibold text-red-100"
+          ></div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.name} *</label>
@@ -4606,11 +4664,34 @@ function openManualBookingModal() {
   });
 
   const form = overlay.querySelector('#restaurant-manual-booking-form');
+  const manualBookingErrorBox = overlay.querySelector('[data-manual-booking-error]');
   const manualOriginInput = overlay.querySelector('input[name="manualOrigin"]');
   const manualOriginButtons = overlay.querySelectorAll('[data-manual-origin]');
 
+  const showManualBookingFormError = (message, selector) => {
+    if (manualBookingErrorBox) {
+      manualBookingErrorBox.textContent = message;
+      manualBookingErrorBox.classList.remove('hidden');
+    }
+
+    const targetField = selector ? overlay.querySelector(selector) : null;
+
+    if (targetField) {
+      targetField.focus();
+    }
+  };
+
+  const clearManualBookingFormError = () => {
+    if (manualBookingErrorBox) {
+      manualBookingErrorBox.textContent = '';
+      manualBookingErrorBox.classList.add('hidden');
+    }
+  };
+
   manualOriginButtons.forEach((button) => {
     button.addEventListener('click', () => {
+      clearManualBookingFormError();
+
       const selectedOrigin = button.getAttribute('data-manual-origin') || 'phone';
 
       if (manualOriginInput) {
@@ -4643,27 +4724,25 @@ function openManualBookingModal() {
     const bookingTime = String(formData.get('bookingTime') || '').trim();
     const bookingPeople = Number(formData.get('bookingPeople') || 0);
 
+    clearManualBookingFormError();
+
     if (!customerName) {
-      showRestaurantToast(currentTexts.required, 'danger');
-      overlay.querySelector('input[name="customerName"]')?.focus();
+      showManualBookingFormError(currentTexts.required, 'input[name="customerName"]');
       return;
     }
 
     if (!bookingDate) {
-      showRestaurantToast(currentTexts.dateRequired, 'danger');
-      overlay.querySelector('input[name="bookingDate"]')?.focus();
+      showManualBookingFormError(currentTexts.dateRequired, 'input[name="bookingDate"]');
       return;
     }
 
     if (!bookingTime) {
-      showRestaurantToast(currentTexts.timeRequired, 'danger');
-      overlay.querySelector('input[name="bookingTime"]')?.focus();
+      showManualBookingFormError(currentTexts.timeRequired, 'input[name="bookingTime"]');
       return;
     }
 
     if (!Number.isFinite(bookingPeople) || bookingPeople < 1) {
-      showRestaurantToast(currentTexts.peopleRequired, 'danger');
-      overlay.querySelector('input[name="bookingPeople"]')?.focus();
+      showManualBookingFormError(currentTexts.peopleRequired, 'input[name="bookingPeople"]');
       return;
     }
 
@@ -4689,6 +4768,8 @@ function openManualBookingModal() {
 
     syncRequestsState();
     renderMenu();
+
+    void playRestaurantManualConfirmationSound();
 
     showRestaurantToast(currentTexts.saved, 'info');
   });
