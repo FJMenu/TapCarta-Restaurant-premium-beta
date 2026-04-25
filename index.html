@@ -4245,10 +4245,9 @@ function getElapsedLabel(item) {
   }
 
 async function persistRestaurantRequestUpdate(updatedRequest) {
-  const isOrderRequest = !!updatedRequest?.order;
-  const isLiveBookingRequest =
-    !isOrderRequest &&
-    (updatedRequest?.requestType === 'booking' || updatedRequest?.liveRequestId);
+  const isOrderRequest = !!updatedRequest?.order || updatedRequest?.requestType === 'order';
+  const isBookingRequest = !isOrderRequest;
+  const isLiveRequest = !!updatedRequest?.liveRequestId;
 
   const storageKey = isOrderRequest ? 'tapcarta_order_requests' : 'tapcarta_booking_requests';
   const lastKey = isOrderRequest ? 'tapcarta_last_order_request' : 'tapcarta_last_booking_request';
@@ -4313,20 +4312,40 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
       );
     }
 
-    if (isLiveBookingRequest && updatedRequest?.liveRequestId) {
+    if (isLiveRequest) {
       const livePayload = {
         status: updatedRequest.status || 'pending',
         updated_at: updatedRequest.updatedAt || new Date().toISOString(),
         restaurant_message: updatedRequest?.restaurantResponse?.message || null
       };
 
-      const { error } = await supabaseClient
+      const activeRestaurantId =
+        updatedRequest?.restaurantId ||
+        activeRestaurantData?.identity?.id ||
+        activeRestaurantData?.id ||
+        siteConfig?.identity?.id ||
+        '';
+
+      let query = supabaseClient
         .from('requests')
         .update(livePayload)
         .eq('id', updatedRequest.liveRequestId);
 
+      if (activeRestaurantId) {
+        query = query.eq('restaurant_id', activeRestaurantId);
+      }
+
+      query = query.eq('type', isOrderRequest ? 'order' : 'booking');
+
+      const { error } = await query;
+
       if (error) {
-        console.warn('TapCarta Restaurant: impossible de synchroniser la réservation live', error);
+        console.warn(
+          isOrderRequest
+            ? 'TapCarta Restaurant: impossible de synchroniser la commande live'
+            : 'TapCarta Restaurant: impossible de synchroniser la réservation live',
+          error
+        );
       }
     }
   } catch (error) {
