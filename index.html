@@ -5130,6 +5130,15 @@ function openManualOrderModal() {
           ? 'Info wijzigen'
           : 'Modifier les infos';
 
+  const confirmOrderLabel =
+    currentLang === 'es'
+      ? 'Confirmar pedido'
+      : currentLang === 'en'
+        ? 'Confirm order'
+        : currentLang === 'nl'
+          ? 'Bestelling bevestigen'
+          : 'Confirmer la commande';
+
   const infoStepLabel =
     currentLang === 'es'
       ? 'Datos del pedido'
@@ -5393,6 +5402,14 @@ function openManualOrderModal() {
 
             <button
               type="button"
+              data-manual-order-footer-edit-info
+              class="hidden btn-action px-5 py-3 rounded-2xl border border-gold/35 bg-gold/10 text-sm font-extrabold text-gold hover:bg-gold/15 transition-all"
+            >
+              ${editInfoLabel}
+            </button>
+
+            <button
+              type="button"
               data-manual-order-continue
               class="btn-action px-6 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all"
             >
@@ -5404,7 +5421,7 @@ function openManualOrderModal() {
               data-manual-order-submit
               class="hidden btn-action px-6 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all"
             >
-              ${texts.save}
+              ${confirmOrderLabel}
             </button>
           </div>
         </div>
@@ -5432,6 +5449,7 @@ function openManualOrderModal() {
   const continueButton = overlay.querySelector('[data-manual-order-continue]');
   const submitButton = overlay.querySelector('[data-manual-order-submit]');
   const editInfoButton = overlay.querySelector('[data-manual-order-edit-info]');
+  const footerEditInfoButton = overlay.querySelector('[data-manual-order-footer-edit-info]');
   const infoStepPill = overlay.querySelector('[data-manual-order-step-pill="info"]');
   const cashierStepPill = overlay.querySelector('[data-manual-order-step-pill="cashier"]');
   const infoSummary = overlay.querySelector('[data-manual-order-info-summary]');
@@ -5513,6 +5531,7 @@ function openManualOrderModal() {
     cashierPanel?.classList.toggle('hidden', isInfoStep);
     continueButton?.classList.toggle('hidden', !isInfoStep);
     submitButton?.classList.toggle('hidden', isInfoStep);
+    footerEditInfoButton?.classList.toggle('hidden', isInfoStep);
 
     infoStepPill?.classList.toggle('border-gold', isInfoStep);
     infoStepPill?.classList.toggle('bg-gold', isInfoStep);
@@ -5692,10 +5711,13 @@ function openManualOrderModal() {
     setManualOrderStep('cashier');
   });
 
-  editInfoButton?.addEventListener('click', () => {
+  const returnToManualOrderInfoStep = () => {
     clearManualOrderFormError();
     setManualOrderStep('info');
-  });
+  };
+
+  editInfoButton?.addEventListener('click', returnToManualOrderInfoStep);
+  footerEditInfoButton?.addEventListener('click', returnToManualOrderInfoStep);
 
   manualOriginButtons.forEach((button) => {
     button.addEventListener('click', () => {
