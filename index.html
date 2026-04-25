@@ -2976,6 +2976,14 @@ function playRestaurantNotificationSound({ force = false } = {}) {
     if (!audioContext) return false;
 
     if (audioContext.state !== 'running') {
+      audioContext.resume?.().then(() => {
+        if (audioContext.state === 'running') {
+          playRestaurantNotificationSound({ force });
+        }
+      }).catch((e) => {
+        console.warn('TapCarta sound resume failed', e);
+      });
+
       console.warn('TapCarta sound blocked: audio context not running');
       return false;
     }
@@ -2984,8 +2992,8 @@ function playRestaurantNotificationSound({ force = false } = {}) {
 
     const masterGain = audioContext.createGain();
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.linearRampToValueAtTime(0.28, now + 0.03);
-    masterGain.gain.linearRampToValueAtTime(0.28, now + 2.75);
+    masterGain.gain.linearRampToValueAtTime(0.32, now + 0.03);
+    masterGain.gain.linearRampToValueAtTime(0.32, now + 2.75);
     masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.05);
     masterGain.connect(audioContext.destination);
 
@@ -3007,8 +3015,8 @@ function playRestaurantNotificationSound({ force = false } = {}) {
       oscillator.frequency.setValueAtTime(beep.frequency, now + beep.start);
 
       gain.gain.setValueAtTime(0.0001, now + beep.start);
-      gain.gain.linearRampToValueAtTime(0.55, now + beep.start + 0.02);
-      gain.gain.linearRampToValueAtTime(0.55, now + beep.start + beep.duration - 0.03);
+      gain.gain.linearRampToValueAtTime(0.65, now + beep.start + 0.02);
+      gain.gain.linearRampToValueAtTime(0.65, now + beep.start + beep.duration - 0.03);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + beep.start + beep.duration);
 
       oscillator.connect(gain);
@@ -3058,7 +3066,10 @@ function updateRestaurantSoundToggleIcon() {
 
 async function toggleRestaurantSound() {
   const current = localStorage.getItem('tapcarta_restaurant_sound_enabled');
-  const next = current === 'false' ? 'true' : 'false';
+
+  const next = current === 'true'
+    ? 'false'
+    : 'true';
 
   localStorage.setItem('tapcarta_restaurant_sound_enabled', next);
   updateRestaurantSoundToggleIcon();
