@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.7';
+            const APP_VERSION = 'V1.2.8';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -702,6 +702,76 @@
       }
 
       .allergen-label {
+        font-size: 0.86rem;
+      }
+    }
+    .restaurant-manual-action-bar {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      z-index: 80;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .restaurant-manual-action-inner {
+      width: min(560px, 100%);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid rgba(242, 199, 68, 0.28);
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(15, 15, 15, 0.96), rgba(26, 26, 26, 0.94));
+      box-shadow: 0 18px 55px rgba(0, 0, 0, 0.42);
+      backdrop-filter: blur(14px);
+      pointer-events: auto;
+    }
+
+    .restaurant-manual-action-btn {
+      min-height: 52px;
+      border-radius: 16px;
+      border: 1px solid rgba(242, 199, 68, 0.36);
+      background: rgba(242, 199, 68, 0.08);
+      color: #FAF6EE;
+      font-size: 0.92rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .restaurant-manual-action-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(242, 199, 68, 0.7);
+      background: rgba(242, 199, 68, 0.14);
+    }
+
+    .restaurant-manual-action-btn i {
+      width: 18px;
+      height: 18px;
+      color: #F2C744;
+    }
+
+    @media (max-width: 640px) {
+      .restaurant-manual-action-bar {
+        left: 10px;
+        right: 10px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
+      }
+
+      .restaurant-manual-action-inner {
+        border-radius: 18px;
+        padding: 8px;
+        gap: 8px;
+      }
+
+      .restaurant-manual-action-btn {
+        min-height: 50px;
         font-size: 0.86rem;
       }
     }
@@ -6280,6 +6350,40 @@ function renderRequestRow(item, displayMode = 'active') {
         </section>
       </div>
     </main>
+
+    <div class="restaurant-manual-action-bar" aria-label="Actions rapides restaurant">
+      <div class="restaurant-manual-action-inner">
+        <button
+          id="restaurant-manual-booking-btn"
+          type="button"
+          class="restaurant-manual-action-btn"
+        >
+          <i data-lucide="calendar-plus"></i>
+          <span>${currentLang === 'es'
+            ? '+ Reserva'
+            : currentLang === 'en'
+              ? '+ Booking'
+              : currentLang === 'nl'
+                ? '+ Reservatie'
+                : '+ Réservation'}</span>
+        </button>
+
+        <button
+          id="restaurant-manual-order-btn"
+          type="button"
+          class="restaurant-manual-action-btn"
+        >
+          <i data-lucide="shopping-bag"></i>
+          <span>${currentLang === 'es'
+            ? '+ Pedido'
+            : currentLang === 'en'
+              ? '+ Order'
+              : currentLang === 'nl'
+                ? '+ Bestelling'
+                : '+ Commande'}</span>
+        </button>
+      </div>
+    </div>
   `;
 
   const toastTitle = document.getElementById('install-toast-title');
@@ -6300,6 +6404,38 @@ function renderRequestRow(item, displayMode = 'active') {
   if (refreshAllBtn) {
     refreshAllBtn.addEventListener('click', () => {
       window.location.reload();
+    });
+  }
+
+  const manualBookingBtn = document.getElementById('restaurant-manual-booking-btn');
+  if (manualBookingBtn) {
+    manualBookingBtn.addEventListener('click', () => {
+      showRestaurantToast(
+        currentLang === 'es'
+          ? 'Añadir reserva: formulario en la siguiente etapa.'
+          : currentLang === 'en'
+            ? 'Add booking: form in the next step.'
+            : currentLang === 'nl'
+              ? 'Reservatie toevoegen: formulier in de volgende stap.'
+              : 'Ajouter une réservation : formulaire à l’étape suivante.',
+        'info'
+      );
+    });
+  }
+
+  const manualOrderBtn = document.getElementById('restaurant-manual-order-btn');
+  if (manualOrderBtn) {
+    manualOrderBtn.addEventListener('click', () => {
+      showRestaurantToast(
+        currentLang === 'es'
+          ? 'Añadir pedido: formulario en la siguiente etapa.'
+          : currentLang === 'en'
+            ? 'Add order: form in the next step.'
+            : currentLang === 'nl'
+              ? 'Bestelling toevoegen: formulier in de volgende stap.'
+              : 'Ajouter une commande : formulaire à l’étape suivante.',
+        'info'
+      );
     });
   }
 
