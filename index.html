@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.8';
+            const APP_VERSION = 'V1.2.9';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -4800,6 +4800,729 @@ function openManualBookingModal() {
   }, 80);
 }
 
+function getManualOrderTexts() {
+  if (currentLang === 'es') {
+    return {
+      title: 'Añadir un pedido',
+      subtitle: 'Pedido recibido por teléfono, mostrador, WhatsApp u otro canal.',
+      name: 'Nombre del cliente',
+      phone: 'Teléfono',
+      date: 'Fecha',
+      time: 'Hora',
+      origin: 'Origen',
+      note: 'Nota',
+      notePlaceholder: 'Nota interna opcional',
+      menu: 'Menú',
+      cart: 'Pedido',
+      emptyCart: 'Añade artículos desde el menú.',
+      total: 'Total',
+      cancel: 'Cancelar',
+      save: 'Guardar pedido',
+      add: 'Añadir',
+      required: 'El nombre del cliente es obligatorio.',
+      dateRequired: 'La fecha es obligatoria.',
+      timeRequired: 'La hora es obligatoria.',
+      itemsRequired: 'Añade al menos un artículo al pedido.',
+      saved: 'Pedido añadido.',
+      noMenu: 'No hay artículos disponibles para añadir.',
+      originPhone: 'Teléfono',
+      originCounter: 'Mostrador',
+      originWhatsapp: 'WhatsApp',
+      originOther: 'Otro'
+    };
+  }
+
+  if (currentLang === 'en') {
+    return {
+      title: 'Add an order',
+      subtitle: 'Order received by phone, counter, WhatsApp or another channel.',
+      name: 'Customer name',
+      phone: 'Phone',
+      date: 'Date',
+      time: 'Time',
+      origin: 'Origin',
+      note: 'Note',
+      notePlaceholder: 'Optional internal note',
+      menu: 'Menu',
+      cart: 'Order',
+      emptyCart: 'Add items from the menu.',
+      total: 'Total',
+      cancel: 'Cancel',
+      save: 'Save order',
+      add: 'Add',
+      required: 'Customer name is required.',
+      dateRequired: 'Date is required.',
+      timeRequired: 'Time is required.',
+      itemsRequired: 'Add at least one item to the order.',
+      saved: 'Order added.',
+      noMenu: 'No available items to add.',
+      originPhone: 'Phone',
+      originCounter: 'Counter',
+      originWhatsapp: 'WhatsApp',
+      originOther: 'Other'
+    };
+  }
+
+  if (currentLang === 'nl') {
+    return {
+      title: 'Bestelling toevoegen',
+      subtitle: 'Bestelling ontvangen via telefoon, balie, WhatsApp of een ander kanaal.',
+      name: 'Naam klant',
+      phone: 'Telefoon',
+      date: 'Datum',
+      time: 'Uur',
+      origin: 'Herkomst',
+      note: 'Notitie',
+      notePlaceholder: 'Optionele interne notitie',
+      menu: 'Menu',
+      cart: 'Bestelling',
+      emptyCart: 'Voeg artikelen toe vanuit het menu.',
+      total: 'Totaal',
+      cancel: 'Annuleren',
+      save: 'Bestelling opslaan',
+      add: 'Toevoegen',
+      required: 'Naam van de klant is verplicht.',
+      dateRequired: 'Datum is verplicht.',
+      timeRequired: 'Uur is verplicht.',
+      itemsRequired: 'Voeg minstens één artikel toe aan de bestelling.',
+      saved: 'Bestelling toegevoegd.',
+      noMenu: 'Geen beschikbare artikelen om toe te voegen.',
+      originPhone: 'Telefoon',
+      originCounter: 'Balie',
+      originWhatsapp: 'WhatsApp',
+      originOther: 'Andere'
+    };
+  }
+
+  return {
+    title: 'Ajouter une commande',
+    subtitle: 'Commande reçue par téléphone, comptoir, WhatsApp ou autre canal.',
+    name: 'Nom du client',
+    phone: 'Téléphone',
+    date: 'Date',
+    time: 'Heure',
+    origin: 'Origine',
+    note: 'Note',
+    notePlaceholder: 'Note interne facultative',
+    menu: 'Menu',
+    cart: 'Commande',
+    emptyCart: 'Ajoutez des articles depuis le menu.',
+    total: 'Total',
+    cancel: 'Annuler',
+    save: 'Enregistrer',
+    add: 'Ajouter',
+    required: 'Le nom du client est obligatoire.',
+    dateRequired: 'La date est obligatoire.',
+    timeRequired: 'L’heure est obligatoire.',
+    itemsRequired: 'Ajoutez au moins un article à la commande.',
+    saved: 'Commande ajoutée.',
+    noMenu: 'Aucun article disponible à ajouter.',
+    originPhone: 'Téléphone',
+    originCounter: 'Comptoir',
+    originWhatsapp: 'WhatsApp',
+    originOther: 'Autre'
+  };
+}
+
+function getManualOrderAvailableMenuItems() {
+  const categories = Array.isArray(activeRestaurantData?.menu?.categories)
+    ? activeRestaurantData.menu.categories
+    : [];
+
+  return categories.flatMap((category) => {
+    const categoryName = category?.name || '';
+    const items = Array.isArray(category?.items) ? category.items : [];
+
+    return items
+      .filter((item) => item && item.visible !== false && item.available !== false)
+      .map((item) => ({
+        id: item.id || `manual_item_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        name: item.name || '',
+        category: categoryName,
+        price: Number(item.price || 0)
+      }));
+  });
+}
+
+function saveManualOrderToLocalStorage(manualOrder) {
+  const storageKey = 'tapcarta_order_requests';
+  const lastKey = 'tapcarta_last_order_request';
+
+  const raw = localStorage.getItem(storageKey);
+  const parsed = raw ? JSON.parse(raw) : [];
+  const safeList = Array.isArray(parsed) ? parsed : [];
+
+  const withoutDuplicate = safeList.filter(
+    (entry) => String(entry?.requestId) !== String(manualOrder.requestId)
+  );
+
+  localStorage.setItem(storageKey, JSON.stringify([...withoutDuplicate, manualOrder]));
+  localStorage.setItem(lastKey, JSON.stringify(manualOrder));
+}
+
+async function createManualOrderInSupabase(manualOrder) {
+  if (!window.supabaseClient || !manualOrder?.restaurantId) {
+    return manualOrder;
+  }
+
+  const payload = {
+    restaurant_id: manualOrder.restaurantId,
+    type: 'order',
+    status: 'confirmed',
+    client_name: manualOrder.customer?.name || '',
+    client_phone: manualOrder.customer?.phone || '',
+    client_language: manualOrder.customer?.language || currentLang,
+    booking_date: manualOrder.order?.date || null,
+    booking_time: manualOrder.order?.time || null,
+    note: manualOrder.order?.note || '',
+    items: Array.isArray(manualOrder.order?.items) ? manualOrder.order.items : [],
+    restaurant_message: manualOrder.restaurantResponse?.message || '',
+    created_at: manualOrder.createdAt,
+    updated_at: manualOrder.updatedAt
+  };
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('requests')
+      .insert(payload)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+
+    if (!data?.id) {
+      return manualOrder;
+    }
+
+    return {
+      ...manualOrder,
+      requestId: data.id,
+      liveRequestId: data.id,
+      createdAt: data.created_at || manualOrder.createdAt,
+      updatedAt: data.updated_at || manualOrder.updatedAt
+    };
+  } catch (error) {
+    console.warn('TapCarta Restaurant: impossible de créer la commande manuelle dans Supabase', error);
+    return manualOrder;
+  }
+}
+
+function buildManualOrderRequestFromForm(form, cartItems) {
+  const formData = new FormData(form);
+  const nowIso = new Date().toISOString();
+  const activeRestaurantId = getActiveRestaurantIdForManualRequest();
+  const manualOrigin = String(formData.get('manualOrigin') || 'phone');
+  const customerName = String(formData.get('customerName') || '').trim();
+  const customerPhone = String(formData.get('customerPhone') || '').trim();
+  const orderDate = String(formData.get('orderDate') || '').trim();
+  const orderTime = String(formData.get('orderTime') || '').trim();
+  const orderNote = String(formData.get('orderNote') || '').trim();
+  const safeCartItems = Array.isArray(cartItems) ? cartItems : [];
+  const totalAmount = safeCartItems.reduce(
+    (total, item) => total + Number(item.price || 0) * Number(item.quantity || 1),
+    0
+  );
+  const localRequestId =
+    window.crypto?.randomUUID
+      ? `manual_order_${window.crypto.randomUUID()}`
+      : `manual_order_${Date.now()}`;
+
+  return {
+    restaurantId: activeRestaurantId,
+    requestId: localRequestId,
+    requestType: 'order',
+    createdAt: nowIso,
+    updatedAt: nowIso,
+    status: 'confirmed',
+    confirmedAt: nowIso,
+    createdBy: 'restaurant',
+    sourceChannel: 'manual',
+    manualOrigin,
+    clientVisible: false,
+    clientAccessToken: null,
+    customer: {
+      name: customerName,
+      phone: customerPhone,
+      language: currentLang
+    },
+    order: {
+      date: orderDate,
+      time: orderTime,
+      note: orderNote,
+      items: safeCartItems.map((item) => ({
+        id: item.id || '',
+        name: item.name || '',
+        category: item.category || '',
+        quantity: Number(item.quantity || 1),
+        price: Number(item.price || 0)
+      })),
+      totalAmount,
+      manualOriginLabel: getManualOriginLabel(manualOrigin)
+    },
+    restaurantResponse: {
+      reason: 'confirmed',
+      message:
+        currentLang === 'es'
+          ? 'Pedido añadido manualmente por el restaurante.'
+          : currentLang === 'en'
+            ? 'Order manually added by the restaurant.'
+            : currentLang === 'nl'
+              ? 'Bestelling handmatig toegevoegd door het restaurant.'
+              : 'Commande ajoutée manuellement par le restaurant.',
+      updatedBy: 'restaurant'
+    }
+  };
+}
+
+function openManualOrderModal() {
+  document.getElementById('restaurant-manual-order-modal')?.remove();
+
+  const texts = getManualOrderTexts();
+  const todayValue = getManualRequestTodayValue();
+  const nextTimeValue = getManualRequestNextSimpleTimeValue();
+  const menuItems = getManualOrderAvailableMenuItems();
+  let cartItems = [];
+
+  const overlay = document.createElement('div');
+  overlay.id = 'restaurant-manual-order-modal';
+  overlay.className = 'fixed inset-0 z-[10000] bg-black/75 backdrop-blur-sm flex items-center justify-center px-3 py-3 sm:px-5 sm:py-5';
+
+  overlay.innerHTML = `
+    <div class="w-full max-w-6xl max-h-[94vh] overflow-hidden rounded-[28px] border border-gold/35 bg-[#11100d] shadow-[0_24px_90px_rgba(0,0,0,0.68)] flex flex-col">
+      <div class="flex items-start justify-between gap-4 px-4 sm:px-5 py-4 border-b border-white/10">
+        <div class="min-w-0">
+          <div class="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-gold mb-2">
+            <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+            TapCarta Resto
+          </div>
+          <h3 class="font-display text-xl sm:text-2xl font-bold text-cream leading-tight">${texts.title}</h3>
+          <p class="text-xs sm:text-sm text-cream/65 mt-1">${texts.subtitle}</p>
+        </div>
+
+        <button
+          type="button"
+          data-close-manual-order
+          class="btn-action w-10 h-10 rounded-2xl border border-white/10 text-cream hover:bg-white/5 flex items-center justify-center flex-shrink-0"
+          aria-label="${texts.cancel}"
+        >
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="restaurant-manual-order-form" novalidate class="flex flex-col min-h-0">
+        <div class="px-4 sm:px-5 py-4 overflow-y-auto">
+          <div
+            data-manual-order-error
+            class="hidden mb-3 rounded-2xl border border-red-400/45 bg-red-950/80 px-4 py-3 text-sm font-semibold text-red-100"
+          ></div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-4">
+            <div class="space-y-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.name} *</label>
+                  <input
+                    name="customerName"
+                    type="text"
+                    autocomplete="off"
+                    class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70"
+                  >
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.phone}</label>
+                  <input
+                    name="customerPhone"
+                    type="tel"
+                    autocomplete="off"
+                    class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70"
+                  >
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.date}</label>
+                  <input
+                    name="orderDate"
+                    type="date"
+                    value="${todayValue}"
+                    class="w-full rounded-2xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
+                  >
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.time}</label>
+                  <input
+                    name="orderTime"
+                    type="time"
+                    value="${nextTimeValue}"
+                    class="w-full rounded-2xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
+                  >
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.origin}</label>
+                <input type="hidden" name="manualOrigin" value="phone">
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" data-manual-order-origin-group>
+                  <button type="button" data-manual-order-origin="phone" class="manual-order-origin-btn rounded-2xl border border-gold bg-gold text-black px-3 py-2.5 text-sm font-extrabold transition-all">
+                    ${texts.originPhone}
+                  </button>
+
+                  <button type="button" data-manual-order-origin="counter" class="manual-order-origin-btn rounded-2xl border border-white/10 bg-black/30 text-cream px-3 py-2.5 text-sm font-semibold hover:border-gold/50 transition-all">
+                    ${texts.originCounter}
+                  </button>
+
+                  <button type="button" data-manual-order-origin="whatsapp" class="manual-order-origin-btn rounded-2xl border border-white/10 bg-black/30 text-cream px-3 py-2.5 text-sm font-semibold hover:border-gold/50 transition-all">
+                    ${texts.originWhatsapp}
+                  </button>
+
+                  <button type="button" data-manual-order-origin="other" class="manual-order-origin-btn rounded-2xl border border-white/10 bg-black/30 text-cream px-3 py-2.5 text-sm font-semibold hover:border-gold/50 transition-all">
+                    ${texts.originOther}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.note}</label>
+                <textarea
+                  name="orderNote"
+                  rows="2"
+                  placeholder="${texts.notePlaceholder}"
+                  class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70 resize-none"
+                ></textarea>
+              </div>
+
+              <div class="rounded-2xl border border-white/10 bg-black/25 p-3">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                  <h4 class="text-sm font-extrabold text-cream">${texts.menu}</h4>
+                  <span class="text-xs font-bold text-gold">${menuItems.length} articles</span>
+                </div>
+
+                <div class="space-y-2 max-h-[280px] overflow-y-auto pr-1" data-manual-order-menu-list>
+                  ${menuItems.length ? menuItems.map((item) => `
+                    <button
+                      type="button"
+                      data-manual-order-add-item="${escapeRequestDetailsHtml(item.id)}"
+                      class="w-full text-left rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5 hover:border-gold/45 hover:bg-gold/8 transition-all"
+                    >
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                          <div class="text-sm font-bold text-cream truncate">${escapeRequestDetailsHtml(item.name)}</div>
+                          <div class="text-[11px] text-cream/50 truncate">${escapeRequestDetailsHtml(item.category)}</div>
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                          <span class="text-sm font-extrabold text-gold">${formatRequestAmount(item.price)}</span>
+                          <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-gold text-black">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  `).join('') : `
+                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm font-semibold text-cream/70">
+                      ${texts.noMenu}
+                    </div>
+                  `}
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-gold/25 bg-gold/6 p-3 flex flex-col min-h-[300px]">
+              <div class="flex items-center justify-between gap-3 mb-3">
+                <h4 class="text-sm font-extrabold text-cream">${texts.cart}</h4>
+                <div class="text-right">
+                  <div class="text-[10px] uppercase tracking-wide text-gold/70 font-bold">${texts.total}</div>
+                  <div class="text-xl font-extrabold text-gold" data-manual-order-total>0,00 €</div>
+                </div>
+              </div>
+
+              <div class="space-y-2 overflow-y-auto pr-1 flex-1" data-manual-order-cart-list>
+                <div class="rounded-2xl border border-white/10 bg-black/20 px-4 py-5 text-sm font-semibold text-cream/65">
+                  ${texts.emptyCart}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sticky bottom-0 bg-[#11100d] border-t border-white/10 px-4 sm:px-5 py-3 flex flex-col sm:flex-row gap-2 justify-end">
+          <button
+            type="button"
+            data-close-manual-order
+            class="btn-action px-5 py-3 rounded-2xl border border-white/10 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+          >
+            ${texts.cancel}
+          </button>
+
+          <button
+            type="submit"
+            class="btn-action px-5 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all"
+          >
+            ${texts.save}
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const form = overlay.querySelector('#restaurant-manual-order-form');
+  const manualOrderErrorBox = overlay.querySelector('[data-manual-order-error]');
+  const manualOriginInput = overlay.querySelector('input[name="manualOrigin"]');
+  const manualOriginButtons = overlay.querySelectorAll('[data-manual-order-origin]');
+  const cartList = overlay.querySelector('[data-manual-order-cart-list]');
+  const totalBox = overlay.querySelector('[data-manual-order-total]');
+
+  const showManualOrderFormError = (message, selector) => {
+    if (manualOrderErrorBox) {
+      manualOrderErrorBox.textContent = message;
+      manualOrderErrorBox.classList.remove('hidden');
+    }
+
+    const targetField = selector ? overlay.querySelector(selector) : null;
+
+    if (targetField) {
+      targetField.focus();
+    }
+  };
+
+  const clearManualOrderFormError = () => {
+    if (manualOrderErrorBox) {
+      manualOrderErrorBox.textContent = '';
+      manualOrderErrorBox.classList.add('hidden');
+    }
+  };
+
+  const renderManualOrderCart = () => {
+    const totalAmount = cartItems.reduce(
+      (total, item) => total + Number(item.price || 0) * Number(item.quantity || 1),
+      0
+    );
+
+    if (totalBox) {
+      totalBox.textContent = formatRequestAmount(totalAmount);
+    }
+
+    if (!cartList) return;
+
+    if (!cartItems.length) {
+      cartList.innerHTML = `
+        <div class="rounded-2xl border border-white/10 bg-black/20 px-4 py-5 text-sm font-semibold text-cream/65">
+          ${texts.emptyCart}
+        </div>
+      `;
+      return;
+    }
+
+    cartList.innerHTML = cartItems.map((item) => `
+      <div class="rounded-2xl border border-white/10 bg-black/25 px-3 py-3">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="text-sm font-bold text-cream">${escapeRequestDetailsHtml(item.name)}</div>
+            <div class="text-[11px] text-cream/50">${escapeRequestDetailsHtml(item.category)}</div>
+            <div class="text-xs font-extrabold text-gold mt-1">${formatRequestAmount(Number(item.price || 0) * Number(item.quantity || 1))}</div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button" data-manual-order-decrease="${escapeRequestDetailsHtml(item.id)}" class="btn-action w-9 h-9 rounded-xl border border-white/10 text-cream hover:bg-white/5">
+              -
+            </button>
+
+            <span class="inline-flex items-center justify-center min-w-10 h-9 rounded-xl border border-gold/30 bg-gold/10 text-gold text-sm font-extrabold">
+              ×${item.quantity || 1}
+            </span>
+
+            <button type="button" data-manual-order-increase="${escapeRequestDetailsHtml(item.id)}" class="btn-action w-9 h-9 rounded-xl border border-white/10 text-cream hover:bg-white/5">
+              +
+            </button>
+
+            <button type="button" data-manual-order-remove="${escapeRequestDetailsHtml(item.id)}" class="btn-action w-9 h-9 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    if (window.lucide) {
+      requestAnimationFrame(() => lucide.createIcons());
+    }
+  };
+
+  overlay.querySelectorAll('[data-close-manual-order]').forEach((button) => {
+    button.addEventListener('click', () => overlay.remove());
+  });
+
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      overlay.remove();
+    }
+  });
+
+  manualOriginButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      clearManualOrderFormError();
+
+      const selectedOrigin = button.getAttribute('data-manual-order-origin') || 'phone';
+
+      if (manualOriginInput) {
+        manualOriginInput.value = selectedOrigin;
+      }
+
+      manualOriginButtons.forEach((originButton) => {
+        const isSelected = originButton === button;
+
+        originButton.classList.toggle('border-gold', isSelected);
+        originButton.classList.toggle('bg-gold', isSelected);
+        originButton.classList.toggle('text-black', isSelected);
+        originButton.classList.toggle('font-extrabold', isSelected);
+
+        originButton.classList.toggle('border-white/10', !isSelected);
+        originButton.classList.toggle('bg-black/30', !isSelected);
+        originButton.classList.toggle('text-cream', !isSelected);
+        originButton.classList.toggle('font-semibold', !isSelected);
+      });
+    });
+  });
+
+  overlay.querySelectorAll('[data-manual-order-add-item]').forEach((button) => {
+    button.addEventListener('click', () => {
+      clearManualOrderFormError();
+
+      const itemId = button.getAttribute('data-manual-order-add-item') || '';
+      const menuItem = menuItems.find((item) => String(item.id) === String(itemId));
+
+      if (!menuItem) return;
+
+      const existingItem = cartItems.find((item) => String(item.id) === String(menuItem.id));
+
+      if (existingItem) {
+        existingItem.quantity = Number(existingItem.quantity || 1) + 1;
+      } else {
+        cartItems.push({
+          ...menuItem,
+          quantity: 1
+        });
+      }
+
+      renderManualOrderCart();
+    });
+  });
+
+  overlay.addEventListener('click', (event) => {
+    const decreaseButton = event.target.closest('[data-manual-order-decrease]');
+    const increaseButton = event.target.closest('[data-manual-order-increase]');
+    const removeButton = event.target.closest('[data-manual-order-remove]');
+
+    if (decreaseButton) {
+      const itemId = decreaseButton.getAttribute('data-manual-order-decrease') || '';
+      cartItems = cartItems
+        .map((item) =>
+          String(item.id) === String(itemId)
+            ? { ...item, quantity: Math.max(0, Number(item.quantity || 1) - 1) }
+            : item
+        )
+        .filter((item) => Number(item.quantity || 0) > 0);
+
+      renderManualOrderCart();
+      return;
+    }
+
+    if (increaseButton) {
+      const itemId = increaseButton.getAttribute('data-manual-order-increase') || '';
+      cartItems = cartItems.map((item) =>
+        String(item.id) === String(itemId)
+          ? { ...item, quantity: Number(item.quantity || 1) + 1 }
+          : item
+      );
+
+      renderManualOrderCart();
+      return;
+    }
+
+    if (removeButton) {
+      const itemId = removeButton.getAttribute('data-manual-order-remove') || '';
+      cartItems = cartItems.filter((item) => String(item.id) !== String(itemId));
+
+      renderManualOrderCart();
+    }
+  });
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const currentTexts = getManualOrderTexts();
+    const formData = new FormData(form);
+    const customerName = String(formData.get('customerName') || '').trim();
+    const orderDate = String(formData.get('orderDate') || '').trim();
+    const orderTime = String(formData.get('orderTime') || '').trim();
+
+    clearManualOrderFormError();
+
+    if (!customerName) {
+      showManualOrderFormError(currentTexts.required, 'input[name="customerName"]');
+      return;
+    }
+
+    if (!orderDate) {
+      showManualOrderFormError(currentTexts.dateRequired, 'input[name="orderDate"]');
+      return;
+    }
+
+    if (!orderTime) {
+      showManualOrderFormError(currentTexts.timeRequired, 'input[name="orderTime"]');
+      return;
+    }
+
+    if (!cartItems.length) {
+      showManualOrderFormError(currentTexts.itemsRequired);
+      return;
+    }
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.classList.add('opacity-60', 'pointer-events-none');
+    }
+
+    const localManualOrder = buildManualOrderRequestFromForm(form, cartItems);
+    const syncedManualOrder = await createManualOrderInSupabase(localManualOrder);
+
+    if (!syncedManualOrder.liveRequestId) {
+      console.warn(
+        'TapCarta Restaurant: commande manuelle visible localement, mais synchronisation Supabase non confirmée.',
+        syncedManualOrder
+      );
+    }
+
+    saveManualOrderToLocalStorage(syncedManualOrder);
+
+    overlay.remove();
+
+    syncRequestsState();
+    renderMenu();
+
+    void playRestaurantManualConfirmationSound();
+
+    showRestaurantToast(currentTexts.saved, 'info');
+  });
+
+  renderManualOrderCart();
+
+  if (window.lucide) {
+    requestAnimationFrame(() => lucide.createIcons());
+  }
+
+  window.setTimeout(() => {
+    overlay.querySelector('input[name="customerName"]')?.focus();
+  }, 80);
+}
+
 function removeRequestDetailsModal() {
   const existingModal = document.getElementById('restaurant-request-details-modal');
   if (existingModal) {
@@ -7087,16 +7810,7 @@ function renderRequestRow(item, displayMode = 'active') {
   const manualOrderBtn = document.getElementById('restaurant-manual-order-btn');
   if (manualOrderBtn) {
     manualOrderBtn.addEventListener('click', () => {
-      showRestaurantToast(
-        currentLang === 'es'
-          ? 'Añadir pedido: formulario en la siguiente etapa.'
-          : currentLang === 'en'
-            ? 'Add order: form in the next step.'
-            : currentLang === 'nl'
-              ? 'Bestelling toevoegen: formulier in de volgende stap.'
-              : 'Ajouter une commande : formulaire à l’étape suivante.',
-        'info'
-      );
+      openManualOrderModal();
     });
   }
 
