@@ -4744,6 +4744,41 @@ function buildRequestDetailsRows(item) {
 
 function buildRequestDetailsModalHtml(item) {
   const actionTexts = getRequestActionTexts();
+  const sourceStatus = item?.sourceRequest?.status || '';
+  const isOrder = !!item?.sourceRequest?.order;
+  const isAlreadyConfirmed = sourceStatus === 'confirmed' || sourceStatus === 'accepted_by_client';
+
+  const confirmedLabel = isOrder
+    ? (currentLang === 'es'
+        ? 'Pedido ya confirmado'
+        : currentLang === 'en'
+          ? 'Order already confirmed'
+          : currentLang === 'nl'
+            ? 'Bestelling al bevestigd'
+            : 'Commande déjà confirmée')
+    : (currentLang === 'es'
+        ? 'Reserva ya confirmada'
+        : currentLang === 'en'
+          ? 'Booking already confirmed'
+          : currentLang === 'nl'
+            ? 'Reservatie al bevestigd'
+            : 'Réservation déjà confirmée');
+
+  const confirmedHelpText = isOrder
+    ? (currentLang === 'es'
+        ? 'Esta acción ya está validada. Para cerrarla, utilice únicamente “Pedido servido” en la tarjeta.'
+        : currentLang === 'en'
+          ? 'This request is already validated. To close it, use only “Order served” on the card.'
+          : currentLang === 'nl'
+            ? 'Deze aanvraag is al bevestigd. Gebruik alleen “Bestelling geserveerd” op de kaart om ze af te sluiten.'
+            : 'Cette demande est déjà validée. Pour la clôturer, utilisez uniquement “Commande servie” sur la carte.')
+    : (currentLang === 'es'
+        ? 'Esta reserva ya está validada. Para cerrarla, utilice únicamente “Cliente llegado” en la tarjeta.'
+        : currentLang === 'en'
+          ? 'This booking is already validated. To close it, use only “Client arrived” on the card.'
+          : currentLang === 'nl'
+            ? 'Deze reservatie is al bevestigd. Gebruik alleen “Klant aangekomen” op de kaart om ze af te sluiten.'
+            : 'Cette réservation est déjà validée. Pour la clôturer, utilisez uniquement “Client arrivé” sur la carte.');
 
   return `
     <div id="restaurant-request-details-modal" class="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
@@ -4766,7 +4801,18 @@ function buildRequestDetailsModalHtml(item) {
         <div class="p-5 md:p-6 space-y-5">
           ${buildRequestDetailsRows(item)}
 
-          ${isRequestAwaitingRestaurantAction(item) ? `
+          ${isAlreadyConfirmed ? `
+            <div class="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3">
+              <div class="text-sm font-extrabold text-emerald-200">
+                ${confirmedLabel}
+              </div>
+              <div class="text-xs text-cream/60 mt-1">
+                ${confirmedHelpText}
+              </div>
+            </div>
+          ` : ''}
+
+          ${isRequestAwaitingRestaurantAction(item) && !isAlreadyConfirmed ? `
             <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
               <button
                 type="button"
@@ -4793,6 +4839,16 @@ function buildRequestDetailsModalHtml(item) {
               </button>
             </div>
           ` : ''}
+
+          <div class="flex justify-end pt-2 border-t border-white/8">
+            <button
+              type="button"
+              onclick="closeRequestDetailsModal()"
+              class="btn-action px-5 py-3 rounded-xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+            >
+              ${t.restaurantDetailsCloseButton}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -5371,7 +5427,12 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
             <div class="text-base md:text-lg font-extrabold text-gold mt-0.5">${formatRequestAmount(source.order?.totalAmount)}</div>
           </div>
 
-          <div class="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-2">
+          <button
+            type="button"
+            onclick="openRequestDetails('${item.id}')"
+            class="btn-action text-left rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-2 hover:bg-white/[0.06] transition-all cursor-pointer"
+            title="${currentLang === 'es' ? 'Ver el detalle completo' : currentLang === 'en' ? 'See full details' : currentLang === 'nl' ? 'Volledig detail bekijken' : 'Voir le détail complet'}"
+          >
             <div class="flex items-center justify-between gap-3 mb-1.5">
               <div class="text-[9px] uppercase tracking-wide text-cream/50 font-bold">
                 ${currentLang === 'es' ? 'Pedido' : currentLang === 'en' ? 'Order' : currentLang === 'nl' ? 'Bestelling' : 'Commande'}
@@ -5390,7 +5451,7 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
                 + ${hiddenItemsCount} ${orderItemsUnitLabel} · ${currentLang === 'es' ? 'ver detalle completo' : currentLang === 'en' ? 'see full details' : currentLang === 'nl' ? 'volledig detail bekijken' : 'voir le détail complet'}
               </div>
             ` : ''}
-          </div>
+          </button>
         </div>
 
         ${!shouldHideOldModificationMessage && source.restaurantResponse?.message
