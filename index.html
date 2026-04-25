@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.6';
+            const APP_VERSION = 'V1.2.7';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3328,6 +3328,36 @@ let treatedRequests = [];
 let activeOrders = [];
 let activeReservations = [];
 
+window.restaurantRequestTypeFilter = window.restaurantRequestTypeFilter || 'all';
+
+function isRestaurantOrderRequest(item) {
+  return !!item?.sourceRequest?.order || item?.sourceRequest?.requestType === 'order';
+}
+
+function isRestaurantBookingRequest(item) {
+  return !!item?.sourceRequest?.booking || item?.sourceRequest?.requestType === 'booking';
+}
+
+function filterRestaurantRequestsByType(items) {
+  const filter = window.restaurantRequestTypeFilter || 'all';
+
+  if (filter === 'orders') {
+    return items.filter(isRestaurantOrderRequest);
+  }
+
+  if (filter === 'bookings') {
+    return items.filter(isRestaurantBookingRequest);
+  }
+
+  return items;
+}
+
+window.setRestaurantRequestTypeFilter = function(filter) {
+  const allowedFilters = ['all', 'orders', 'bookings'];
+  window.restaurantRequestTypeFilter = allowedFilters.includes(filter) ? filter : 'all';
+  renderMenu();
+};
+
 function getBookingDateTimeMs(sourceRequest) {
   const bookingDate = sourceRequest?.booking?.date || '';
   const bookingTime = sourceRequest?.booking?.time || '00:00';
@@ -5429,7 +5459,24 @@ function renderRequestRow(item, displayMode = 'active') {
   }
 
   function renderRequestsSection() {
-    const visibleRequestsCount = activeRequests.length + todayRequests.length + upcomingRequests.length + verifyRequests.length;
+    const filteredActiveRequests = filterRestaurantRequestsByType(activeRequests);
+    const filteredTodayRequests = filterRestaurantRequestsByType(todayRequests);
+    const filteredUpcomingRequests = filterRestaurantRequestsByType(upcomingRequests);
+    const filteredVerifyRequests = filterRestaurantRequestsByType(verifyRequests);
+    const filteredTreatedRequests = filterRestaurantRequestsByType(treatedRequests);
+
+    const visibleRequestsCount =
+      filteredActiveRequests.length +
+      filteredTodayRequests.length +
+      filteredUpcomingRequests.length +
+      filteredVerifyRequests.length;
+
+    const currentRequestFilter = window.restaurantRequestTypeFilter || 'all';
+
+    const getRequestFilterButtonClass = (filter) =>
+      currentRequestFilter === filter
+        ? 'border-gold/45 bg-gold/15 text-gold'
+        : 'border-white/10 bg-black/15 text-cream/70 hover:bg-white/5 hover:text-cream';
 
     const renderRequestGroup = (title, subtitle, items, emptyText, mode = 'active') => `
       <div class="rounded-[22px] border border-white/10 bg-black/12 p-4 md:p-5">
@@ -5528,11 +5575,65 @@ function renderRequestRow(item, displayMode = 'active') {
   </div>
 
   ${siteConfig.orderReservationOptionEnabled ? `
+    <div class="mb-5 rounded-[22px] border border-white/10 bg-black/12 p-3 md:p-4">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div>
+          <div class="text-sm font-bold text-cream">
+            ${currentLang === 'es'
+              ? 'Filtrar la vista'
+              : currentLang === 'en'
+                ? 'Filter view'
+                : currentLang === 'nl'
+                  ? 'Weergave filteren'
+                  : 'Filtrer la vue'}
+          </div>
+          <div class="text-xs text-cream/55 mt-1">
+            ${currentLang === 'es'
+              ? 'Mostrar todo, solo pedidos o solo reservas.'
+              : currentLang === 'en'
+                ? 'Show all, only orders or only bookings.'
+                : currentLang === 'nl'
+                  ? 'Toon alles, alleen bestellingen of alleen reservaties.'
+                  : 'Afficher tout, uniquement les commandes ou uniquement les réservations.'}
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onclick="setRestaurantRequestTypeFilter('all')"
+            class="btn-action inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all ${getRequestFilterButtonClass('all')}"
+          >
+            <i data-lucide="layout-list" class="w-4 h-4"></i>
+            ${currentLang === 'es' ? 'Todo' : currentLang === 'en' ? 'All' : currentLang === 'nl' ? 'Alles' : 'Tout'}
+          </button>
+
+          <button
+            type="button"
+            onclick="setRestaurantRequestTypeFilter('orders')"
+            class="btn-action inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all ${getRequestFilterButtonClass('orders')}"
+          >
+            <i data-lucide="utensils" class="w-4 h-4"></i>
+            ${currentLang === 'es' ? 'Pedidos' : currentLang === 'en' ? 'Orders' : currentLang === 'nl' ? 'Bestellingen' : 'Commandes'}
+          </button>
+
+          <button
+            type="button"
+            onclick="setRestaurantRequestTypeFilter('bookings')"
+            class="btn-action inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all ${getRequestFilterButtonClass('bookings')}"
+          >
+            <i data-lucide="calendar-check" class="w-4 h-4"></i>
+            ${currentLang === 'es' ? 'Reservas' : currentLang === 'en' ? 'Bookings' : currentLang === 'nl' ? 'Reservaties' : 'Réservations'}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="restaurant-active-requests" class="space-y-4">
       ${renderRequestGroup(
         currentLang === 'es' ? 'A tratar' : currentLang === 'en' ? 'To handle' : currentLang === 'nl' ? 'Te behandelen' : 'À traiter',
         currentLang === 'es' ? 'Demandas que necesitan una acción del restaurante.' : currentLang === 'en' ? 'Requests requiring restaurant action.' : currentLang === 'nl' ? 'Aanvragen die actie van het restaurant vragen.' : 'Demandes qui nécessitent une action du restaurant.',
-        activeRequests,
+        filteredActiveRequests,
         currentLang === 'es' ? 'No hay solicitudes por tratar.' : currentLang === 'en' ? 'No requests to handle.' : currentLang === 'nl' ? 'Geen aanvragen te behandelen.' : 'Aucune demande à traiter.',
         'active'
       )}
@@ -5540,7 +5641,7 @@ function renderRequestRow(item, displayMode = 'active') {
       ${renderRequestGroup(
         currentLang === 'es' ? 'Hoy' : currentLang === 'en' ? 'Today' : currentLang === 'nl' ? 'Vandaag' : 'Aujourd’hui',
         currentLang === 'es' ? 'Solicitudes del día, visibles para el servicio.' : currentLang === 'en' ? 'Today’s requests, visible for service.' : currentLang === 'nl' ? 'Aanvragen van vandaag, zichtbaar voor de service.' : 'Demandes du jour, visibles pour le service.',
-        todayRequests,
+        filteredTodayRequests,
         currentLang === 'es' ? 'No hay solicitudes para hoy.' : currentLang === 'en' ? 'No requests for today.' : currentLang === 'nl' ? 'Geen aanvragen voor vandaag.' : 'Aucune demande pour aujourd’hui.',
         'active'
       )}
@@ -5548,7 +5649,7 @@ function renderRequestRow(item, displayMode = 'active') {
       ${renderRequestGroup(
         currentLang === 'es' ? 'Próximas' : currentLang === 'en' ? 'Upcoming' : currentLang === 'nl' ? 'Later' : 'À venir',
         currentLang === 'es' ? 'Reservas futuras ya aceptadas o confirmadas.' : currentLang === 'en' ? 'Future bookings already accepted or confirmed.' : currentLang === 'nl' ? 'Toekomstige reservaties die al aanvaard of bevestigd zijn.' : 'Réservations futures déjà acceptées ou confirmées.',
-        upcomingRequests,
+         filteredUpcomingRequests,
         currentLang === 'es' ? 'No hay reservas próximas.' : currentLang === 'en' ? 'No upcoming bookings.' : currentLang === 'nl' ? 'Geen toekomstige reservaties.' : 'Aucune réservation à venir.',
         'readonly'
       )}
@@ -5562,7 +5663,7 @@ function renderRequestRow(item, displayMode = 'active') {
             : currentLang === 'nl'
               ? 'Oudere aanvragen die nog openstaan omdat ze niet tijdens de service werden afgesloten.'
               : 'Demandes anciennes encore ouvertes car elles n’ont pas été clôturées pendant le service.',
-        verifyRequests,
+          filteredVerifyRequests,
         currentLang === 'es' ? 'No hay solicitudes por verificar.' : currentLang === 'en' ? 'No requests to verify.' : currentLang === 'nl' ? 'Geen aanvragen te controleren.' : 'Aucune demande à vérifier.',
         'verify'
       )}
@@ -5588,7 +5689,7 @@ function renderRequestRow(item, displayMode = 'active') {
 
           <div class="inline-flex items-center gap-3 self-start rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
             <div class="text-2xl font-bold text-cream">
-              ${treatedRequests.length}
+              ${filteredTreatedRequests.length}
             </div>
             <div class="text-xs text-cream/65 leading-tight">
               ${currentLang === 'es' ? 'Total<br>historial' : currentLang === 'en' ? 'Total<br>history' : currentLang === 'nl' ? 'Totaal<br>geschiedenis' : 'Total<br>historique'}
@@ -5610,7 +5711,7 @@ function renderRequestRow(item, displayMode = 'active') {
 
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="toggleAllHistoryRequests()" class="btn-action px-3 py-2 rounded-xl border border-white/10 text-xs font-semibold text-cream hover:bg-white/5 transition-all">
-              ${selectedHistoryRequestIds.size === treatedRequests.length && treatedRequests.length ? t.restaurantHistoryDeselectAll : t.restaurantHistorySelectAll}
+              ${selectedHistoryRequestIds.size === filteredTreatedRequests.length && filteredTreatedRequests.length ? t.restaurantHistoryDeselectAll : t.restaurantHistorySelectAll}
             </button>
             <button onclick="deleteSelectedHistoryRequests()" class="btn-action w-11 h-11 rounded-xl border border-red-400/25 text-red-200 hover:bg-red-500/10 transition-all inline-flex items-center justify-center" title="${t.restaurantHistoryDeleteSelected}">
               <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -5620,8 +5721,8 @@ function renderRequestRow(item, displayMode = 'active') {
       </div>
 
       <div id="restaurant-history-requests" class="mt-4 space-y-3">
-        ${treatedRequests.length
-          ? treatedRequests.map((item) => renderRequestRow(item, 'history')).join('')
+        ${filteredTreatedRequests.length
+          ? filteredTreatedRequests.map((item) => renderRequestRow(item, 'history')).join('')
           : `
             <div class="rounded-2xl border border-white/8 bg-black/15 px-4 py-4 text-sm text-cream/70">
               ${t.restaurantNoProcessed}
