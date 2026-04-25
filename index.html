@@ -5257,20 +5257,17 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
   const shouldHideOldModificationMessage = sourceStatus === 'accepted_by_client' || sourceStatus === 'confirmed';
 
   if (isOrder) {
-    const itemsHtml = orderItems.length
-      ? orderItems.map((entry) => `
-          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/20 bg-gold/7 px-2.5 py-1.5">
-            <span class="text-xs md:text-sm font-bold text-cream">${escapeRequestDetailsHtml(entry.name || '-')}</span>
-            <span class="text-sm md:text-base font-extrabold text-gold">×${entry.quantity || 1}</span>
-          </div>
-        `).join('')
-      : `
-          <div class="inline-flex items-center gap-2 rounded-xl border border-gold/20 bg-gold/7 px-2.5 py-1.5">
-            <span class="text-xs md:text-sm font-bold text-cream">
-              ${currentLang === 'es' ? 'Pedido recibido' : currentLang === 'en' ? 'Order received' : currentLang === 'nl' ? 'Bestelling ontvangen' : 'Commande reçue'}
-            </span>
-          </div>
-        `;
+    const orderItemsSummary = orderItems.length
+      ? orderItems
+          .map((entry) => `${escapeRequestDetailsHtml(entry.name || '-')} ×${entry.quantity || 1}`)
+          .join(' · ')
+      : (currentLang === 'es'
+          ? 'Pedido recibido'
+          : currentLang === 'en'
+            ? 'Order received'
+            : currentLang === 'nl'
+              ? 'Bestelling ontvangen'
+              : 'Commande reçue');
 
     return `
       <div class="mt-3 max-w-2xl">
@@ -5297,17 +5294,16 @@ function renderRequestMainInfo(item, isOrder, orderItems, bookingPeople) {
           </div>
         </div>
 
-        <div class="mt-2 rounded-lg border border-gold/14 bg-black/14 px-2.5 py-2">
-          <div class="text-[9px] uppercase tracking-wide text-gold/65 font-bold mb-1.5">
-            ${currentLang === 'es' ? 'Pedido' : currentLang === 'en' ? 'Order' : currentLang === 'nl' ? 'Bestelling' : 'Commande'}
-          </div>
-          <div class="flex flex-wrap gap-1.5">
-            ${itemsHtml}
-          </div>
-          ${!shouldHideOldModificationMessage && source.restaurantResponse?.message
-            ? `<div class="text-xs text-cream/60 mt-2">${escapeRequestDetailsHtml(source.restaurantResponse.message)}</div>`
-            : ''}
+        <div class="mt-2 text-xs md:text-sm text-cream/72 leading-snug max-w-2xl">
+          <span class="font-bold text-gold/85">
+            ${currentLang === 'es' ? 'Pedido' : currentLang === 'en' ? 'Order' : currentLang === 'nl' ? 'Bestelling' : 'Commande'} :
+          </span>
+          <span>${orderItemsSummary}</span>
         </div>
+
+        ${!shouldHideOldModificationMessage && source.restaurantResponse?.message
+          ? `<div class="text-xs text-cream/60 mt-1.5">${escapeRequestDetailsHtml(source.restaurantResponse.message)}</div>`
+          : ''}
       </div>
     `;
   }
