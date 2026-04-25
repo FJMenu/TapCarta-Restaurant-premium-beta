@@ -2929,10 +2929,23 @@ function showRestaurantConfirmDialog({ title, message, confirmLabel, cancelLabel
     }
   });
 }
+const RESTAURANT_SOUND_STORAGE_KEY = 'tapcarta_restaurant_sound_enabled';
+
 window.tapCartaRestaurantAudioState = window.tapCartaRestaurantAudioState || {
   context: null,
-  unlocked: false
+  unlocked: false,
+  unlockBridgeInitialized: false,
+  lastPlayAttemptAt: 0
 };
+
+function isRestaurantSoundEnabled() {
+  return localStorage.getItem(RESTAURANT_SOUND_STORAGE_KEY) !== 'false';
+}
+
+function setRestaurantSoundEnabled(enabled) {
+  localStorage.setItem(RESTAURANT_SOUND_STORAGE_KEY, enabled ? 'true' : 'false');
+  updateRestaurantSoundToggleIcon();
+}
 
 function getRestaurantAudioContext() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -2965,35 +2978,20 @@ async function unlockRestaurantNotificationSound() {
   }
 }
 
-function playRestaurantNotificationSound({ force = false } = {}) {
-  const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled');
+function playRestaurantNotificationTone() {
+  const audioContext = getRestaurantAudioContext();
 
-  if (!force && enabled === 'false') return false;
+  if (!audioContext || audioContext.state !== 'running') {
+    return false;
+  }
 
   try {
-    const audioContext = getRestaurantAudioContext();
-
-    if (!audioContext) return false;
-
-    if (audioContext.state !== 'running') {
-      audioContext.resume?.().then(() => {
-        if (audioContext.state === 'running') {
-          playRestaurantNotificationSound({ force });
-        }
-      }).catch((e) => {
-        console.warn('TapCarta sound resume failed', e);
-      });
-
-      console.warn('TapCarta sound blocked: audio context not running');
-      return false;
-    }
-
     const now = audioContext.currentTime;
 
     const masterGain = audioContext.createGain();
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.linearRampToValueAtTime(0.32, now + 0.03);
-    masterGain.gain.linearRampToValueAtTime(0.32, now + 2.75);
+    masterGain.gain.linearRampToValueAtTime(0.36, now + 0.03);
+    masterGain.gain.linearRampToValueAtTime(0.36, now + 2.75);
     masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.05);
     masterGain.connect(audioContext.destination);
 
@@ -3015,8 +3013,8 @@ function playRestaurantNotificationSound({ force = false } = {}) {
       oscillator.frequency.setValueAtTime(beep.frequency, now + beep.start);
 
       gain.gain.setValueAtTime(0.0001, now + beep.start);
-      gain.gain.linearRampToValueAtTime(0.65, now + beep.start + 0.02);
-      gain.gain.linearRampToValueAtTime(0.65, now + beep.start + beep.duration - 0.03);
+      gain.gain.linearRampToValueAtTime(0.7, now + beep.start + 0.02);
+      gain.gain.linearRampToValueAtTime(0.7, now + beep.start + beep.duration - 0.03);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + beep.start + beep.duration);
 
       oscillator.connect(gain);
@@ -3028,13 +3026,37 @@ function playRestaurantNotificationSound({ force = false } = {}) {
 
     return true;
   } catch (e) {
-    console.warn('TapCarta sound failed', e);
+    console.warn('TapCarta sound tone failed', e);
     return false;
   }
 }
 
+async function playRestaurantNotificationSound({ force = false } = {}) {
+  if (!force && !isRestaurantSoundEnabled()) {
+    return false;
+  }
+
+  window.tapCartaRestaurantAudioState.lastPlayAttemptAt = Date.now();
+
+  const unlocked = await unlockRestaurantNotificationSound();
+
+  if (!unlocked) {
+    return false;
+  }
+
+  return playRestaurantNotificationTone();
+}
+
+async function notifyRestaurantNewRequestSound() {
+  if (!isRestaurantSoundEnabled()) {
+    return false;
+  }
+
+  return playRestaurantNotificationSound({ force: false });
+}
+
 function updateRestaurantSoundToggleIcon() {
-  const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled') !== 'false';
+  const enabled = isRestaurantSoundEnabled();
   const button = document.getElementById('tapcarta-sound-toggle');
 
   if (!button) return;
@@ -3065,23 +3087,17 @@ function updateRestaurantSoundToggleIcon() {
 }
 
 async function toggleRestaurantSound() {
-  const current = localStorage.getItem('tapcarta_restaurant_sound_enabled');
+  const next = !isRestaurantSoundEnabled();
 
-  const next = current === 'true'
-    ? 'false'
-    : 'true';
+  setRestaurantSoundEnabled(next);
 
-  localStorage.setItem('tapcarta_restaurant_sound_enabled', next);
-  updateRestaurantSoundToggleIcon();
-
-  if (next === 'true') {
-    const unlocked = await unlockRestaurantNotificationSound();
-    const soundPlayed = unlocked ? playRestaurantNotificationSound({ force: true }) : false;
+  if (next) {
+    const soundPlayed = await playRestaurantNotificationSound({ force: true });
 
     showRestaurantToast(
       soundPlayed
         ? (currentLang === 'es' ? 'Notificación sonora activada. Sonido de prueba enviado.' : currentLang === 'en' ? 'Sound notification enabled. Test sound played.' : currentLang === 'nl' ? 'Geluidsmelding ingeschakeld. Testgeluid afgespeeld.' : 'Notification sonore activée. Son de test envoyé.')
-        : (currentLang === 'es' ? 'Sonido activado, pero el navegador bloqueó la reproducción. Haz clic otra vez si no escuchas nada.' : currentLang === 'en' ? 'Sound enabled, but the browser blocked playback. Click again if you hear nothing.' : currentLang === 'nl' ? 'Geluid ingeschakeld, maar de browser blokkeerde het afspelen. Klik opnieuw als je niets hoort.' : 'Son activé, mais le navigateur a bloqué la lecture. Cliquez encore si vous n’entendez rien.'),
+        : (currentLang === 'es' ? 'Sonido activado. Si el navegador lo bloquea, toca otra vez el botón de sonido.' : currentLang === 'en' ? 'Sound enabled. If the browser blocks it, tap the sound button again.' : currentLang === 'nl' ? 'Geluid ingeschakeld. Als de browser het blokkeert, tik opnieuw op de geluidsknop.' : 'Son activé. Si le navigateur le bloque, cliquez encore sur le bouton son.'),
       'info'
     );
 
@@ -3100,29 +3116,6 @@ async function toggleRestaurantSound() {
   );
 }
 
-window.getRestaurantAudioContext = getRestaurantAudioContext;
-window.unlockRestaurantNotificationSound = unlockRestaurantNotificationSound;
-window.playRestaurantNotificationSound = playRestaurantNotificationSound;
-window.updateRestaurantSoundToggleIcon = updateRestaurantSoundToggleIcon;
-window.toggleRestaurantSound = toggleRestaurantSound;
-
-window.getRestaurantAudioContext = getRestaurantAudioContext;
-window.unlockRestaurantNotificationSound = unlockRestaurantNotificationSound;
-window.playRestaurantNotificationSound = playRestaurantNotificationSound;
-window.updateRestaurantSoundToggleIcon = updateRestaurantSoundToggleIcon;
-window.toggleRestaurantSound = toggleRestaurantSound;
-
-window.getRestaurantAudioContext = getRestaurantAudioContext;
-window.unlockRestaurantNotificationSound = unlockRestaurantNotificationSound;
-window.playRestaurantNotificationSound = playRestaurantNotificationSound;
-window.updateRestaurantSoundToggleIcon = updateRestaurantSoundToggleIcon;
-window.toggleRestaurantSound = toggleRestaurantSound;
-
-window.getRestaurantAudioContext = getRestaurantAudioContext;
-window.unlockRestaurantNotificationSound = unlockRestaurantNotificationSound;
-window.playRestaurantNotificationSound = playRestaurantNotificationSound;
-window.updateRestaurantSoundToggleIcon = updateRestaurantSoundToggleIcon;
-window.toggleRestaurantSound = toggleRestaurantSound;
 function initializeRestaurantAudioUnlockBridge() {
   if (window.tapCartaRestaurantAudioState?.unlockBridgeInitialized) {
     return;
@@ -3130,26 +3123,35 @@ function initializeRestaurantAudioUnlockBridge() {
 
   window.tapCartaRestaurantAudioState.unlockBridgeInitialized = true;
 
-  const unlockOnce = async () => {
-    const enabled = localStorage.getItem('tapcarta_restaurant_sound_enabled') !== 'false';
-
-    if (!enabled) {
+  const unlockOnInteraction = async () => {
+    if (!isRestaurantSoundEnabled()) {
       return;
     }
 
     await unlockRestaurantNotificationSound();
 
     if (window.tapCartaRestaurantAudioState?.unlocked) {
-      document.removeEventListener('pointerdown', unlockOnce);
-      document.removeEventListener('keydown', unlockOnce);
-      document.removeEventListener('touchstart', unlockOnce);
+      document.removeEventListener('pointerdown', unlockOnInteraction);
+      document.removeEventListener('keydown', unlockOnInteraction);
+      document.removeEventListener('touchstart', unlockOnInteraction);
+      document.removeEventListener('click', unlockOnInteraction);
     }
   };
 
-  document.addEventListener('pointerdown', unlockOnce, { passive: true });
-  document.addEventListener('keydown', unlockOnce);
-  document.addEventListener('touchstart', unlockOnce, { passive: true });
+  document.addEventListener('pointerdown', unlockOnInteraction, { passive: true });
+  document.addEventListener('keydown', unlockOnInteraction);
+  document.addEventListener('touchstart', unlockOnInteraction, { passive: true });
+  document.addEventListener('click', unlockOnInteraction);
 }
+
+window.isRestaurantSoundEnabled = isRestaurantSoundEnabled;
+window.setRestaurantSoundEnabled = setRestaurantSoundEnabled;
+window.getRestaurantAudioContext = getRestaurantAudioContext;
+window.unlockRestaurantNotificationSound = unlockRestaurantNotificationSound;
+window.playRestaurantNotificationSound = playRestaurantNotificationSound;
+window.notifyRestaurantNewRequestSound = notifyRestaurantNewRequestSound;
+window.updateRestaurantSoundToggleIcon = updateRestaurantSoundToggleIcon;
+window.toggleRestaurantSound = toggleRestaurantSound;
 
 function isRestaurantRequestModalOpen() {
   return !!(
@@ -3250,7 +3252,7 @@ function notifyIfNewActionRequests() {
 
     if (popupIds.length) {
       state.lastNotificationAt = Date.now();
-      playRestaurantNotificationSound();
+      notifyRestaurantNewRequestSound();
 
       if (!isRestaurantRequestModalOpen()) {
         showRestaurantNewRequestNotification(popupIds.length);
@@ -3268,7 +3270,7 @@ function notifyIfNewActionRequests() {
 
     if (now - state.lastNotificationAt >= 5000) {
       state.lastNotificationAt = now;
-      playRestaurantNotificationSound();
+      notifyRestaurantNewRequestSound();
     }
 
     if (!isRestaurantRequestModalOpen()) {
