@@ -5082,21 +5082,68 @@ function openManualOrderModal() {
   const nextTimeValue = getManualRequestNextSimpleTimeValue();
   const menuItems = getManualOrderAvailableMenuItems();
   let cartItems = [];
+  let activeCategory = 'all';
+
+  const allCategoriesLabel =
+    currentLang === 'es'
+      ? 'Todo'
+      : currentLang === 'en'
+        ? 'All'
+        : currentLang === 'nl'
+          ? 'Alles'
+          : 'Tout';
+
+  const itemCountLabel =
+    currentLang === 'es'
+      ? 'artículos'
+      : currentLang === 'en'
+        ? 'items'
+        : currentLang === 'nl'
+          ? 'artikelen'
+          : 'articles';
+
+  const summaryLabel =
+    currentLang === 'es'
+      ? 'Resumen'
+      : currentLang === 'en'
+        ? 'Summary'
+        : currentLang === 'nl'
+          ? 'Samenvatting'
+          : 'Résumé';
+
+  const categories = [
+    { id: 'all', name: allCategoriesLabel },
+    ...Array.from(
+      new Set(
+        menuItems
+          .map((item) => String(item.category || '').trim())
+          .filter(Boolean)
+      )
+    ).map((categoryName) => ({
+      id: categoryName,
+      name: categoryName
+    }))
+  ];
+
+  const getCartQuantityForItem = (itemId) => {
+    const item = cartItems.find((entry) => String(entry.id) === String(itemId));
+    return Number(item?.quantity || 0);
+  };
 
   const overlay = document.createElement('div');
   overlay.id = 'restaurant-manual-order-modal';
-  overlay.className = 'fixed inset-0 z-[10000] bg-black/75 backdrop-blur-sm flex items-center justify-center px-3 py-3 sm:px-5 sm:py-5';
+  overlay.className = 'fixed inset-0 z-[10000] bg-black/75 backdrop-blur-sm flex items-center justify-center px-2 py-2 sm:px-4 sm:py-4';
 
   overlay.innerHTML = `
-    <div class="w-full max-w-6xl max-h-[94vh] overflow-hidden rounded-[28px] border border-gold/35 bg-[#11100d] shadow-[0_24px_90px_rgba(0,0,0,0.68)] flex flex-col">
-      <div class="flex items-start justify-between gap-4 px-4 sm:px-5 py-4 border-b border-white/10">
+    <div class="w-full max-w-7xl max-h-[96vh] overflow-hidden rounded-[26px] border border-gold/35 bg-[#11100d] shadow-[0_24px_90px_rgba(0,0,0,0.68)] flex flex-col">
+      <div class="flex items-start justify-between gap-4 px-4 sm:px-5 py-3 border-b border-white/10">
         <div class="min-w-0">
-          <div class="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-gold mb-2">
+          <div class="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-gold mb-1.5">
             <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
             TapCarta Resto
           </div>
           <h3 class="font-display text-xl sm:text-2xl font-bold text-cream leading-tight">${texts.title}</h3>
-          <p class="text-xs sm:text-sm text-cream/65 mt-1">${texts.subtitle}</p>
+          <p class="text-xs sm:text-sm text-cream/60 mt-0.5">${texts.subtitle}</p>
         </div>
 
         <button
@@ -5110,133 +5157,145 @@ function openManualOrderModal() {
       </div>
 
       <form id="restaurant-manual-order-form" novalidate class="flex flex-col min-h-0">
-        <div class="px-4 sm:px-5 py-4 overflow-y-auto">
+        <div class="px-3 sm:px-5 py-3 overflow-y-auto">
           <div
             data-manual-order-error
             class="hidden mb-3 rounded-2xl border border-red-400/45 bg-red-950/80 px-4 py-3 text-sm font-semibold text-red-100"
           ></div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-4">
-            <div class="space-y-3">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.name} *</label>
-                  <input
-                    name="customerName"
-                    type="text"
-                    autocomplete="off"
-                    class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70"
-                  >
+          <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-4">
+            <div class="space-y-3 min-w-0">
+              <div class="rounded-2xl border border-white/10 bg-black/25 p-3">
+                <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_140px_120px] gap-2">
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.name} *</label>
+                    <input
+                      name="customerName"
+                      type="text"
+                      autocomplete="off"
+                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
+                    >
+                  </div>
+
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.phone}</label>
+                    <input
+                      name="customerPhone"
+                      type="tel"
+                      autocomplete="off"
+                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
+                    >
+                  </div>
+
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.date}</label>
+                    <input
+                      name="orderDate"
+                      type="date"
+                      value="${todayValue}"
+                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
+                    >
+                  </div>
+
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.time}</label>
+                    <input
+                      name="orderTime"
+                      type="time"
+                      value="${nextTimeValue}"
+                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
+                    >
+                  </div>
                 </div>
 
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.phone}</label>
-                  <input
-                    name="customerPhone"
-                    type="tel"
-                    autocomplete="off"
-                    class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70"
-                  >
+                <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-2 mt-2">
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.origin}</label>
+                    <input type="hidden" name="manualOrigin" value="phone">
+
+                    <div class="grid grid-cols-4 gap-1.5" data-manual-order-origin-group>
+                      <button type="button" data-manual-order-origin="phone" class="manual-order-origin-btn rounded-xl border border-gold bg-gold text-black px-2 py-2 text-xs font-extrabold transition-all">
+                        ${texts.originPhone}
+                      </button>
+
+                      <button type="button" data-manual-order-origin="counter" class="manual-order-origin-btn rounded-xl border border-white/10 bg-black/30 text-cream px-2 py-2 text-xs font-semibold hover:border-gold/50 transition-all">
+                        ${texts.originCounter}
+                      </button>
+
+                      <button type="button" data-manual-order-origin="whatsapp" class="manual-order-origin-btn rounded-xl border border-white/10 bg-black/30 text-cream px-2 py-2 text-xs font-semibold hover:border-gold/50 transition-all">
+                        ${texts.originWhatsapp}
+                      </button>
+
+                      <button type="button" data-manual-order-origin="other" class="manual-order-origin-btn rounded-xl border border-white/10 bg-black/30 text-cream px-2 py-2 text-xs font-semibold hover:border-gold/50 transition-all">
+                        ${texts.originOther}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.note}</label>
+                    <input
+                      name="orderNote"
+                      type="text"
+                      placeholder="${texts.notePlaceholder}"
+                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
+                    >
+                  </div>
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.date}</label>
-                  <input
-                    name="orderDate"
-                    type="date"
-                    value="${todayValue}"
-                    class="w-full rounded-2xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
-                  >
+              <div class="xl:hidden sticky top-0 z-20 rounded-2xl border border-gold/30 bg-[#17130b]/95 backdrop-blur px-4 py-3 shadow-lg">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <div class="text-[10px] uppercase tracking-wide text-gold/75 font-extrabold">${summaryLabel}</div>
+                    <div class="text-sm font-bold text-cream" data-manual-order-mobile-count>0 ${itemCountLabel}</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-[10px] uppercase tracking-wide text-gold/75 font-extrabold">${texts.total}</div>
+                    <div class="text-xl font-extrabold text-gold" data-manual-order-mobile-total>0,00 €</div>
+                  </div>
                 </div>
-
-                <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.time}</label>
-                  <input
-                    name="orderTime"
-                    type="time"
-                    value="${nextTimeValue}"
-                    class="w-full rounded-2xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
-                  >
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.origin}</label>
-                <input type="hidden" name="manualOrigin" value="phone">
-
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" data-manual-order-origin-group>
-                  <button type="button" data-manual-order-origin="phone" class="manual-order-origin-btn rounded-2xl border border-gold bg-gold text-black px-3 py-2.5 text-sm font-extrabold transition-all">
-                    ${texts.originPhone}
-                  </button>
-
-                  <button type="button" data-manual-order-origin="counter" class="manual-order-origin-btn rounded-2xl border border-white/10 bg-black/30 text-cream px-3 py-2.5 text-sm font-semibold hover:border-gold/50 transition-all">
-                    ${texts.originCounter}
-                  </button>
-
-                  <button type="button" data-manual-order-origin="whatsapp" class="manual-order-origin-btn rounded-2xl border border-white/10 bg-black/30 text-cream px-3 py-2.5 text-sm font-semibold hover:border-gold/50 transition-all">
-                    ${texts.originWhatsapp}
-                  </button>
-
-                  <button type="button" data-manual-order-origin="other" class="manual-order-origin-btn rounded-2xl border border-white/10 bg-black/30 text-cream px-3 py-2.5 text-sm font-semibold hover:border-gold/50 transition-all">
-                    ${texts.originOther}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-[11px] font-bold uppercase tracking-wide text-gold/80 mb-1.5">${texts.note}</label>
-                <textarea
-                  name="orderNote"
-                  rows="2"
-                  placeholder="${texts.notePlaceholder}"
-                  class="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-cream outline-none focus:border-gold/70 resize-none"
-                ></textarea>
               </div>
 
               <div class="rounded-2xl border border-white/10 bg-black/25 p-3">
                 <div class="flex items-center justify-between gap-3 mb-3">
                   <h4 class="text-sm font-extrabold text-cream">${texts.menu}</h4>
-                  <span class="text-xs font-bold text-gold">${menuItems.length} articles</span>
+                  <span class="text-xs font-bold text-gold">${menuItems.length} ${itemCountLabel}</span>
                 </div>
 
-                <div class="space-y-2 max-h-[280px] overflow-y-auto pr-1" data-manual-order-menu-list>
-                  ${menuItems.length ? menuItems.map((item) => `
+                <div class="flex gap-2 overflow-x-auto pb-2 mb-3" data-manual-order-category-list>
+                  ${categories.map((category) => `
                     <button
                       type="button"
-                      data-manual-order-add-item="${escapeRequestDetailsHtml(item.id)}"
-                      class="w-full text-left rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5 hover:border-gold/45 hover:bg-gold/8 transition-all"
+                      data-manual-order-category="${escapeRequestDetailsHtml(category.id)}"
+                      class="manual-order-category-btn shrink-0 rounded-full border px-4 py-2 text-xs font-extrabold transition-all ${
+                        category.id === 'all'
+                          ? 'border-gold bg-gold text-black'
+                          : 'border-white/10 bg-black/30 text-cream hover:border-gold/50'
+                      }"
                     >
-                      <div class="flex items-center justify-between gap-3">
-                        <div class="min-w-0">
-                          <div class="text-sm font-bold text-cream truncate">${escapeRequestDetailsHtml(item.name)}</div>
-                          <div class="text-[11px] text-cream/50 truncate">${escapeRequestDetailsHtml(item.category)}</div>
-                        </div>
-
-                        <div class="flex items-center gap-2 shrink-0">
-                          <span class="text-sm font-extrabold text-gold">${formatRequestAmount(item.price)}</span>
-                          <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-gold text-black">
-                            <i data-lucide="plus" class="w-4 h-4"></i>
-                          </span>
-                        </div>
-                      </div>
+                      ${escapeRequestDetailsHtml(category.name)}
                     </button>
-                  `).join('') : `
-                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm font-semibold text-cream/70">
-                      ${texts.noMenu}
-                    </div>
-                  `}
+                  `).join('')}
                 </div>
+
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"
+                  data-manual-order-menu-list
+                ></div>
               </div>
             </div>
 
-            <div class="rounded-2xl border border-gold/25 bg-gold/6 p-3 flex flex-col min-h-[300px]">
+            <aside class="rounded-2xl border border-gold/25 bg-gold/6 p-3 flex flex-col min-h-[280px] xl:sticky xl:top-0 xl:self-start xl:max-h-[calc(96vh-150px)]">
               <div class="flex items-center justify-between gap-3 mb-3">
-                <h4 class="text-sm font-extrabold text-cream">${texts.cart}</h4>
+                <div>
+                  <h4 class="text-sm font-extrabold text-cream">${texts.cart}</h4>
+                  <p class="text-xs font-semibold text-cream/50" data-manual-order-count>0 ${itemCountLabel}</p>
+                </div>
+
                 <div class="text-right">
                   <div class="text-[10px] uppercase tracking-wide text-gold/70 font-bold">${texts.total}</div>
-                  <div class="text-xl font-extrabold text-gold" data-manual-order-total>0,00 €</div>
+                  <div class="text-2xl font-extrabold text-gold" data-manual-order-total>0,00 €</div>
                 </div>
               </div>
 
@@ -5245,25 +5304,39 @@ function openManualOrderModal() {
                   ${texts.emptyCart}
                 </div>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
 
-        <div class="sticky bottom-0 bg-[#11100d] border-t border-white/10 px-4 sm:px-5 py-3 flex flex-col sm:flex-row gap-2 justify-end">
-          <button
-            type="button"
-            data-close-manual-order
-            class="btn-action px-5 py-3 rounded-2xl border border-white/10 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
-          >
-            ${texts.cancel}
-          </button>
+        <div class="sticky bottom-0 bg-[#11100d] border-t border-white/10 px-3 sm:px-5 py-3 flex flex-col sm:flex-row gap-2 justify-between">
+          <div class="flex items-center justify-between sm:justify-start gap-4 rounded-2xl border border-gold/20 bg-gold/8 px-4 py-2">
+            <div>
+              <div class="text-[10px] uppercase tracking-wide text-gold/75 font-extrabold">${summaryLabel}</div>
+              <div class="text-sm font-bold text-cream" data-manual-order-footer-count>0 ${itemCountLabel}</div>
+            </div>
 
-          <button
-            type="submit"
-            class="btn-action px-5 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all"
-          >
-            ${texts.save}
-          </button>
+            <div class="text-right">
+              <div class="text-[10px] uppercase tracking-wide text-gold/75 font-extrabold">${texts.total}</div>
+              <div class="text-xl font-extrabold text-gold" data-manual-order-footer-total>0,00 €</div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              data-close-manual-order
+              class="btn-action px-5 py-3 rounded-2xl border border-white/10 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+            >
+              ${texts.cancel}
+            </button>
+
+            <button
+              type="submit"
+              class="btn-action px-6 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all"
+            >
+              ${texts.save}
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -5275,13 +5348,21 @@ function openManualOrderModal() {
   const manualOrderErrorBox = overlay.querySelector('[data-manual-order-error]');
   const manualOriginInput = overlay.querySelector('input[name="manualOrigin"]');
   const manualOriginButtons = overlay.querySelectorAll('[data-manual-order-origin]');
+  const categoryButtons = overlay.querySelectorAll('[data-manual-order-category]');
+  const menuList = overlay.querySelector('[data-manual-order-menu-list]');
   const cartList = overlay.querySelector('[data-manual-order-cart-list]');
   const totalBox = overlay.querySelector('[data-manual-order-total]');
+  const countBox = overlay.querySelector('[data-manual-order-count]');
+  const mobileTotalBox = overlay.querySelector('[data-manual-order-mobile-total]');
+  const mobileCountBox = overlay.querySelector('[data-manual-order-mobile-count]');
+  const footerTotalBox = overlay.querySelector('[data-manual-order-footer-total]');
+  const footerCountBox = overlay.querySelector('[data-manual-order-footer-count]');
 
   const showManualOrderFormError = (message, selector) => {
     if (manualOrderErrorBox) {
       manualOrderErrorBox.textContent = message;
       manualOrderErrorBox.classList.remove('hidden');
+      manualOrderErrorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     const targetField = selector ? overlay.querySelector(selector) : null;
@@ -5298,15 +5379,99 @@ function openManualOrderModal() {
     }
   };
 
-  const renderManualOrderCart = () => {
+  const getFilteredMenuItems = () => {
+    if (activeCategory === 'all') {
+      return menuItems;
+    }
+
+    return menuItems.filter((item) => String(item.category || '') === String(activeCategory));
+  };
+
+  const updateManualOrderSummaries = () => {
     const totalAmount = cartItems.reduce(
       (total, item) => total + Number(item.price || 0) * Number(item.quantity || 1),
       0
     );
 
-    if (totalBox) {
-      totalBox.textContent = formatRequestAmount(totalAmount);
+    const itemCount = cartItems.reduce(
+      (total, item) => total + Number(item.quantity || 0),
+      0
+    );
+
+    const countText = `${itemCount} ${itemCountLabel}`;
+    const totalText = formatRequestAmount(totalAmount);
+
+    [totalBox, mobileTotalBox, footerTotalBox].forEach((box) => {
+      if (box) box.textContent = totalText;
+    });
+
+    [countBox, mobileCountBox, footerCountBox].forEach((box) => {
+      if (box) box.textContent = countText;
+    });
+  };
+
+  const renderManualOrderMenu = () => {
+    if (!menuList) return;
+
+    const filteredItems = getFilteredMenuItems();
+
+    if (!filteredItems.length) {
+      menuList.innerHTML = `
+        <div class="sm:col-span-2 lg:col-span-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm font-semibold text-cream/70">
+          ${texts.noMenu}
+        </div>
+      `;
+      return;
     }
+
+    menuList.innerHTML = filteredItems.map((item) => {
+      const quantity = getCartQuantityForItem(item.id);
+      const isSelected = quantity > 0;
+
+      return `
+        <button
+          type="button"
+          data-manual-order-add-item="${escapeRequestDetailsHtml(item.id)}"
+          class="manual-order-menu-item w-full min-h-[86px] text-left rounded-2xl border px-3 py-3 transition-all ${
+            isSelected
+              ? 'border-gold bg-gold/15 shadow-[0_0_0_1px_rgba(242,199,68,0.25)]'
+              : 'border-white/10 bg-white/[0.03] hover:border-gold/45 hover:bg-gold/8'
+          }"
+        >
+          <div class="flex h-full flex-col justify-between gap-2">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <div class="text-sm font-extrabold text-cream leading-tight">${escapeRequestDetailsHtml(item.name)}</div>
+                <div class="text-[11px] text-cream/50 truncate mt-0.5">${escapeRequestDetailsHtml(item.category)}</div>
+              </div>
+
+              <span
+                data-manual-order-item-qty="${escapeRequestDetailsHtml(item.id)}"
+                class="${isSelected ? 'inline-flex' : 'hidden'} shrink-0 items-center justify-center min-w-9 h-8 rounded-xl bg-gold text-black text-sm font-extrabold"
+              >
+                ×${quantity}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-sm font-extrabold text-gold">${formatRequestAmount(item.price)}</span>
+              <span class="inline-flex items-center justify-center h-8 rounded-xl bg-gold text-black px-3 text-xs font-extrabold">
+                + ${texts.add}
+              </span>
+            </div>
+          </div>
+        </button>
+      `;
+    }).join('');
+
+    if (window.lucide) {
+      requestAnimationFrame(() => lucide.createIcons());
+    }
+  };
+
+  const renderManualOrderCart = () => {
+    updateManualOrderSummaries();
+    renderManualOrderMenu();
 
     if (!cartList) return;
 
@@ -5323,12 +5488,12 @@ function openManualOrderModal() {
       <div class="rounded-2xl border border-white/10 bg-black/25 px-3 py-3">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <div class="text-sm font-bold text-cream">${escapeRequestDetailsHtml(item.name)}</div>
+            <div class="text-sm font-bold text-cream leading-tight">${escapeRequestDetailsHtml(item.name)}</div>
             <div class="text-[11px] text-cream/50">${escapeRequestDetailsHtml(item.category)}</div>
             <div class="text-xs font-extrabold text-gold mt-1">${formatRequestAmount(Number(item.price || 0) * Number(item.quantity || 1))}</div>
           </div>
 
-          <div class="flex items-center gap-2 shrink-0">
+          <div class="flex items-center gap-1.5 shrink-0">
             <button type="button" data-manual-order-decrease="${escapeRequestDetailsHtml(item.id)}" class="btn-action w-9 h-9 rounded-xl border border-white/10 text-cream hover:bg-white/5">
               -
             </button>
@@ -5390,11 +5555,40 @@ function openManualOrderModal() {
     });
   });
 
-  overlay.querySelectorAll('[data-manual-order-add-item]').forEach((button) => {
+  categoryButtons.forEach((button) => {
     button.addEventListener('click', () => {
+      activeCategory = button.getAttribute('data-manual-order-category') || 'all';
+
+      categoryButtons.forEach((categoryButton) => {
+        const isSelected = categoryButton === button;
+
+        categoryButton.classList.toggle('border-gold', isSelected);
+        categoryButton.classList.toggle('bg-gold', isSelected);
+        categoryButton.classList.toggle('text-black', isSelected);
+
+        categoryButton.classList.toggle('border-white/10', !isSelected);
+        categoryButton.classList.toggle('bg-black/30', !isSelected);
+        categoryButton.classList.toggle('text-cream', !isSelected);
+      });
+
+      renderManualOrderMenu();
+    });
+  });
+
+  overlay.addEventListener('click', (event) => {
+    const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+
+    if (!target) return;
+
+    const addButton = target.closest('[data-manual-order-add-item]');
+    const decreaseButton = target.closest('[data-manual-order-decrease]');
+    const increaseButton = target.closest('[data-manual-order-increase]');
+    const removeButton = target.closest('[data-manual-order-remove]');
+
+    if (addButton) {
       clearManualOrderFormError();
 
-      const itemId = button.getAttribute('data-manual-order-add-item') || '';
+      const itemId = addButton.getAttribute('data-manual-order-add-item') || '';
       const menuItem = menuItems.find((item) => String(item.id) === String(itemId));
 
       if (!menuItem) return;
@@ -5411,16 +5605,12 @@ function openManualOrderModal() {
       }
 
       renderManualOrderCart();
-    });
-  });
-
-  overlay.addEventListener('click', (event) => {
-    const decreaseButton = event.target.closest('[data-manual-order-decrease]');
-    const increaseButton = event.target.closest('[data-manual-order-increase]');
-    const removeButton = event.target.closest('[data-manual-order-remove]');
+      return;
+    }
 
     if (decreaseButton) {
       const itemId = decreaseButton.getAttribute('data-manual-order-decrease') || '';
+
       cartItems = cartItems
         .map((item) =>
           String(item.id) === String(itemId)
@@ -5435,6 +5625,7 @@ function openManualOrderModal() {
 
     if (increaseButton) {
       const itemId = increaseButton.getAttribute('data-manual-order-increase') || '';
+
       cartItems = cartItems.map((item) =>
         String(item.id) === String(itemId)
           ? { ...item, quantity: Number(item.quantity || 1) + 1 }
@@ -5447,6 +5638,7 @@ function openManualOrderModal() {
 
     if (removeButton) {
       const itemId = removeButton.getAttribute('data-manual-order-remove') || '';
+
       cartItems = cartItems.filter((item) => String(item.id) !== String(itemId));
 
       renderManualOrderCart();
@@ -5485,6 +5677,7 @@ function openManualOrderModal() {
     }
 
     const submitButton = form.querySelector('button[type="submit"]');
+
     if (submitButton) {
       submitButton.disabled = true;
       submitButton.classList.add('opacity-60', 'pointer-events-none');
@@ -5522,7 +5715,6 @@ function openManualOrderModal() {
     overlay.querySelector('input[name="customerName"]')?.focus();
   }, 80);
 }
-
 function removeRequestDetailsModal() {
   const existingModal = document.getElementById('restaurant-request-details-modal');
   if (existingModal) {
