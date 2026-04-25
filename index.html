@@ -775,6 +775,38 @@
         font-size: 0.86rem;
       }
     }
+
+    #restaurant-manual-order-modal,
+    #restaurant-manual-order-modal * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(242, 199, 68, 0.85) rgba(12, 12, 12, 0.55);
+    }
+
+    #restaurant-manual-order-modal ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    #restaurant-manual-order-modal ::-webkit-scrollbar-track {
+      background: rgba(12, 12, 12, 0.55);
+      border-radius: 999px;
+    }
+
+    #restaurant-manual-order-modal ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(242, 199, 68, 0.95), rgba(175, 128, 24, 0.95));
+      border-radius: 999px;
+      border: 2px solid rgba(12, 12, 12, 0.55);
+    }
+
+    #restaurant-manual-order-modal ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(255, 218, 91, 1), rgba(198, 150, 33, 1));
+    }
+
+    [data-manual-order-cart-item].manual-order-cart-focus {
+      border-color: rgba(242, 199, 68, 0.85);
+      background: rgba(242, 199, 68, 0.12);
+      box-shadow: 0 0 0 1px rgba(242, 199, 68, 0.35), 0 12px 35px rgba(0, 0, 0, 0.3);
+    }
   </style>
 
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
@@ -5643,7 +5675,7 @@ function openManualOrderModal() {
     }
   };
 
-  const renderManualOrderCart = () => {
+  const renderManualOrderCart = (focusItemId = null) => {
     updateManualOrderSummaries();
     renderManualOrderMenu();
 
@@ -5659,7 +5691,10 @@ function openManualOrderModal() {
     }
 
     cartList.innerHTML = cartItems.map((item) => `
-      <div class="rounded-2xl border border-white/10 bg-black/25 px-3 py-3">
+      <div
+        data-manual-order-cart-item="${escapeRequestDetailsHtml(item.id)}"
+        class="rounded-2xl border border-white/10 bg-black/25 px-3 py-3 transition-all duration-200"
+      >
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
             <div class="text-sm font-bold text-cream leading-tight">${escapeRequestDetailsHtml(item.name)}</div>
@@ -5687,6 +5722,27 @@ function openManualOrderModal() {
         </div>
       </div>
     `).join('');
+
+    if (focusItemId) {
+      requestAnimationFrame(() => {
+        const focusedCartItem = cartList.querySelector(
+          `[data-manual-order-cart-item="${CSS.escape(String(focusItemId))}"]`
+        );
+
+        if (focusedCartItem) {
+          focusedCartItem.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest'
+          });
+
+          focusedCartItem.classList.add('manual-order-cart-focus');
+
+          window.setTimeout(() => {
+            focusedCartItem.classList.remove('manual-order-cart-focus');
+          }, 650);
+        }
+      });
+    }
 
     if (window.lucide) {
       requestAnimationFrame(() => lucide.createIcons());
@@ -5794,7 +5850,7 @@ function openManualOrderModal() {
         });
       }
 
-      renderManualOrderCart();
+      renderManualOrderCart(itemId);
       return;
     }
 
@@ -5809,7 +5865,7 @@ function openManualOrderModal() {
         )
         .filter((item) => Number(item.quantity || 0) > 0);
 
-      renderManualOrderCart();
+      renderManualOrderCart(itemId);
       return;
     }
 
@@ -5822,7 +5878,7 @@ function openManualOrderModal() {
           : item
       );
 
-      renderManualOrderCart();
+      renderManualOrderCart(itemId);
       return;
     }
 
