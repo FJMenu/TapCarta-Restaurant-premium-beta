@@ -3145,8 +3145,8 @@ function playRestaurantManualConfirmationTone() {
     const masterGain = audioContext.createGain();
 
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.linearRampToValueAtTime(0.22, now + 0.012);
-    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+    masterGain.gain.linearRampToValueAtTime(0.48, now + 0.01);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
     masterGain.connect(audioContext.destination);
 
     const firstOscillator = audioContext.createOscillator();
@@ -3156,16 +3156,16 @@ function playRestaurantManualConfirmationTone() {
     firstOscillator.frequency.setValueAtTime(880, now);
 
     firstGain.gain.setValueAtTime(0.0001, now);
-    firstGain.gain.linearRampToValueAtTime(0.65, now + 0.012);
-    firstGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+    firstGain.gain.linearRampToValueAtTime(0.95, now + 0.01);
+    firstGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
 
     firstOscillator.connect(firstGain);
     firstGain.connect(masterGain);
 
     firstOscillator.start(now);
-    firstOscillator.stop(now + 0.13);
+    firstOscillator.stop(now + 0.14);
 
-    const secondStart = now + 0.15;
+    const secondStart = now + 0.16;
     const secondOscillator = audioContext.createOscillator();
     const secondGain = audioContext.createGain();
 
@@ -3173,14 +3173,14 @@ function playRestaurantManualConfirmationTone() {
     secondOscillator.frequency.setValueAtTime(1175, secondStart);
 
     secondGain.gain.setValueAtTime(0.0001, secondStart);
-    secondGain.gain.linearRampToValueAtTime(0.58, secondStart + 0.012);
-    secondGain.gain.exponentialRampToValueAtTime(0.0001, secondStart + 0.16);
+    secondGain.gain.linearRampToValueAtTime(0.9, secondStart + 0.01);
+    secondGain.gain.exponentialRampToValueAtTime(0.0001, secondStart + 0.17);
 
     secondOscillator.connect(secondGain);
     secondGain.connect(masterGain);
 
     secondOscillator.start(secondStart);
-    secondOscillator.stop(secondStart + 0.17);
+    secondOscillator.stop(secondStart + 0.18);
 
     return true;
   } catch (e) {
