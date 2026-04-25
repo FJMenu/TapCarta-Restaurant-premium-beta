@@ -65,6 +65,10 @@ self.addEventListener('fetch', (event) => {
 
   const requestUrl = new URL(request.url);
 
+  if (!requestUrl.protocol.startsWith('http')) {
+    return;
+  }
+
   if (requestUrl.origin !== self.location.origin) {
     return;
   }
