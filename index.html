@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.9';
+            const APP_VERSION = 'V1.2.10';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2675,6 +2675,7 @@ window.tapCartaRestaurantLiveBookingBootstrapDone = window.tapCartaRestaurantLiv
 
 async function syncLiveBookingsToLocalStorage() {
   const bookingStorageKey = 'tapcarta_booking_requests';
+  const orderStorageKey = 'tapcarta_order_requests';
   const activeRestaurantId =
     activeRestaurantData?.identity?.id ||
     activeRestaurantData?.id ||
@@ -2729,30 +2730,71 @@ async function syncLiveBookingsToLocalStorage() {
     };
   }
 
-  try {
-    const { data, error } = await supabaseClient
-      .from('requests')
-      .select('*')
-      .eq('restaurant_id', activeRestaurantId)
-      .eq('type', 'booking')
-      .order('created_at', { ascending: false });
+  function mapLiveOrderRowToRequest(row) {
+    if (!row) return null;
 
-    if (error) throw error;
+    const orderItems = Array.isArray(row.items)
+      ? row.items.map((item) => {
+          const quantity = Number(item?.quantity || 1);
+          const unitPrice = Number(item?.unitPrice ?? item?.price ?? 0);
+          const lineTotal = Number(item?.lineTotal ?? (unitPrice * quantity));
 
-    const rawBookings = localStorage.getItem(bookingStorageKey);
-    const parsedBookings = rawBookings ? JSON.parse(rawBookings) : [];
-    const safeBookings = Array.isArray(parsedBookings) ? parsedBookings : [];
+          return {
+            id: item?.id || '',
+            name: item?.name || '',
+            category: item?.category || '',
+            quantity,
+            price: Number.isFinite(unitPrice) ? unitPrice : 0,
+            unitPrice: Number.isFinite(unitPrice) ? unitPrice : null,
+            lineTotal: Number.isFinite(lineTotal) ? Number(lineTotal.toFixed(2)) : null
+          };
+        })
+      : [];
 
-    const bookingMap = new Map();
+    const totalAmount = orderItems.reduce(
+      (sum, item) => sum + Number(item.lineTotal ?? (Number(item.price || 0) * Number(item.quantity || 1))),
+      0
+    );
 
-    safeBookings.forEach((item) => {
+    return {
+      restaurantId: row.restaurant_id || activeRestaurantId,
+      requestId: row.id,
+      liveRequestId: row.id,
+      requestType: 'order',
+      createdAt: row.created_at || new Date().toISOString(),
+      updatedAt: row.updated_at || null,
+      status: row.status || 'pending',
+      customer: {
+        name: row.client_name || '',
+        phone: row.client_phone || '',
+        language: row.client_language || 'fr'
+      },
+      order: {
+        date: row.booking_date || '',
+        time: row.booking_time ? String(row.booking_time).slice(0, 5) : '',
+        note: row.note || '',
+        items: orderItems,
+        totalAmount: Number(totalAmount.toFixed(2))
+      },
+      restaurantResponse: {
+        reason: row.status || '',
+        message: row.restaurant_message || '',
+        updatedBy: row.restaurant_message ? 'restaurant' : ''
+      }
+    };
+  }
+
+  function mergeLiveItemsWithLocalCache({ safeItems, liveItems, requestType, activeRestaurantId }) {
+    const itemMap = new Map();
+
+    safeItems.forEach((item) => {
       if (
         item &&
-        item.requestType === 'booking' &&
+        item.requestType === requestType &&
         String(item.restaurantId || '') === String(activeRestaurantId) &&
         item.requestId
       ) {
-        bookingMap.set(String(item.requestId), item);
+        itemMap.set(String(item.requestId), item);
       }
     });
 
@@ -2767,12 +2809,11 @@ async function syncLiveBookingsToLocalStorage() {
       'service_unknown_no_action'
     ];
 
-    const liveBookings = Array.isArray(data)
-      ? data
-          .map(mapLiveBookingRowToRequest)
+    const mergedLiveItems = Array.isArray(liveItems)
+      ? liveItems
           .filter(Boolean)
           .map((liveItem) => {
-            const existingItem = bookingMap.get(String(liveItem.requestId));
+            const existingItem = itemMap.get(String(liveItem.requestId));
             const shouldKeepLocalFinalStatus =
               existingItem &&
               finalLocalStatuses.includes(existingItem.status) &&
@@ -2800,6 +2841,8 @@ async function syncLiveBookingsToLocalStorage() {
                 (liveItem.status === 'cancelled' ? liveItem.updatedAt : null),
               arrivedAt: existingItem?.arrivedAt || null,
               notArrivedAt: existingItem?.notArrivedAt || null,
+              servedAt: existingItem?.servedAt || null,
+              notServedAt: existingItem?.notServedAt || null,
               autoClosedAt: existingItem?.autoClosedAt || null,
               historyDeleted: existingItem?.historyDeleted === true,
               historyUpdatedAt: existingItem?.historyUpdatedAt || null,
@@ -2811,29 +2854,82 @@ async function syncLiveBookingsToLocalStorage() {
           })
       : [];
 
-    const keptNonLiveBookings = safeBookings.filter((item) => {
-      const isActiveRestaurantBooking =
+    const keptLocalItems = safeItems.filter((item) => {
+      const isActiveRestaurantSameType =
         item &&
-        item.requestType === 'booking' &&
+        item.requestType === requestType &&
         String(item.restaurantId || '') === String(activeRestaurantId);
 
-      if (!isActiveRestaurantBooking) {
+      if (!isActiveRestaurantSameType) {
         return true;
       }
 
-      return (
-        item.createdBy === 'restaurant' ||
-        item.sourceChannel === 'manual' ||
-        item.manualOrigin
-      );
+      return !item.liveRequestId;
     });
+
+    return [...keptLocalItems, ...mergedLiveItems];
+  }
+
+  try {
+    const [{ data: bookingsData, error: bookingsError }, { data: ordersData, error: ordersError }] = await Promise.all([
+      supabaseClient
+        .from('requests')
+        .select('*')
+        .eq('restaurant_id', activeRestaurantId)
+        .eq('type', 'booking')
+        .order('created_at', { ascending: false }),
+      supabaseClient
+        .from('requests')
+        .select('*')
+        .eq('restaurant_id', activeRestaurantId)
+        .eq('type', 'order')
+        .order('created_at', { ascending: false })
+    ]);
+
+    if (bookingsError) throw bookingsError;
+    if (ordersError) throw ordersError;
+
+    const rawBookings = localStorage.getItem(bookingStorageKey);
+    const parsedBookings = rawBookings ? JSON.parse(rawBookings) : [];
+    const safeBookings = Array.isArray(parsedBookings) ? parsedBookings : [];
+
+    const rawOrders = localStorage.getItem(orderStorageKey);
+    const parsedOrders = rawOrders ? JSON.parse(rawOrders) : [];
+    const safeOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
+
+    const liveBookings = Array.isArray(bookingsData)
+      ? bookingsData.map(mapLiveBookingRowToRequest).filter(Boolean)
+      : [];
+
+    const liveOrders = Array.isArray(ordersData)
+      ? ordersData.map(mapLiveOrderRowToRequest).filter(Boolean)
+      : [];
 
     localStorage.setItem(
       bookingStorageKey,
-      JSON.stringify([...keptNonLiveBookings, ...liveBookings])
+      JSON.stringify(
+        mergeLiveItemsWithLocalCache({
+          safeItems: safeBookings,
+          liveItems: liveBookings,
+          requestType: 'booking',
+          activeRestaurantId
+        })
+      )
+    );
+
+    localStorage.setItem(
+      orderStorageKey,
+      JSON.stringify(
+        mergeLiveItemsWithLocalCache({
+          safeItems: safeOrders,
+          liveItems: liveOrders,
+          requestType: 'order',
+          activeRestaurantId
+        })
+      )
     );
   } catch (error) {
-    console.warn('TapCarta Restaurant: impossible de synchroniser les réservations live', error);
+    console.warn('TapCarta Restaurant: impossible de synchroniser les demandes live', error);
   } finally {
     window.tapCartaRestaurantLiveBookingSyncState.isSyncing = false;
   }
@@ -2850,7 +2946,7 @@ function loadRestaurantRequests() {
     '';
 
   const bookingActiveStatuses = ['pending', 'modified', 'accepted_by_client', 'rejected_by_client', 'confirmed'];
-  const orderActiveStatuses = ['sent', 'modified', 'accepted_by_client', 'rejected_by_client', 'confirmed'];
+  const orderActiveStatuses = ['pending', 'sent', 'modified', 'accepted_by_client', 'rejected_by_client', 'confirmed'];
 
   function getHistoryReferenceTimestamp(item) {
     const rawValue =
