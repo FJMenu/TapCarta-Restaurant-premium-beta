@@ -3145,25 +3145,42 @@ function playRestaurantManualConfirmationTone() {
     const masterGain = audioContext.createGain();
 
     masterGain.gain.setValueAtTime(0.001, now);
-    masterGain.gain.linearRampToValueAtTime(0.12, now + 0.015);
-    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+    masterGain.gain.linearRampToValueAtTime(0.22, now + 0.012);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
     masterGain.connect(audioContext.destination);
 
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
+    const firstOscillator = audioContext.createOscillator();
+    const firstGain = audioContext.createGain();
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, now);
+    firstOscillator.type = 'sine';
+    firstOscillator.frequency.setValueAtTime(880, now);
 
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(0.5, now + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    firstGain.gain.setValueAtTime(0.0001, now);
+    firstGain.gain.linearRampToValueAtTime(0.65, now + 0.012);
+    firstGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
 
-    oscillator.connect(gain);
-    gain.connect(masterGain);
+    firstOscillator.connect(firstGain);
+    firstGain.connect(masterGain);
 
-    oscillator.start(now);
-    oscillator.stop(now + 0.2);
+    firstOscillator.start(now);
+    firstOscillator.stop(now + 0.13);
+
+    const secondStart = now + 0.15;
+    const secondOscillator = audioContext.createOscillator();
+    const secondGain = audioContext.createGain();
+
+    secondOscillator.type = 'sine';
+    secondOscillator.frequency.setValueAtTime(1175, secondStart);
+
+    secondGain.gain.setValueAtTime(0.0001, secondStart);
+    secondGain.gain.linearRampToValueAtTime(0.58, secondStart + 0.012);
+    secondGain.gain.exponentialRampToValueAtTime(0.0001, secondStart + 0.16);
+
+    secondOscillator.connect(secondGain);
+    secondGain.connect(masterGain);
+
+    secondOscillator.start(secondStart);
+    secondOscillator.stop(secondStart + 0.17);
 
     return true;
   } catch (e) {
