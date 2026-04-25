@@ -5083,6 +5083,7 @@ function openManualOrderModal() {
   const menuItems = getManualOrderAvailableMenuItems();
   let cartItems = [];
   let activeCategory = 'all';
+  let manualOrderStep = 'info';
 
   const allCategoriesLabel =
     currentLang === 'es'
@@ -5110,6 +5111,42 @@ function openManualOrderModal() {
         : currentLang === 'nl'
           ? 'Samenvatting'
           : 'Résumé';
+
+  const continueLabel =
+    currentLang === 'es'
+      ? 'Continuar al pedido'
+      : currentLang === 'en'
+        ? 'Continue to order'
+        : currentLang === 'nl'
+          ? 'Verder naar bestelling'
+          : 'Continuer vers la commande';
+
+  const editInfoLabel =
+    currentLang === 'es'
+      ? 'Modificar los datos'
+      : currentLang === 'en'
+        ? 'Edit info'
+        : currentLang === 'nl'
+          ? 'Info wijzigen'
+          : 'Modifier les infos';
+
+  const infoStepLabel =
+    currentLang === 'es'
+      ? 'Datos del pedido'
+      : currentLang === 'en'
+        ? 'Order info'
+        : currentLang === 'nl'
+          ? 'Bestelgegevens'
+          : 'Infos commande';
+
+  const cashierStepLabel =
+    currentLang === 'es'
+      ? 'Caja rápida'
+      : currentLang === 'en'
+        ? 'Quick till'
+        : currentLang === 'nl'
+          ? 'Snelle kassa'
+          : 'Mini-caisse';
 
   const categories = [
     { id: 'all', name: allCategoriesLabel },
@@ -5163,148 +5200,172 @@ function openManualOrderModal() {
             class="hidden mb-3 rounded-2xl border border-red-400/45 bg-red-950/80 px-4 py-3 text-sm font-semibold text-red-100"
           ></div>
 
-          <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-4">
-            <div class="space-y-3 min-w-0">
-              <div class="rounded-2xl border border-white/10 bg-black/25 p-3">
-                <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_140px_120px] gap-2">
-                  <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.name} *</label>
-                    <input
-                      name="customerName"
-                      type="text"
-                      autocomplete="off"
-                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
-                    >
-                  </div>
+          <div class="flex items-center gap-2 mb-3">
+            <div data-manual-order-step-pill="info" class="rounded-full border border-gold bg-gold text-black px-4 py-2 text-xs font-extrabold">
+              1 · ${infoStepLabel}
+            </div>
+            <div data-manual-order-step-pill="cashier" class="rounded-full border border-white/10 bg-black/30 text-cream px-4 py-2 text-xs font-extrabold">
+              2 · ${cashierStepLabel}
+            </div>
+          </div>
 
-                  <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.phone}</label>
-                    <input
-                      name="customerPhone"
-                      type="tel"
-                      autocomplete="off"
-                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
-                    >
-                  </div>
+          <div data-manual-order-info-panel class="rounded-2xl border border-white/10 bg-black/25 p-4 max-w-3xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.name} *</label>
+                <input
+                  name="customerName"
+                  type="text"
+                  autocomplete="off"
+                  class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
+                >
+              </div>
 
-                  <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.date}</label>
-                    <input
-                      name="orderDate"
-                      type="date"
-                      value="${todayValue}"
-                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
-                    >
-                  </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.phone}</label>
+                <input
+                  name="customerPhone"
+                  type="tel"
+                  autocomplete="off"
+                  class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
+                >
+              </div>
 
-                  <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.time}</label>
-                    <input
-                      name="orderTime"
-                      type="time"
-                      value="${nextTimeValue}"
-                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
-                    >
-                  </div>
-                </div>
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.date}</label>
+                <input
+                  name="orderDate"
+                  type="date"
+                  value="${todayValue}"
+                  class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
+                >
+              </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-2 mt-2">
-                  <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.origin}</label>
-                    <input type="hidden" name="manualOrigin" value="phone">
+              <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.time}</label>
+                <input
+                  name="orderTime"
+                  type="time"
+                  value="${nextTimeValue}"
+                  class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
+                >
+              </div>
 
-                    <div class="grid grid-cols-4 gap-1.5" data-manual-order-origin-group>
-                      <button type="button" data-manual-order-origin="phone" class="manual-order-origin-btn rounded-xl border border-gold bg-gold text-black px-2 py-2 text-xs font-extrabold transition-all">
-                        ${texts.originPhone}
-                      </button>
+              <div class="md:col-span-2">
+                <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.origin}</label>
+                <input type="hidden" name="manualOrigin" value="phone">
 
-                      <button type="button" data-manual-order-origin="counter" class="manual-order-origin-btn rounded-xl border border-white/10 bg-black/30 text-cream px-2 py-2 text-xs font-semibold hover:border-gold/50 transition-all">
-                        ${texts.originCounter}
-                      </button>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" data-manual-order-origin-group>
+                  <button type="button" data-manual-order-origin="phone" class="manual-order-origin-btn rounded-xl border border-gold bg-gold text-black px-3 py-3 text-sm font-extrabold transition-all">
+                    ${texts.originPhone}
+                  </button>
 
-                      <button type="button" data-manual-order-origin="whatsapp" class="manual-order-origin-btn rounded-xl border border-white/10 bg-black/30 text-cream px-2 py-2 text-xs font-semibold hover:border-gold/50 transition-all">
-                        ${texts.originWhatsapp}
-                      </button>
+                  <button type="button" data-manual-order-origin="counter" class="manual-order-origin-btn rounded-xl border border-white/10 bg-black/30 text-cream px-3 py-3 text-sm font-semibold hover:border-gold/50 transition-all">
+                    ${texts.originCounter}
+                  </button>
 
-                      <button type="button" data-manual-order-origin="other" class="manual-order-origin-btn rounded-xl border border-white/10 bg-black/30 text-cream px-2 py-2 text-xs font-semibold hover:border-gold/50 transition-all">
-                        ${texts.originOther}
-                      </button>
-                    </div>
-                  </div>
+                  <button type="button" data-manual-order-origin="whatsapp" class="manual-order-origin-btn rounded-xl border border-white/10 bg-black/30 text-cream px-3 py-3 text-sm font-semibold hover:border-gold/50 transition-all">
+                    ${texts.originWhatsapp}
+                  </button>
 
-                  <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.note}</label>
-                    <input
-                      name="orderNote"
-                      type="text"
-                      placeholder="${texts.notePlaceholder}"
-                      class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-2.5 text-cream outline-none focus:border-gold/70"
-                    >
-                  </div>
+                  <button type="button" data-manual-order-origin="other" class="manual-order-origin-btn rounded-xl border border-white/10 bg-black/30 text-cream px-3 py-3 text-sm font-semibold hover:border-gold/50 transition-all">
+                    ${texts.originOther}
+                  </button>
                 </div>
               </div>
 
-              <div class="xl:hidden sticky top-0 z-20 rounded-2xl border border-gold/30 bg-[#17130b]/95 backdrop-blur px-4 py-3 shadow-lg">
-                <div class="flex items-center justify-between gap-3">
-                  <div>
-                    <div class="text-[10px] uppercase tracking-wide text-gold/75 font-extrabold">${summaryLabel}</div>
-                    <div class="text-sm font-bold text-cream" data-manual-order-mobile-count>0 ${itemCountLabel}</div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-[10px] uppercase tracking-wide text-gold/75 font-extrabold">${texts.total}</div>
-                    <div class="text-xl font-extrabold text-gold" data-manual-order-mobile-total>0,00 €</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="rounded-2xl border border-white/10 bg-black/25 p-3">
-                <div class="flex items-center justify-between gap-3 mb-3">
-                  <h4 class="text-sm font-extrabold text-cream">${texts.menu}</h4>
-                  <span class="text-xs font-bold text-gold">${menuItems.length} ${itemCountLabel}</span>
-                </div>
-
-                <div class="flex gap-2 overflow-x-auto pb-2 mb-3" data-manual-order-category-list>
-                  ${categories.map((category) => `
-                    <button
-                      type="button"
-                      data-manual-order-category="${escapeRequestDetailsHtml(category.id)}"
-                      class="manual-order-category-btn shrink-0 rounded-full border px-4 py-2 text-xs font-extrabold transition-all ${
-                        category.id === 'all'
-                          ? 'border-gold bg-gold text-black'
-                          : 'border-white/10 bg-black/30 text-cream hover:border-gold/50'
-                      }"
-                    >
-                      ${escapeRequestDetailsHtml(category.name)}
-                    </button>
-                  `).join('')}
-                </div>
-
-                <div
-                  class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"
-                  data-manual-order-menu-list
-                ></div>
+              <div class="md:col-span-2">
+                <label class="block text-[10px] font-bold uppercase tracking-wide text-gold/80 mb-1">${texts.note}</label>
+                <input
+                  name="orderNote"
+                  type="text"
+                  placeholder="${texts.notePlaceholder}"
+                  class="w-full rounded-xl border border-white/10 bg-black/35 px-3 py-3 text-cream outline-none focus:border-gold/70"
+                >
               </div>
             </div>
+          </div>
 
-            <aside class="rounded-2xl border border-gold/25 bg-gold/6 p-3 flex flex-col min-h-[280px] xl:sticky xl:top-0 xl:self-start xl:max-h-[calc(96vh-150px)]">
-              <div class="flex items-center justify-between gap-3 mb-3">
-                <div>
-                  <h4 class="text-sm font-extrabold text-cream">${texts.cart}</h4>
-                  <p class="text-xs font-semibold text-cream/50" data-manual-order-count>0 ${itemCountLabel}</p>
+          <div data-manual-order-cashier-panel class="hidden">
+            <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-4">
+              <div class="space-y-3 min-w-0">
+                <div class="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="text-[10px] uppercase tracking-wide text-gold/75 font-extrabold">${infoStepLabel}</div>
+                    <div class="text-sm font-bold text-cream truncate" data-manual-order-info-summary></div>
+                  </div>
+
+                  <button
+                    type="button"
+                    data-manual-order-edit-info
+                    class="btn-action rounded-2xl border border-gold/35 bg-gold/10 px-4 py-2 text-sm font-extrabold text-gold hover:bg-gold/15 transition-all"
+                  >
+                    ${editInfoLabel}
+                  </button>
                 </div>
 
-                <div class="text-right">
-                  <div class="text-[10px] uppercase tracking-wide text-gold/70 font-bold">${texts.total}</div>
-                  <div class="text-2xl font-extrabold text-gold" data-manual-order-total>0,00 €</div>
+                <div class="xl:hidden sticky top-0 z-20 rounded-2xl border border-gold/30 bg-[#17130b]/95 backdrop-blur px-4 py-3 shadow-lg">
+                  <div class="flex items-center justify-between gap-3">
+                    <div>
+                      <div class="text-[10px] uppercase tracking-wide text-gold/75 font-extrabold">${summaryLabel}</div>
+                      <div class="text-sm font-bold text-cream" data-manual-order-mobile-count>0 ${itemCountLabel}</div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-[10px] uppercase tracking-wide text-gold/75 font-extrabold">${texts.total}</div>
+                      <div class="text-xl font-extrabold text-gold" data-manual-order-mobile-total>0,00 €</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rounded-2xl border border-white/10 bg-black/25 p-3">
+                  <div class="flex items-center justify-between gap-3 mb-3">
+                    <h4 class="text-sm font-extrabold text-cream">${texts.menu}</h4>
+                    <span class="text-xs font-bold text-gold">${menuItems.length} ${itemCountLabel}</span>
+                  </div>
+
+                  <div class="flex gap-2 overflow-x-auto pb-2 mb-3" data-manual-order-category-list>
+                    ${categories.map((category) => `
+                      <button
+                        type="button"
+                        data-manual-order-category="${escapeRequestDetailsHtml(category.id)}"
+                        class="manual-order-category-btn shrink-0 rounded-full border px-4 py-2 text-xs font-extrabold transition-all ${
+                          category.id === 'all'
+                            ? 'border-gold bg-gold text-black'
+                            : 'border-white/10 bg-black/30 text-cream hover:border-gold/50'
+                        }"
+                      >
+                        ${escapeRequestDetailsHtml(category.name)}
+                      </button>
+                    `).join('')}
+                  </div>
+
+                  <div
+                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"
+                    data-manual-order-menu-list
+                  ></div>
                 </div>
               </div>
 
-              <div class="space-y-2 overflow-y-auto pr-1 flex-1" data-manual-order-cart-list>
-                <div class="rounded-2xl border border-white/10 bg-black/20 px-4 py-5 text-sm font-semibold text-cream/65">
-                  ${texts.emptyCart}
+              <aside class="rounded-2xl border border-gold/25 bg-gold/6 p-3 flex flex-col min-h-[280px] xl:sticky xl:top-0 xl:self-start xl:max-h-[calc(96vh-150px)]">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <h4 class="text-sm font-extrabold text-cream">${texts.cart}</h4>
+                    <p class="text-xs font-semibold text-cream/50" data-manual-order-count>0 ${itemCountLabel}</p>
+                  </div>
+
+                  <div class="text-right">
+                    <div class="text-[10px] uppercase tracking-wide text-gold/70 font-bold">${texts.total}</div>
+                    <div class="text-2xl font-extrabold text-gold" data-manual-order-total>0,00 €</div>
+                  </div>
                 </div>
-              </div>
-            </aside>
+
+                <div class="space-y-2 overflow-y-auto pr-1 flex-1" data-manual-order-cart-list>
+                  <div class="rounded-2xl border border-white/10 bg-black/20 px-4 py-5 text-sm font-semibold text-cream/65">
+                    ${texts.emptyCart}
+                  </div>
+                </div>
+              </aside>
+            </div>
           </div>
         </div>
 
@@ -5331,8 +5392,17 @@ function openManualOrderModal() {
             </button>
 
             <button
-              type="submit"
+              type="button"
+              data-manual-order-continue
               class="btn-action px-6 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all"
+            >
+              ${continueLabel}
+            </button>
+
+            <button
+              type="submit"
+              data-manual-order-submit
+              class="hidden btn-action px-6 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all"
             >
               ${texts.save}
             </button>
@@ -5357,6 +5427,14 @@ function openManualOrderModal() {
   const mobileCountBox = overlay.querySelector('[data-manual-order-mobile-count]');
   const footerTotalBox = overlay.querySelector('[data-manual-order-footer-total]');
   const footerCountBox = overlay.querySelector('[data-manual-order-footer-count]');
+  const infoPanel = overlay.querySelector('[data-manual-order-info-panel]');
+  const cashierPanel = overlay.querySelector('[data-manual-order-cashier-panel]');
+  const continueButton = overlay.querySelector('[data-manual-order-continue]');
+  const submitButton = overlay.querySelector('[data-manual-order-submit]');
+  const editInfoButton = overlay.querySelector('[data-manual-order-edit-info]');
+  const infoStepPill = overlay.querySelector('[data-manual-order-step-pill="info"]');
+  const cashierStepPill = overlay.querySelector('[data-manual-order-step-pill="cashier"]');
+  const infoSummary = overlay.querySelector('[data-manual-order-info-summary]');
 
   const showManualOrderFormError = (message, selector) => {
     if (manualOrderErrorBox) {
@@ -5376,6 +5454,83 @@ function openManualOrderModal() {
     if (manualOrderErrorBox) {
       manualOrderErrorBox.textContent = '';
       manualOrderErrorBox.classList.add('hidden');
+    }
+  };
+
+  const getManualOrderFormSnapshot = () => {
+    const formData = new FormData(form);
+
+    return {
+      customerName: String(formData.get('customerName') || '').trim(),
+      customerPhone: String(formData.get('customerPhone') || '').trim(),
+      orderDate: String(formData.get('orderDate') || '').trim(),
+      orderTime: String(formData.get('orderTime') || '').trim(),
+      manualOrigin: String(formData.get('manualOrigin') || 'phone'),
+      orderNote: String(formData.get('orderNote') || '').trim()
+    };
+  };
+
+  const validateManualOrderInfoStep = () => {
+    const currentTexts = getManualOrderTexts();
+    const snapshot = getManualOrderFormSnapshot();
+
+    clearManualOrderFormError();
+
+    if (!snapshot.customerName) {
+      showManualOrderFormError(currentTexts.required, 'input[name="customerName"]');
+      return false;
+    }
+
+    if (!snapshot.orderDate) {
+      showManualOrderFormError(currentTexts.dateRequired, 'input[name="orderDate"]');
+      return false;
+    }
+
+    if (!snapshot.orderTime) {
+      showManualOrderFormError(currentTexts.timeRequired, 'input[name="orderTime"]');
+      return false;
+    }
+
+    return true;
+  };
+
+  const updateManualOrderInfoSummary = () => {
+    if (!infoSummary) return;
+
+    const snapshot = getManualOrderFormSnapshot();
+    const phonePart = snapshot.customerPhone ? ` · ${snapshot.customerPhone}` : '';
+    const notePart = snapshot.orderNote ? ` · ${snapshot.orderNote}` : '';
+
+    infoSummary.textContent = `${snapshot.customerName}${phonePart} · ${snapshot.orderDate} ${snapshot.orderTime}${notePart}`;
+  };
+
+  const setManualOrderStep = (nextStep) => {
+    manualOrderStep = nextStep;
+
+    const isInfoStep = manualOrderStep === 'info';
+
+    infoPanel?.classList.toggle('hidden', !isInfoStep);
+    cashierPanel?.classList.toggle('hidden', isInfoStep);
+    continueButton?.classList.toggle('hidden', !isInfoStep);
+    submitButton?.classList.toggle('hidden', isInfoStep);
+
+    infoStepPill?.classList.toggle('border-gold', isInfoStep);
+    infoStepPill?.classList.toggle('bg-gold', isInfoStep);
+    infoStepPill?.classList.toggle('text-black', isInfoStep);
+    infoStepPill?.classList.toggle('border-white/10', !isInfoStep);
+    infoStepPill?.classList.toggle('bg-black/30', !isInfoStep);
+    infoStepPill?.classList.toggle('text-cream', !isInfoStep);
+
+    cashierStepPill?.classList.toggle('border-gold', !isInfoStep);
+    cashierStepPill?.classList.toggle('bg-gold', !isInfoStep);
+    cashierStepPill?.classList.toggle('text-black', !isInfoStep);
+    cashierStepPill?.classList.toggle('border-white/10', isInfoStep);
+    cashierStepPill?.classList.toggle('bg-black/30', isInfoStep);
+    cashierStepPill?.classList.toggle('text-cream', isInfoStep);
+
+    if (!isInfoStep) {
+      updateManualOrderInfoSummary();
+      renderManualOrderCart();
     }
   };
 
@@ -5529,6 +5684,19 @@ function openManualOrderModal() {
     }
   });
 
+  continueButton?.addEventListener('click', () => {
+    if (!validateManualOrderInfoStep()) {
+      return;
+    }
+
+    setManualOrderStep('cashier');
+  });
+
+  editInfoButton?.addEventListener('click', () => {
+    clearManualOrderFormError();
+    setManualOrderStep('info');
+  });
+
   manualOriginButtons.forEach((button) => {
     button.addEventListener('click', () => {
       clearManualOrderFormError();
@@ -5649,25 +5817,16 @@ function openManualOrderModal() {
     event.preventDefault();
 
     const currentTexts = getManualOrderTexts();
-    const formData = new FormData(form);
-    const customerName = String(formData.get('customerName') || '').trim();
-    const orderDate = String(formData.get('orderDate') || '').trim();
-    const orderTime = String(formData.get('orderTime') || '').trim();
 
-    clearManualOrderFormError();
+    if (manualOrderStep !== 'cashier') {
+      if (validateManualOrderInfoStep()) {
+        setManualOrderStep('cashier');
+      }
 
-    if (!customerName) {
-      showManualOrderFormError(currentTexts.required, 'input[name="customerName"]');
       return;
     }
 
-    if (!orderDate) {
-      showManualOrderFormError(currentTexts.dateRequired, 'input[name="orderDate"]');
-      return;
-    }
-
-    if (!orderTime) {
-      showManualOrderFormError(currentTexts.timeRequired, 'input[name="orderTime"]');
+    if (!validateManualOrderInfoStep()) {
       return;
     }
 
@@ -5675,8 +5834,6 @@ function openManualOrderModal() {
       showManualOrderFormError(currentTexts.itemsRequired);
       return;
     }
-
-    const submitButton = form.querySelector('button[type="submit"]');
 
     if (submitButton) {
       submitButton.disabled = true;
@@ -5706,6 +5863,7 @@ function openManualOrderModal() {
   });
 
   renderManualOrderCart();
+  setManualOrderStep('info');
 
   if (window.lucide) {
     requestAnimationFrame(() => lucide.createIcons());
@@ -5715,6 +5873,7 @@ function openManualOrderModal() {
     overlay.querySelector('input[name="customerName"]')?.focus();
   }, 80);
 }
+
 function removeRequestDetailsModal() {
   const existingModal = document.getElementById('restaurant-request-details-modal');
   if (existingModal) {
