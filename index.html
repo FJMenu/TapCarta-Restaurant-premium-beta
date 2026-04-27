@@ -4019,6 +4019,8 @@ function syncRequestsState() {
   activeReservations = activeRequests.filter(item => item.type === t.restaurantTypeBooking);
 }
 
+window.syncRequestsState = syncRequestsState;
+
 syncRequestsState();
 
 if (!window.tapCartaRestaurantLiveBookingBootstrapDone) {
