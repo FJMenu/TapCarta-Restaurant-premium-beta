@@ -7030,15 +7030,58 @@ window.closeRequestWithoutCompletion = async function(requestId) {
 
   const confirmed = await showRestaurantConfirmDialog({
     title: isOrder
-      ? (currentLang === 'es' ? 'Confirmar pedido no servido' : currentLang === 'en' ? 'Confirm order not served' : currentLang === 'nl' ? 'Niet-geserveerde bestelling bevestigen' : 'Confirmer commande non servie')
-      : (currentLang === 'es' ? 'Confirmar cliente no presentado' : currentLang === 'en' ? 'Confirm client did not come' : currentLang === 'nl' ? 'Bevestigen dat klant niet gekomen is' : 'Confirmer client non venu'),
+      ? (currentLang === 'es'
+          ? 'Confirmar pedido no servido'
+          : currentLang === 'en'
+            ? 'Confirm order not served'
+            : currentLang === 'nl'
+              ? 'Niet-geserveerde bestelling bevestigen'
+              : 'Confirmer commande non servie')
+      : (currentLang === 'es'
+          ? 'Confirmar cliente no presentado'
+          : currentLang === 'en'
+            ? 'Confirm client did not come'
+            : currentLang === 'nl'
+              ? 'Bevestigen dat klant niet gekomen is'
+              : 'Confirmer client non venu'),
     message: isOrder
-      ? (currentLang === 'es' ? 'Esta acción enviará el pedido al historial como no servido.' : currentLang === 'en' ? 'This will move the order to history as not served.' : currentLang === 'nl' ? 'Deze actie zet de bestelling in de geschiedenis als niet geserveerd.' : 'Cette action enverra la commande en historique comme non servie.')
-      : (currentLang === 'es' ? 'Esta acción enviará la reserva al historial como cliente no presentado.' : currentLang === 'en' ? 'This will move the booking to history as client did not come.' : currentLang === 'nl' ? 'Deze actie zet de reservatie in de geschiedenis als klant niet gekomen.' : 'Cette action enverra la réservation en historique comme client non venu.'),
+      ? (currentLang === 'es'
+          ? 'Esta acción enviará el pedido al historial como no servido.'
+          : currentLang === 'en'
+            ? 'This will move the order to history as not served.'
+            : currentLang === 'nl'
+              ? 'Deze actie zet de bestelling in de geschiedenis als niet geserveerd.'
+              : 'Cette action enverra la commande en historique comme non servie.')
+      : (currentLang === 'es'
+          ? 'Esta acción enviará la reserva al historial como cliente no presentado.'
+          : currentLang === 'en'
+            ? 'This will move the booking to history as client did not come.'
+            : currentLang === 'nl'
+              ? 'Deze actie zet de reservatie in de geschiedenis als klant niet gekomen.'
+              : 'Cette action enverra la réservation en historique comme client non venu.'),
     confirmLabel: isOrder
-      ? (currentLang === 'es' ? 'Pedido no servido' : currentLang === 'en' ? 'Order not served' : currentLang === 'nl' ? 'Bestelling niet geserveerd' : 'Commande non servie')
-      : (currentLang === 'es' ? 'Cliente no presentado' : currentLang === 'en' ? 'Client did not come' : currentLang === 'nl' ? 'Klant niet gekomen' : 'Client non venu'),
-    cancelLabel: currentLang === 'es' ? 'Cancelar' : currentLang === 'en' ? 'Cancel' : currentLang === 'nl' ? 'Annuleren' : 'Annuler',
+      ? (currentLang === 'es'
+          ? 'Pedido no servido'
+          : currentLang === 'en'
+            ? 'Order not served'
+            : currentLang === 'nl'
+              ? 'Bestelling niet geserveerd'
+              : 'Commande non servie')
+      : (currentLang === 'es'
+          ? 'Cliente no presentado'
+          : currentLang === 'en'
+            ? 'Client did not come'
+            : currentLang === 'nl'
+              ? 'Klant niet gekomen'
+              : 'Client non venu'),
+    cancelLabel:
+      currentLang === 'es'
+        ? 'Cancelar'
+        : currentLang === 'en'
+          ? 'Cancel'
+          : currentLang === 'nl'
+            ? 'Annuleren'
+            : 'Annuler',
     danger: true
   });
 
@@ -7051,6 +7094,7 @@ window.closeRequestWithoutCompletion = async function(requestId) {
   item.treated = true;
   item.status = t.restaurantStatusProcessed;
   item.sourceRequest.updatedAt = nowIso;
+  item.sourceRequest.historyUpdatedAt = nowIso;
 
   if (isOrder) {
     item.sourceRequest.status = 'not_served';
@@ -7086,81 +7130,8 @@ window.closeRequestWithoutCompletion = async function(requestId) {
     };
   }
 
-  void persistRestaurantRequestUpdate(item.sourceRequest);
-  syncRequestsState();
-  notifyIfNewActionRequests();
-  renderMenu();
-};
+  await persistRestaurantRequestUpdate(item.sourceRequest);
 
-window.closeRequestWithoutCompletion = async function(requestId) {
-  const item = requestsData.find((entry) => String(entry.id) === String(requestId));
-
-  if (!item || !item.sourceRequest) {
-    alert(t.restaurantRequestNotFound);
-    return;
-  }
-
-  const isOrder = !!item.sourceRequest?.order;
-
-  const confirmed = await showRestaurantConfirmDialog({
-    title: isOrder
-      ? (currentLang === 'es' ? 'Confirmar pedido no servido' : currentLang === 'en' ? 'Confirm order not served' : currentLang === 'nl' ? 'Niet-geserveerde bestelling bevestigen' : 'Confirmer commande non servie')
-      : (currentLang === 'es' ? 'Confirmar cliente no presentado' : currentLang === 'en' ? 'Confirm client did not come' : currentLang === 'nl' ? 'Bevestigen dat klant niet gekomen is' : 'Confirmer client non venu'),
-    message: isOrder
-      ? (currentLang === 'es' ? 'Esta acción enviará el pedido al historial como no servido.' : currentLang === 'en' ? 'This will move the order to history as not served.' : currentLang === 'nl' ? 'Deze actie zet de bestelling in de geschiedenis als niet geserveerd.' : 'Cette action enverra la commande en historique comme non servie.')
-      : (currentLang === 'es' ? 'Esta acción enviará la reserva al historial como cliente no presentado.' : currentLang === 'en' ? 'This will move the booking to history as client did not come.' : currentLang === 'nl' ? 'Deze actie zet de reservatie in de geschiedenis als klant niet gekomen.' : 'Cette action enverra la réservation en historique comme client non venu.'),
-    confirmLabel: isOrder
-      ? (currentLang === 'es' ? 'Pedido no servido' : currentLang === 'en' ? 'Order not served' : currentLang === 'nl' ? 'Bestelling niet geserveerd' : 'Commande non servie')
-      : (currentLang === 'es' ? 'Cliente no presentado' : currentLang === 'en' ? 'Client did not come' : currentLang === 'nl' ? 'Klant niet gekomen' : 'Client non venu'),
-    cancelLabel: currentLang === 'es' ? 'Cancelar' : currentLang === 'en' ? 'Cancel' : currentLang === 'nl' ? 'Annuleren' : 'Annuler',
-    danger: true
-  });
-
-  if (!confirmed) {
-    return;
-  }
-
-  const nowIso = new Date().toISOString();
-
-  item.treated = true;
-  item.status = t.restaurantStatusProcessed;
-  item.sourceRequest.updatedAt = nowIso;
-
-  if (isOrder) {
-    item.sourceRequest.status = 'not_served';
-    item.sourceRequest.notServedAt = nowIso;
-    item.sourceRequest.restaurantResponse = {
-      ...(item.sourceRequest.restaurantResponse || {}),
-      reason: 'not_served',
-      message:
-        currentLang === 'es'
-          ? 'Pedido no servido.'
-          : currentLang === 'en'
-            ? 'Order not served.'
-            : currentLang === 'nl'
-              ? 'Bestelling niet geserveerd.'
-              : 'Commande non servie.',
-      updatedBy: 'restaurant'
-    };
-  } else {
-    item.sourceRequest.status = 'not_arrived';
-    item.sourceRequest.notArrivedAt = nowIso;
-    item.sourceRequest.restaurantResponse = {
-      ...(item.sourceRequest.restaurantResponse || {}),
-      reason: 'client_not_arrived',
-      message:
-        currentLang === 'es'
-          ? 'Cliente no presentado.'
-          : currentLang === 'en'
-            ? 'Client did not come.'
-            : currentLang === 'nl'
-              ? 'Klant niet gekomen.'
-              : 'Client non venu.',
-      updatedBy: 'restaurant'
-    };
-  }
-
-  void persistRestaurantRequestUpdate(item.sourceRequest);
   syncRequestsState();
   notifyIfNewActionRequests();
   renderMenu();
