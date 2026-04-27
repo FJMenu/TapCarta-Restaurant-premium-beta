@@ -2671,9 +2671,14 @@ window.tapCartaRestaurantLiveBookingSyncState = window.tapCartaRestaurantLiveBoo
 
 window.tapCartaRestaurantLiveBookingBootstrapDone = window.tapCartaRestaurantLiveBookingBootstrapDone || false;
 
+window.tapCartaRestaurantLiveRequestsCache = window.tapCartaRestaurantLiveRequestsCache || {
+  bookings: [],
+  orders: [],
+  updatedAt: null,
+  error: null
+};
+
 async function syncLiveBookingsToLocalStorage() {
-  const bookingStorageKey = 'tapcarta_booking_requests';
-  const orderStorageKey = 'tapcarta_order_requests';
   const activeRestaurantId =
     activeRestaurantData?.identity?.id ||
     activeRestaurantData?.id ||
@@ -2685,6 +2690,45 @@ async function syncLiveBookingsToLocalStorage() {
   }
 
   window.tapCartaRestaurantLiveBookingSyncState.isSyncing = true;
+
+  function normalizeRestaurantResponse(row) {
+    const rawRestaurantResponse =
+      row?.restaurant_response && typeof row.restaurant_response === 'object'
+        ? row.restaurant_response
+        : {};
+
+    return {
+      ...rawRestaurantResponse,
+      reason: rawRestaurantResponse.reason || row?.status || '',
+      message: rawRestaurantResponse.message || row?.restaurant_message || '',
+      updatedBy:
+        rawRestaurantResponse.updatedBy ||
+        (row?.restaurant_message ? 'restaurant' : ''),
+      proposal: rawRestaurantResponse.proposal || null
+    };
+  }
+
+  function buildFinalTimestamps(row) {
+    const status = row?.status || '';
+    const updatedAt = row?.updated_at || null;
+
+    return {
+      confirmedAt: status === 'confirmed' ? updatedAt : null,
+      cancelledAt:
+        status === 'cancelled' || status === 'cancelled_by_client' || status === 'refused'
+          ? updatedAt
+          : null,
+      servedAt: status === 'served' ? updatedAt : null,
+      arrivedAt: status === 'arrived' ? updatedAt : null,
+      notServedAt: status === 'not_served' ? updatedAt : null,
+      notArrivedAt: status === 'not_arrived' ? updatedAt : null,
+      autoClosedAt:
+        status === 'service_unknown_no_action' || status === 'presence_unknown_no_action'
+          ? updatedAt
+          : null,
+      historyUpdatedAt: updatedAt
+    };
+  }
 
   function mapLiveBookingRowToRequest(row) {
     if (!row) return null;
@@ -2720,11 +2764,8 @@ async function syncLiveBookingsToLocalStorage() {
         preorderIndicativeEnabled: true,
         preorderItems
       },
-      restaurantResponse: {
-        reason: row.status || '',
-        message: row.restaurant_message || '',
-        updatedBy: row.restaurant_message ? 'restaurant' : ''
-      }
+      restaurantResponse: normalizeRestaurantResponse(row),
+      ...buildFinalTimestamps(row)
     };
   }
 
@@ -2750,7 +2791,8 @@ async function syncLiveBookingsToLocalStorage() {
       : [];
 
     const totalAmount = orderItems.reduce(
-      (sum, item) => sum + Number(item.lineTotal ?? (Number(item.price || 0) * Number(item.quantity || 1))),
+      (sum, item) =>
+        sum + Number(item.lineTotal ?? (Number(item.price || 0) * Number(item.quantity || 1))),
       0
     );
 
@@ -2774,98 +2816,9 @@ async function syncLiveBookingsToLocalStorage() {
         items: orderItems,
         totalAmount: Number(totalAmount.toFixed(2))
       },
-      restaurantResponse: {
-        reason: row.status || '',
-        message: row.restaurant_message || '',
-        updatedBy: row.restaurant_message ? 'restaurant' : ''
-      }
+      restaurantResponse: normalizeRestaurantResponse(row),
+      ...buildFinalTimestamps(row)
     };
-  }
-
-  function mergeLiveItemsWithLocalCache({ safeItems, liveItems, requestType, activeRestaurantId }) {
-    const itemMap = new Map();
-
-    safeItems.forEach((item) => {
-      if (
-        item &&
-        item.requestType === requestType &&
-        String(item.restaurantId || '') === String(activeRestaurantId) &&
-        item.requestId
-      ) {
-        itemMap.set(String(item.requestId), item);
-      }
-    });
-
-    const finalLocalStatuses = [
-      'served',
-      'arrived',
-      'not_served',
-      'not_arrived',
-      'cancelled',
-      'cancelled_by_client',
-      'presence_unknown_no_action',
-      'service_unknown_no_action'
-    ];
-
-    const mergedLiveItems = Array.isArray(liveItems)
-      ? liveItems
-          .filter(Boolean)
-          .map((liveItem) => {
-            const existingItem = itemMap.get(String(liveItem.requestId));
-            const shouldKeepLocalFinalStatus =
-              existingItem &&
-              finalLocalStatuses.includes(existingItem.status) &&
-              !finalLocalStatuses.includes(liveItem.status);
-
-            if (shouldKeepLocalFinalStatus) {
-              return {
-                ...liveItem,
-                ...existingItem,
-                restaurantResponse: {
-                  ...(liveItem.restaurantResponse || {}),
-                  ...(existingItem.restaurantResponse || {})
-                }
-              };
-            }
-
-            return {
-              ...(existingItem || {}),
-              ...liveItem,
-              confirmedAt:
-                existingItem?.confirmedAt ||
-                (liveItem.status === 'confirmed' ? liveItem.updatedAt : null),
-              cancelledAt:
-                existingItem?.cancelledAt ||
-                (liveItem.status === 'cancelled' ? liveItem.updatedAt : null),
-              arrivedAt: existingItem?.arrivedAt || null,
-              notArrivedAt: existingItem?.notArrivedAt || null,
-              servedAt: existingItem?.servedAt || null,
-              notServedAt: existingItem?.notServedAt || null,
-              autoClosedAt: existingItem?.autoClosedAt || null,
-              historyDeleted: existingItem?.historyDeleted === true,
-              historyUpdatedAt: existingItem?.historyUpdatedAt || null,
-              restaurantResponse: {
-                ...(existingItem?.restaurantResponse || {}),
-                ...(liveItem.restaurantResponse || {})
-              }
-            };
-          })
-      : [];
-
-    const keptLocalItems = safeItems.filter((item) => {
-      const isActiveRestaurantSameType =
-        item &&
-        item.requestType === requestType &&
-        String(item.restaurantId || '') === String(activeRestaurantId);
-
-      if (!isActiveRestaurantSameType) {
-        return true;
-      }
-
-      return !item.liveRequestId;
-    });
-
-    return [...keptLocalItems, ...mergedLiveItems];
   }
 
   try {
@@ -2887,14 +2840,6 @@ async function syncLiveBookingsToLocalStorage() {
     if (bookingsError) throw bookingsError;
     if (ordersError) throw ordersError;
 
-    const rawBookings = localStorage.getItem(bookingStorageKey);
-    const parsedBookings = rawBookings ? JSON.parse(rawBookings) : [];
-    const safeBookings = Array.isArray(parsedBookings) ? parsedBookings : [];
-
-    const rawOrders = localStorage.getItem(orderStorageKey);
-    const parsedOrders = rawOrders ? JSON.parse(rawOrders) : [];
-    const safeOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
-
     const liveBookings = Array.isArray(bookingsData)
       ? bookingsData.map(mapLiveBookingRowToRequest).filter(Boolean)
       : [];
@@ -2903,39 +2848,26 @@ async function syncLiveBookingsToLocalStorage() {
       ? ordersData.map(mapLiveOrderRowToRequest).filter(Boolean)
       : [];
 
-    localStorage.setItem(
-      bookingStorageKey,
-      JSON.stringify(
-        mergeLiveItemsWithLocalCache({
-          safeItems: safeBookings,
-          liveItems: liveBookings,
-          requestType: 'booking',
-          activeRestaurantId
-        })
-      )
-    );
-
-    localStorage.setItem(
-      orderStorageKey,
-      JSON.stringify(
-        mergeLiveItemsWithLocalCache({
-          safeItems: safeOrders,
-          liveItems: liveOrders,
-          requestType: 'order',
-          activeRestaurantId
-        })
-      )
-    );
+    window.tapCartaRestaurantLiveRequestsCache = {
+      bookings: liveBookings,
+      orders: liveOrders,
+      updatedAt: new Date().toISOString(),
+      error: null
+    };
   } catch (error) {
-    console.warn('TapCarta Restaurant: impossible de synchroniser les demandes live', error);
+    window.tapCartaRestaurantLiveRequestsCache = {
+      ...(window.tapCartaRestaurantLiveRequestsCache || {}),
+      error,
+      updatedAt: window.tapCartaRestaurantLiveRequestsCache?.updatedAt || null
+    };
+
+    console.warn('TapCarta Restaurant: impossible de charger les demandes live Supabase', error);
   } finally {
     window.tapCartaRestaurantLiveBookingSyncState.isSyncing = false;
   }
 }
 
 function loadRestaurantRequests() {
-  const bookingStorageKey = 'tapcarta_booking_requests';
-  const orderStorageKey = 'tapcarta_order_requests';
   const historyRetentionMs = 30 * 24 * 60 * 60 * 1000;
   const activeRestaurantId =
     activeRestaurantData?.identity?.id ||
@@ -2943,8 +2875,24 @@ function loadRestaurantRequests() {
     siteConfig?.identity?.id ||
     '';
 
-  const bookingActiveStatuses = ['pending', 'modified', 'accepted_by_client', 'rejected_by_client', 'confirmed'];
-  const orderActiveStatuses = ['pending', 'sent', 'modified', 'accepted_by_client', 'rejected_by_client', 'confirmed'];
+  const bookingActiveStatuses = [
+    'pending',
+    'processing',
+    'modified',
+    'accepted_by_client',
+    'rejected_by_client',
+    'confirmed'
+  ];
+
+  const orderActiveStatuses = [
+    'pending',
+    'sent',
+    'processing',
+    'modified',
+    'accepted_by_client',
+    'rejected_by_client',
+    'confirmed'
+  ];
 
   function getHistoryReferenceTimestamp(item) {
     const rawValue =
@@ -2952,6 +2900,11 @@ function loadRestaurantRequests() {
       item?.updatedAt ||
       item?.confirmedAt ||
       item?.cancelledAt ||
+      item?.servedAt ||
+      item?.arrivedAt ||
+      item?.notServedAt ||
+      item?.notArrivedAt ||
+      item?.autoClosedAt ||
       item?.createdAt;
 
     const parsedValue = rawValue ? new Date(rawValue).getTime() : NaN;
@@ -2963,9 +2916,9 @@ function loadRestaurantRequests() {
     return Array.isArray(activeStatuses) && activeStatuses.includes(item.status);
   }
 
-  function shouldAutoDeleteHistory(item, activeStatuses) {
-    if (!item) return false;
-    if (item.historyDeleted === true) return false;
+  function shouldHideExpiredHistory(item, activeStatuses) {
+    if (!item) return true;
+    if (item.historyDeleted === true) return true;
     if (isRequestStillActive(item, activeStatuses)) return false;
     return (Date.now() - getHistoryReferenceTimestamp(item)) > historyRetentionMs;
   }
@@ -2985,48 +2938,33 @@ function loadRestaurantRequests() {
   }
 
   try {
-    const rawBookings = localStorage.getItem(bookingStorageKey);
-    const parsedBookings = rawBookings ? JSON.parse(rawBookings) : [];
+    const liveCache = window.tapCartaRestaurantLiveRequestsCache || {};
+    const safeBookings = Array.isArray(liveCache.bookings) ? liveCache.bookings : [];
+    const safeOrders = Array.isArray(liveCache.orders) ? liveCache.orders : [];
 
-    const rawOrders = localStorage.getItem(orderStorageKey);
-    const parsedOrders = rawOrders ? JSON.parse(rawOrders) : [];
-
-    const safeBookings = Array.isArray(parsedBookings) ? parsedBookings : [];
-    const safeOrders = Array.isArray(parsedOrders) ? parsedOrders : [];
-
-    const cleanedBookings = safeBookings.filter((item) => !shouldAutoDeleteHistory(item, bookingActiveStatuses));
-    const cleanedOrders = safeOrders.filter((item) => !shouldAutoDeleteHistory(item, orderActiveStatuses));
-
-    if (cleanedBookings.length !== safeBookings.length) {
-      localStorage.setItem(bookingStorageKey, JSON.stringify(cleanedBookings));
-    }
-
-    if (cleanedOrders.length !== safeOrders.length) {
-      localStorage.setItem(orderStorageKey, JSON.stringify(cleanedOrders));
-    }
-
-    const bookings = cleanedBookings
+    const bookings = safeBookings
       .filter(
         (item) =>
           item &&
-          item.historyDeleted !== true &&
           item.requestType === 'booking' &&
-          String(item.restaurantId || '') === String(activeRestaurantId)
+          String(item.restaurantId || '') === String(activeRestaurantId) &&
+          !shouldHideExpiredHistory(item, bookingActiveStatuses)
       )
       .map((item) => normalizeRequestItem(item, 'booking', bookingActiveStatuses, t.restaurantTypeBooking));
 
-    const orders = cleanedOrders
+    const orders = safeOrders
       .filter(
         (item) =>
           item &&
-          item.historyDeleted !== true &&
-          String(item.restaurantId || '') === String(activeRestaurantId)
+          item.requestType === 'order' &&
+          String(item.restaurantId || '') === String(activeRestaurantId) &&
+          !shouldHideExpiredHistory(item, orderActiveStatuses)
       )
       .map((item) => normalizeRequestItem(item, 'order', orderActiveStatuses, t.restaurantTypeOrder));
 
     return [...orders, ...bookings].sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
-    console.warn('TapCarta Restaurant: impossible de lire les demandes Standard', error);
+    console.warn('TapCarta Restaurant: impossible de lire les demandes live Supabase', error);
     return [];
   }
 }
