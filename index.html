@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.10';
+            const APP_VERSION = 'V1.2.11';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2704,7 +2704,15 @@ async function syncLiveBookingsToLocalStorage() {
       updatedBy:
         rawRestaurantResponse.updatedBy ||
         (row?.restaurant_message ? 'restaurant' : ''),
-      proposal: rawRestaurantResponse.proposal || null
+      proposal: rawRestaurantResponse.proposal || null,
+      historyDeleted:
+        rawRestaurantResponse.historyDeleted === true ||
+        rawRestaurantResponse.hiddenFromRestaurantHistory === true,
+      historyUpdatedAt:
+        rawRestaurantResponse.historyUpdatedAt ||
+        rawRestaurantResponse.hiddenFromRestaurantHistoryAt ||
+        row?.updated_at ||
+        null
     };
   }
 
@@ -2732,6 +2740,9 @@ async function syncLiveBookingsToLocalStorage() {
 
   function mapLiveBookingRowToRequest(row) {
     if (!row) return null;
+
+    const restaurantResponse = normalizeRestaurantResponse(row);
+    const finalTimestamps = buildFinalTimestamps(row);
 
     const preorderItems = Array.isArray(row.items)
       ? row.items.map((item) => ({
@@ -2764,13 +2775,18 @@ async function syncLiveBookingsToLocalStorage() {
         preorderIndicativeEnabled: true,
         preorderItems
       },
-      restaurantResponse: normalizeRestaurantResponse(row),
-      ...buildFinalTimestamps(row)
+      restaurantResponse,
+      ...finalTimestamps,
+      historyDeleted: restaurantResponse.historyDeleted === true,
+      historyUpdatedAt: restaurantResponse.historyUpdatedAt || finalTimestamps.historyUpdatedAt
     };
   }
 
   function mapLiveOrderRowToRequest(row) {
     if (!row) return null;
+
+    const restaurantResponse = normalizeRestaurantResponse(row);
+    const finalTimestamps = buildFinalTimestamps(row);
 
     const orderItems = Array.isArray(row.items)
       ? row.items.map((item) => {
@@ -2816,8 +2832,10 @@ async function syncLiveBookingsToLocalStorage() {
         items: orderItems,
         totalAmount: Number(totalAmount.toFixed(2))
       },
-      restaurantResponse: normalizeRestaurantResponse(row),
-      ...buildFinalTimestamps(row)
+      restaurantResponse,
+      ...finalTimestamps,
+      historyDeleted: restaurantResponse.historyDeleted === true,
+      historyUpdatedAt: restaurantResponse.historyUpdatedAt || finalTimestamps.historyUpdatedAt
     };
   }
 
@@ -7147,10 +7165,31 @@ window.deleteRequestFromHistory = async function(requestId) {
   }
 
   const confirmedDelete = await showRestaurantConfirmDialog({
-    title: currentLang === 'es' ? 'Retirar del historial visible' : currentLang === 'en' ? 'Remove from visible history' : currentLang === 'nl' ? 'Verwijderen uit zichtbare geschiedenis' : 'Retirer de l’historique visible',
+    title:
+      currentLang === 'es'
+        ? 'Retirar del historial visible'
+        : currentLang === 'en'
+          ? 'Remove from visible history'
+          : currentLang === 'nl'
+            ? 'Verwijderen uit zichtbare geschiedenis'
+            : 'Retirer de l’historique visible',
     message: t.restaurantHistoryDeleteOneConfirm,
-    confirmLabel: currentLang === 'es' ? 'Retirar' : currentLang === 'en' ? 'Remove' : currentLang === 'nl' ? 'Verwijderen' : 'Retirer',
-    cancelLabel: currentLang === 'es' ? 'Cancelar' : currentLang === 'en' ? 'Cancel' : currentLang === 'nl' ? 'Annuleren' : 'Annuler',
+    confirmLabel:
+      currentLang === 'es'
+        ? 'Retirar'
+        : currentLang === 'en'
+          ? 'Remove'
+          : currentLang === 'nl'
+            ? 'Verwijderen'
+            : 'Retirer',
+    cancelLabel:
+      currentLang === 'es'
+        ? 'Cancelar'
+        : currentLang === 'en'
+          ? 'Cancel'
+          : currentLang === 'nl'
+            ? 'Annuleren'
+            : 'Annuler',
     danger: true
   });
 
@@ -7163,9 +7202,31 @@ window.deleteRequestFromHistory = async function(requestId) {
   item.sourceRequest.historyDeleted = true;
   item.sourceRequest.historyUpdatedAt = nowIso;
   item.sourceRequest.updatedAt = nowIso;
+  item.sourceRequest.restaurantResponse = {
+    ...(item.sourceRequest.restaurantResponse || {}),
+    historyDeleted: true,
+    hiddenFromRestaurantHistory: true,
+    historyUpdatedAt: nowIso,
+    hiddenFromRestaurantHistoryAt: nowIso,
+    updatedBy: 'restaurant'
+  };
 
-  void persistRestaurantRequestUpdate(item.sourceRequest);
-  showRestaurantToast(currentLang === 'es' ? 'Retirado del historial visible.' : currentLang === 'en' ? 'Removed from visible history.' : currentLang === 'nl' ? 'Verwijderd uit zichtbare geschiedenis.' : 'Retiré de l’historique visible.', 'info');
+  await persistRestaurantRequestUpdate(item.sourceRequest);
+
+  requestsData = requestsData.filter((entry) => String(entry.id) !== String(requestId));
+  syncRequestsState();
+
+  showRestaurantToast(
+    currentLang === 'es'
+      ? 'Retirado del historial visible.'
+      : currentLang === 'en'
+        ? 'Removed from visible history.'
+        : currentLang === 'nl'
+          ? 'Verwijderd uit zichtbare geschiedenis.'
+          : 'Retiré de l’historique visible.',
+    'info'
+  );
+
   renderMenu();
 };
 
