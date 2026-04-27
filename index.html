@@ -4293,8 +4293,6 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
 
   try {
     if (!liveRequestId || !activeRestaurantId || typeof supabaseClient === 'undefined' || !supabaseClient) {
-      updateLiveMemoryCache();
-
       console.warn(
         isOrderRequest
           ? 'TapCarta Restaurant: commande non synchronisée, identifiant live ou restaurant manquant'
@@ -4306,7 +4304,7 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
         }
       );
 
-      return;
+      return false;
     }
 
     const livePayload = {
@@ -4346,12 +4344,14 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
         error
       );
 
-      return;
+      return false;
     }
 
     updateLiveMemoryCache();
+    return true;
   } catch (error) {
     console.warn('TapCarta Restaurant: impossible de persister la mise à jour Supabase', error);
+    return false;
   }
 }
 
