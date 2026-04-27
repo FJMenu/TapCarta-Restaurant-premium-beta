@@ -4182,110 +4182,154 @@ function getElapsedLabel(item) {
 
 async function persistRestaurantRequestUpdate(updatedRequest) {
   const isOrderRequest = !!updatedRequest?.order || updatedRequest?.requestType === 'order';
-  const isBookingRequest = !isOrderRequest;
-  const isLiveRequest = !!updatedRequest?.liveRequestId;
+  const requestType = isOrderRequest ? 'order' : 'booking';
+  const liveRequestId = updatedRequest?.liveRequestId || updatedRequest?.requestId || '';
 
-  const storageKey = isOrderRequest ? 'tapcarta_order_requests' : 'tapcarta_booking_requests';
-  const lastKey = isOrderRequest ? 'tapcarta_last_order_request' : 'tapcarta_last_booking_request';
+  const activeRestaurantId =
+    updatedRequest?.restaurantId ||
+    activeRestaurantData?.identity?.id ||
+    activeRestaurantData?.id ||
+    siteConfig?.identity?.id ||
+    '';
 
-  try {
-    const raw = localStorage.getItem(storageKey);
-    const parsed = raw ? JSON.parse(raw) : [];
+  const nowIso = new Date().toISOString();
+  const updatedAt = updatedRequest?.updatedAt || nowIso;
 
-    if (Array.isArray(parsed)) {
-      const updatedList = parsed.map((entry) => {
-        if (String(entry?.requestId) !== String(updatedRequest?.requestId)) {
-          return entry;
+  updatedRequest.updatedAt = updatedAt;
+
+  const restaurantResponse =
+    updatedRequest?.restaurantResponse && typeof updatedRequest.restaurantResponse === 'object'
+      ? {
+          ...updatedRequest.restaurantResponse,
+          message: updatedRequest.restaurantResponse.message || '',
+          updatedBy: updatedRequest.restaurantResponse.updatedBy || 'restaurant'
         }
+      : null;
 
-        return {
-          ...entry,
-          status: updatedRequest.status || entry.status,
-          updatedAt: updatedRequest.updatedAt || entry.updatedAt || new Date().toISOString(),
-          confirmedAt: updatedRequest.confirmedAt || entry.confirmedAt,
-          cancelledAt: updatedRequest.cancelledAt || entry.cancelledAt,
-          servedAt: updatedRequest.servedAt || entry.servedAt,
-          arrivedAt: updatedRequest.arrivedAt || entry.arrivedAt,
-          notServedAt: updatedRequest.notServedAt || entry.notServedAt,
-          notArrivedAt: updatedRequest.notArrivedAt || entry.notArrivedAt,
-          autoClosedAt: updatedRequest.autoClosedAt || entry.autoClosedAt,
-          historyDeleted: updatedRequest.historyDeleted === true ? true : entry.historyDeleted === true,
-          historyUpdatedAt: updatedRequest.historyUpdatedAt || entry.historyUpdatedAt,
-          restaurantResponse: {
-            ...(entry.restaurantResponse || {}),
-            ...(updatedRequest.restaurantResponse || {})
-          }
-        };
-      });
+  function updateLiveMemoryCache() {
+    const cache = window.tapCartaRestaurantLiveRequestsCache || {
+      bookings: [],
+      orders: [],
+      updatedAt: null,
+      error: null
+    };
 
-      localStorage.setItem(storageKey, JSON.stringify(updatedList));
-    }
+    const cacheKey = isOrderRequest ? 'orders' : 'bookings';
+    const currentList = Array.isArray(cache[cacheKey]) ? cache[cacheKey] : [];
 
-    const lastRaw = localStorage.getItem(lastKey);
-    const lastParsed = lastRaw ? JSON.parse(lastRaw) : null;
+    const updatedList = currentList.map((entry) => {
+      const sameRequest =
+        String(entry?.requestId || '') === String(updatedRequest?.requestId || '') ||
+        String(entry?.liveRequestId || '') === String(liveRequestId || '');
 
-    if (lastParsed && String(lastParsed.requestId) === String(updatedRequest?.requestId)) {
-      localStorage.setItem(
-        lastKey,
-        JSON.stringify({
-          ...lastParsed,
-          status: updatedRequest.status || lastParsed.status,
-          updatedAt: updatedRequest.updatedAt || lastParsed.updatedAt || new Date().toISOString(),
-          confirmedAt: updatedRequest.confirmedAt || lastParsed.confirmedAt,
-          cancelledAt: updatedRequest.cancelledAt || lastParsed.cancelledAt,
-          servedAt: updatedRequest.servedAt || lastParsed.servedAt,
-          arrivedAt: updatedRequest.arrivedAt || lastParsed.arrivedAt,
-          notServedAt: updatedRequest.notServedAt || lastParsed.notServedAt,
-          notArrivedAt: updatedRequest.notArrivedAt || lastParsed.notArrivedAt,
-          autoClosedAt: updatedRequest.autoClosedAt || lastParsed.autoClosedAt,
-          historyDeleted: updatedRequest.historyDeleted === true ? true : lastParsed.historyDeleted === true,
-          historyUpdatedAt: updatedRequest.historyUpdatedAt || lastParsed.historyUpdatedAt,
-          restaurantResponse: {
-            ...(lastParsed.restaurantResponse || {}),
-            ...(updatedRequest.restaurantResponse || {})
-          }
-        })
-      );
-    }
-
-    if (isLiveRequest) {
-      const livePayload = {
-        status: updatedRequest.status || 'pending',
-        updated_at: updatedRequest.updatedAt || new Date().toISOString(),
-        restaurant_message: updatedRequest?.restaurantResponse?.message || null
-      };
-
-      const activeRestaurantId =
-        updatedRequest?.restaurantId ||
-        activeRestaurantData?.identity?.id ||
-        activeRestaurantData?.id ||
-        siteConfig?.identity?.id ||
-        '';
-
-      let query = supabaseClient
-        .from('requests')
-        .update(livePayload)
-        .eq('id', updatedRequest.liveRequestId);
-
-      if (activeRestaurantId) {
-        query = query.eq('restaurant_id', activeRestaurantId);
+      if (!sameRequest) {
+        return entry;
       }
 
-      query = query.eq('type', isOrderRequest ? 'order' : 'booking');
+      return {
+        ...entry,
+        ...updatedRequest,
+        status: updatedRequest.status || entry.status,
+        updatedAt,
+        confirmedAt: updatedRequest.confirmedAt || entry.confirmedAt || null,
+        cancelledAt: updatedRequest.cancelledAt || entry.cancelledAt || null,
+        servedAt: updatedRequest.servedAt || entry.servedAt || null,
+        arrivedAt: updatedRequest.arrivedAt || entry.arrivedAt || null,
+        notServedAt: updatedRequest.notServedAt || entry.notServedAt || null,
+        notArrivedAt: updatedRequest.notArrivedAt || entry.notArrivedAt || null,
+        autoClosedAt: updatedRequest.autoClosedAt || entry.autoClosedAt || null,
+        historyDeleted: updatedRequest.historyDeleted === true ? true : entry.historyDeleted === true,
+        historyUpdatedAt: updatedRequest.historyUpdatedAt || entry.historyUpdatedAt || updatedAt,
+        restaurantResponse: {
+          ...(entry.restaurantResponse || {}),
+          ...(restaurantResponse || {})
+        }
+      };
+    });
 
-      const { error } = await query;
+    window.tapCartaRestaurantLiveRequestsCache = {
+      ...cache,
+      [cacheKey]: updatedList,
+      updatedAt,
+      error: null
+    };
+  }
 
-      if (error) {
+  async function runSupabaseUpdate(payload) {
+    let query = supabaseClient
+      .from('requests')
+      .update(payload)
+      .eq('id', liveRequestId)
+      .eq('type', requestType);
+
+    if (activeRestaurantId) {
+      query = query.eq('restaurant_id', activeRestaurantId);
+    }
+
+    return await query;
+  }
+
+  try {
+    if (!liveRequestId || !activeRestaurantId || typeof supabaseClient === 'undefined' || !supabaseClient) {
+      updateLiveMemoryCache();
+
+      console.warn(
+        isOrderRequest
+          ? 'TapCarta Restaurant: commande non synchronisée, identifiant live ou restaurant manquant'
+          : 'TapCarta Restaurant: réservation non synchronisée, identifiant live ou restaurant manquant',
+        {
+          liveRequestId,
+          activeRestaurantId,
+          requestType
+        }
+      );
+
+      return;
+    }
+
+    const livePayload = {
+      status: updatedRequest.status || 'pending',
+      updated_at: updatedAt,
+      restaurant_message: restaurantResponse?.message || null
+    };
+
+    if (restaurantResponse) {
+      livePayload.restaurant_response = restaurantResponse;
+    }
+
+    let { error } = await runSupabaseUpdate(livePayload);
+
+    if (error && livePayload.restaurant_response) {
+      const fallbackPayload = {
+        status: livePayload.status,
+        updated_at: livePayload.updated_at,
+        restaurant_message: livePayload.restaurant_message
+      };
+
+      const fallbackResult = await runSupabaseUpdate(fallbackPayload);
+      error = fallbackResult.error;
+
+      if (!error) {
         console.warn(
-          isOrderRequest
-            ? 'TapCarta Restaurant: impossible de synchroniser la commande live'
-            : 'TapCarta Restaurant: impossible de synchroniser la réservation live',
-          error
+          'TapCarta Restaurant: champ restaurant_response non accepté par Supabase, fallback restaurant_message utilisé.'
         );
       }
     }
+
+    if (error) {
+      console.warn(
+        isOrderRequest
+          ? 'TapCarta Restaurant: impossible de synchroniser la commande live'
+          : 'TapCarta Restaurant: impossible de synchroniser la réservation live',
+        error
+      );
+
+      return;
+    }
+
+    updateLiveMemoryCache();
   } catch (error) {
-    console.warn('TapCarta Restaurant: impossible de persister la mise à jour de demande', error);
+    console.warn('TapCarta Restaurant: impossible de persister la mise à jour Supabase', error);
   }
 }
 
@@ -4464,19 +4508,33 @@ function getManualBookingTexts() {
 }
 
 function saveManualBookingToLocalStorage(manualBooking) {
-  const storageKey = 'tapcarta_booking_requests';
-  const lastKey = 'tapcarta_last_booking_request';
+  if (!manualBooking?.liveRequestId) {
+    return false;
+  }
 
-  const raw = localStorage.getItem(storageKey);
-  const parsed = raw ? JSON.parse(raw) : [];
-  const safeList = Array.isArray(parsed) ? parsed : [];
+  const cache = window.tapCartaRestaurantLiveRequestsCache || {
+    bookings: [],
+    orders: [],
+    updatedAt: null,
+    error: null
+  };
 
-  const withoutDuplicate = safeList.filter(
-    (entry) => String(entry?.requestId) !== String(manualBooking.requestId)
+  const currentBookings = Array.isArray(cache.bookings) ? cache.bookings : [];
+
+  const withoutDuplicate = currentBookings.filter(
+    (entry) =>
+      String(entry?.requestId || '') !== String(manualBooking.requestId || '') &&
+      String(entry?.liveRequestId || '') !== String(manualBooking.liveRequestId || '')
   );
 
-  localStorage.setItem(storageKey, JSON.stringify([...withoutDuplicate, manualBooking]));
-  localStorage.setItem(lastKey, JSON.stringify(manualBooking));
+  window.tapCartaRestaurantLiveRequestsCache = {
+    ...cache,
+    bookings: [manualBooking, ...withoutDuplicate],
+    updatedAt: new Date().toISOString(),
+    error: null
+  };
+
+  return true;
 }
 
 async function createManualBookingInSupabase(manualBooking) {
@@ -4857,9 +4915,21 @@ function openManualBookingModal() {
 
     if (!syncedManualBooking.liveRequestId) {
       console.warn(
-        'TapCarta Restaurant: réservation manuelle visible localement, mais synchronisation Supabase non confirmée.',
+        'TapCarta Restaurant: réservation manuelle non enregistrée, synchronisation Supabase non confirmée.',
         syncedManualBooking
       );
+
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.classList.remove('opacity-60', 'pointer-events-none');
+      }
+
+      showManualBookingFormError(
+        'Impossible d’enregistrer la réservation pour le moment. Réessayez dans quelques instants.',
+        'input[name="customerName"]'
+      );
+
+      return;
     }
 
     saveManualBookingToLocalStorage(syncedManualBooking);
@@ -5028,19 +5098,33 @@ function getManualOrderAvailableMenuItems() {
 }
 
 function saveManualOrderToLocalStorage(manualOrder) {
-  const storageKey = 'tapcarta_order_requests';
-  const lastKey = 'tapcarta_last_order_request';
+  if (!manualOrder?.liveRequestId) {
+    return false;
+  }
 
-  const raw = localStorage.getItem(storageKey);
-  const parsed = raw ? JSON.parse(raw) : [];
-  const safeList = Array.isArray(parsed) ? parsed : [];
+  const cache = window.tapCartaRestaurantLiveRequestsCache || {
+    bookings: [],
+    orders: [],
+    updatedAt: null,
+    error: null
+  };
 
-  const withoutDuplicate = safeList.filter(
-    (entry) => String(entry?.requestId) !== String(manualOrder.requestId)
+  const currentOrders = Array.isArray(cache.orders) ? cache.orders : [];
+
+  const withoutDuplicate = currentOrders.filter(
+    (entry) =>
+      String(entry?.requestId || '') !== String(manualOrder.requestId || '') &&
+      String(entry?.liveRequestId || '') !== String(manualOrder.liveRequestId || '')
   );
 
-  localStorage.setItem(storageKey, JSON.stringify([...withoutDuplicate, manualOrder]));
-  localStorage.setItem(lastKey, JSON.stringify(manualOrder));
+  window.tapCartaRestaurantLiveRequestsCache = {
+    ...cache,
+    orders: [manualOrder, ...withoutDuplicate],
+    updatedAt: new Date().toISOString(),
+    error: null
+  };
+
+  return true;
 }
 
 async function createManualOrderInSupabase(manualOrder) {
@@ -5974,9 +6058,20 @@ function openManualOrderModal() {
 
     if (!syncedManualOrder.liveRequestId) {
       console.warn(
-        'TapCarta Restaurant: commande manuelle visible localement, mais synchronisation Supabase non confirmée.',
+        'TapCarta Restaurant: commande manuelle non enregistrée, synchronisation Supabase non confirmée.',
         syncedManualOrder
       );
+
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.classList.remove('opacity-60', 'pointer-events-none');
+      }
+
+      showManualOrderFormError(
+        'Impossible d’enregistrer la commande pour le moment. Réessayez dans quelques instants.'
+      );
+
+      return;
     }
 
     saveManualOrderToLocalStorage(syncedManualOrder);
