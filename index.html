@@ -7345,6 +7345,13 @@ window.deleteRequestFromHistory = async function(requestId) {
     return;
   }
 
+  const previousSourceRequest = {
+    ...item.sourceRequest,
+    restaurantResponse: {
+      ...(item.sourceRequest.restaurantResponse || {})
+    }
+  };
+
   const confirmedDelete = await showRestaurantConfirmDialog({
     title:
       currentLang === 'es'
@@ -7392,7 +7399,25 @@ window.deleteRequestFromHistory = async function(requestId) {
     updatedBy: 'restaurant'
   };
 
-  await persistRestaurantRequestUpdate(item.sourceRequest);
+  const persisted = await persistRestaurantRequestUpdate(item.sourceRequest);
+
+  if (!persisted) {
+    item.sourceRequest = previousSourceRequest;
+
+    showRestaurantToast(
+      currentLang === 'es'
+        ? 'No se ha retirado del historial. Comprueba la conexión.'
+        : currentLang === 'en'
+          ? 'Not removed from history. Check the connection.'
+          : currentLang === 'nl'
+            ? 'Niet uit de geschiedenis verwijderd. Controleer de verbinding.'
+            : 'Non retiré de l’historique. Vérifiez la connexion.',
+      'danger'
+    );
+
+    renderMenu();
+    return;
+  }
 
   requestsData = requestsData.filter((entry) => String(entry.id) !== String(requestId));
   syncRequestsState();
