@@ -3659,7 +3659,18 @@ function isSameLocalDay(timestampA, timestampB) {
   );
 }
 
-function markRequestAsUnconfirmedHistory(source, isBooking) {
+async function markRequestAsUnconfirmedHistory(source, isBooking) {
+  if (!source) {
+    return false;
+  }
+
+  const previousSource = {
+    ...source,
+    restaurantResponse: {
+      ...(source.restaurantResponse || {})
+    }
+  };
+
   const nowIso = new Date().toISOString();
 
   source.status = isBooking
@@ -3692,7 +3703,14 @@ function markRequestAsUnconfirmedHistory(source, isBooking) {
     updatedBy: 'system'
   };
 
-  void persistRestaurantRequestUpdate(source);
+  const persisted = await persistRestaurantRequestUpdate(source);
+
+  if (!persisted) {
+    Object.assign(source, previousSource);
+    return false;
+  }
+
+  return true;
 }
 
 function getRestaurantRequestBucket(item) {
