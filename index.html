@@ -9618,7 +9618,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   console.log('Restaurant actif chargé :', activeRestaurantData);
 
-  renderMenu();
+  try {
+    renderMenu();
+  } catch (error) {
+    console.error('TapCarta Resto: erreur pendant le premier rendu de l’interface', error);
+  }
+
+  try {
+    await syncLiveBookingsToLocalStorage();
+    syncRequestsState();
+    renderMenu();
+  } catch (error) {
+    console.error('TapCarta Resto: erreur pendant la synchronisation initiale Supabase', error);
+
+    try {
+      renderMenu();
+    } catch (renderError) {
+      console.error('TapCarta Resto: impossible de restaurer l’interface après erreur Supabase', renderError);
+    }
+  }
 
   if (typeof initializeRestaurantAudioUnlockBridge === 'function') {
     initializeRestaurantAudioUnlockBridge();
