@@ -3478,6 +3478,17 @@ function isRequestEligibleForPopupNotification(item) {
   );
 }
 
+function getRestaurantPopupNotificationRequests() {
+  return requestsData.filter((item) => {
+    if (!isRequestEligibleForPopupNotification(item)) {
+      return false;
+    }
+
+    const bucket = getRestaurantRequestBucket(item);
+    return bucket !== 'history' && bucket !== 'hidden';
+  });
+}
+
 function getRestaurantRequestNotificationKey(item) {
   const sourceStatus = item?.sourceRequest?.status || '';
   const requestId = String(item?.id || item?.sourceRequest?.requestId || item?.sourceRequest?.liveRequestId || '');
@@ -3491,8 +3502,7 @@ function dismissRestaurantNewRequestNotification() {
   const state = window.tapCartaRestaurantRequestNotificationState;
 
   if (state) {
-    const currentPopupKeys = activeRequests
-      .filter(isRequestEligibleForPopupNotification)
+    const currentPopupKeys = getRestaurantPopupNotificationRequests()
       .map(getRestaurantRequestNotificationKey);
 
     state.knownActionRequestIds = new Set(currentPopupKeys);
@@ -3500,7 +3510,7 @@ function dismissRestaurantNewRequestNotification() {
 }
 
 function notifyIfNewActionRequests() {
-  const popupRequests = activeRequests.filter(isRequestEligibleForPopupNotification);
+  const popupRequests = getRestaurantPopupNotificationRequests();
   const popupKeys = popupRequests.map(getRestaurantRequestNotificationKey);
   const state = window.tapCartaRestaurantRequestNotificationState;
 
