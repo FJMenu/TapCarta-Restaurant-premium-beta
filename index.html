@@ -6955,13 +6955,24 @@ window.openRequestDetails = function(requestId) {
 };
 
 
-window.validateRequest = function(requestId) {
+window.validateRequest = async function(requestId) {
   const item = requestsData.find((entry) => String(entry.id) === String(requestId));
 
   if (!item || !item.sourceRequest) {
     alert(t.restaurantRequestNotFound);
     return;
   }
+
+  const previousItemState = {
+    treated: item.treated,
+    status: item.status,
+    sourceRequest: {
+      ...item.sourceRequest,
+      restaurantResponse: {
+        ...(item.sourceRequest.restaurantResponse || {})
+      }
+    }
+  };
 
   const nowIso = new Date().toISOString();
   const isOrder = !!item.sourceRequest?.order;
@@ -7033,7 +7044,28 @@ window.validateRequest = function(requestId) {
     };
   }
 
-  void persistRestaurantRequestUpdate(item.sourceRequest);
+  const persisted = await persistRestaurantRequestUpdate(item.sourceRequest);
+
+  if (!persisted) {
+    item.treated = previousItemState.treated;
+    item.status = previousItemState.status;
+    item.sourceRequest = previousItemState.sourceRequest;
+
+    showRestaurantToast(
+      currentLang === 'es'
+        ? 'Acción no guardada. Comprueba la conexión e inténtalo de nuevo.'
+        : currentLang === 'en'
+          ? 'Action not saved. Check the connection and try again.'
+          : currentLang === 'nl'
+            ? 'Actie niet opgeslagen. Controleer de verbinding en probeer opnieuw.'
+            : 'Action non enregistrée. Vérifiez la connexion et réessayez.',
+      'danger'
+    );
+
+    renderMenu();
+    return;
+  }
+
   syncRequestsState();
   notifyIfNewActionRequests();
   renderMenu();
