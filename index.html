@@ -4074,7 +4074,22 @@ window.validateSelectedRequests = async function() {
 
   const nowIso = new Date().toISOString();
 
-  selectedItems.forEach((item) => {
+  const results = await Promise.all(selectedItems.map(async (item) => {
+    if (!item.sourceRequest) {
+      return false;
+    }
+
+    const previousItemState = {
+      treated: item.treated,
+      status: item.status,
+      sourceRequest: {
+        ...item.sourceRequest,
+        restaurantResponse: {
+          ...(item.sourceRequest.restaurantResponse || {})
+        }
+      }
+    };
+
     const isOrder = !!item.sourceRequest?.order;
     const confirmationMessage = isOrder
       ? t.restaurantOrderConfirmedMessage
@@ -4093,8 +4108,32 @@ window.validateSelectedRequests = async function() {
       updatedBy: 'restaurant'
     };
 
-    void persistRestaurantRequestUpdate(item.sourceRequest);
-  });
+    const persisted = await persistRestaurantRequestUpdate(item.sourceRequest);
+
+    if (!persisted) {
+      item.treated = previousItemState.treated;
+      item.status = previousItemState.status;
+      item.sourceRequest = previousItemState.sourceRequest;
+      return false;
+    }
+
+    return true;
+  }));
+
+  const hasFailure = results.some((result) => result !== true);
+
+  if (hasFailure) {
+    showRestaurantToast(
+      currentLang === 'es'
+        ? 'Una o varias acciones no se han guardado. Comprueba la conexión.'
+        : currentLang === 'en'
+          ? 'One or more actions were not saved. Check the connection.'
+          : currentLang === 'nl'
+            ? 'Een of meerdere acties zijn niet opgeslagen. Controleer de verbinding.'
+            : 'Une ou plusieurs actions n’ont pas été enregistrées. Vérifiez la connexion.',
+      'danger'
+    );
+  }
 
   window.selectedRequestIds = new Set();
   syncRequestsState();
@@ -7113,6 +7152,17 @@ window.closeRequestWithoutCompletion = async function(requestId) {
     return;
   }
 
+  const previousItemState = {
+    treated: item.treated,
+    status: item.status,
+    sourceRequest: {
+      ...item.sourceRequest,
+      restaurantResponse: {
+        ...(item.sourceRequest.restaurantResponse || {})
+      }
+    }
+  };
+
   const isOrder = !!item.sourceRequest?.order;
 
   const confirmed = await showRestaurantConfirmDialog({
@@ -7217,7 +7267,27 @@ window.closeRequestWithoutCompletion = async function(requestId) {
     };
   }
 
-  await persistRestaurantRequestUpdate(item.sourceRequest);
+  const persisted = await persistRestaurantRequestUpdate(item.sourceRequest);
+
+  if (!persisted) {
+    item.treated = previousItemState.treated;
+    item.status = previousItemState.status;
+    item.sourceRequest = previousItemState.sourceRequest;
+
+    showRestaurantToast(
+      currentLang === 'es'
+        ? 'Acción no guardada. Comprueba la conexión e inténtalo de nuevo.'
+        : currentLang === 'en'
+          ? 'Action not saved. Check the connection and try again.'
+          : currentLang === 'nl'
+            ? 'Actie niet opgeslagen. Controleer de verbinding en probeer opnieuw.'
+            : 'Action non enregistrée. Vérifiez la connexion et réessayez.',
+      'danger'
+    );
+
+    renderMenu();
+    return;
+  }
 
   syncRequestsState();
   notifyIfNewActionRequests();
