@@ -2678,6 +2678,8 @@ window.tapCartaRestaurantLiveRequestsCache = window.tapCartaRestaurantLiveReques
   error: null
 };
 
+const TAPCARTA_HISTORY_DELETED_MARKER = '__tapcarta_history_deleted__';
+
 async function syncLiveBookingsToLocalStorage() {
   const activeRestaurantId =
     activeRestaurantData?.identity?.id ||
@@ -2697,17 +2699,22 @@ async function syncLiveBookingsToLocalStorage() {
         ? row.restaurant_response
         : {};
 
+    const rawMessage = String(rawRestaurantResponse.message || row?.restaurant_message || '');
+    const messageHasHistoryDeletedMarker = rawMessage.includes(TAPCARTA_HISTORY_DELETED_MARKER);
+    const cleanMessage = rawMessage.replace(TAPCARTA_HISTORY_DELETED_MARKER, '').trim();
+
     return {
       ...rawRestaurantResponse,
       reason: rawRestaurantResponse.reason || row?.status || '',
-      message: rawRestaurantResponse.message || row?.restaurant_message || '',
+      message: cleanMessage,
       updatedBy:
         rawRestaurantResponse.updatedBy ||
         (row?.restaurant_message ? 'restaurant' : ''),
       proposal: rawRestaurantResponse.proposal || null,
       historyDeleted:
         rawRestaurantResponse.historyDeleted === true ||
-        rawRestaurantResponse.hiddenFromRestaurantHistory === true,
+        rawRestaurantResponse.hiddenFromRestaurantHistory === true ||
+        messageHasHistoryDeletedMarker,
       historyUpdatedAt:
         rawRestaurantResponse.historyUpdatedAt ||
         rawRestaurantResponse.hiddenFromRestaurantHistoryAt ||
@@ -3466,8 +3473,16 @@ function isRequestEligibleForPopupNotification(item) {
     sourceStatus === 'pending' ||
     sourceStatus === 'sent' ||
     sourceStatus === 'modified' ||
+    sourceStatus === 'accepted_by_client' ||
     sourceStatus === 'rejected_by_client'
   );
+}
+
+function getRestaurantRequestNotificationKey(item) {
+  const sourceStatus = item?.sourceRequest?.status || '';
+  const requestId = String(item?.id || item?.sourceRequest?.requestId || item?.sourceRequest?.liveRequestId || '');
+
+  return `${requestId}:${sourceStatus}`;
 }
 
 function dismissRestaurantNewRequestNotification() {
@@ -3476,42 +3491,42 @@ function dismissRestaurantNewRequestNotification() {
   const state = window.tapCartaRestaurantRequestNotificationState;
 
   if (state) {
-    const currentPopupIds = activeRequests
+    const currentPopupKeys = activeRequests
       .filter(isRequestEligibleForPopupNotification)
-      .map((item) => String(item.id));
+      .map(getRestaurantRequestNotificationKey);
 
-    state.knownActionRequestIds = new Set(currentPopupIds);
+    state.knownActionRequestIds = new Set(currentPopupKeys);
   }
 }
 
 function notifyIfNewActionRequests() {
   const popupRequests = activeRequests.filter(isRequestEligibleForPopupNotification);
-  const popupIds = popupRequests.map((item) => String(item.id));
+  const popupKeys = popupRequests.map(getRestaurantRequestNotificationKey);
   const state = window.tapCartaRestaurantRequestNotificationState;
 
-  if (!popupIds.length || isRestaurantRequestModalOpen()) {
+  if (!popupKeys.length || isRestaurantRequestModalOpen()) {
     document.getElementById('restaurant-new-request-notification')?.remove();
   }
 
   if (!state.knownActionRequestIds) {
-    state.knownActionRequestIds = new Set(popupIds);
+    state.knownActionRequestIds = new Set(popupKeys);
 
-    if (popupIds.length) {
+    if (popupKeys.length) {
       state.lastNotificationAt = Date.now();
       notifyRestaurantNewRequestSound();
 
       if (!isRestaurantRequestModalOpen()) {
-        showRestaurantNewRequestNotification(popupIds.length);
+        showRestaurantNewRequestNotification(popupKeys.length);
       }
     }
 
     return;
   }
 
-  const newIds = popupIds.filter((id) => !state.knownActionRequestIds.has(id));
-  state.knownActionRequestIds = new Set(popupIds);
+  const newKeys = popupKeys.filter((key) => !state.knownActionRequestIds.has(key));
+  state.knownActionRequestIds = new Set(popupKeys);
 
-  if (newIds.length) {
+  if (newKeys.length) {
     const now = Date.now();
 
     if (now - state.lastNotificationAt >= 5000) {
@@ -3520,7 +3535,7 @@ function notifyIfNewActionRequests() {
     }
 
     if (!isRestaurantRequestModalOpen()) {
-      showRestaurantNewRequestNotification(popupIds.length);
+      showRestaurantNewRequestNotification(popupKeys.length);
     }
 
     return;
@@ -3528,7 +3543,7 @@ function notifyIfNewActionRequests() {
 
   const existingNotification = document.getElementById('restaurant-new-request-notification');
 
-  if (!popupIds.length && existingNotification) {
+  if (!popupKeys.length && existingNotification) {
     existingNotification.remove();
   }
 }
@@ -4467,7 +4482,9 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
       const fallbackPayload = {
         status: livePayload.status,
         updated_at: livePayload.updated_at,
-        restaurant_message: livePayload.restaurant_message
+        restaurant_message: updatedRequest.historyDeleted === true
+          ? `${livePayload.restaurant_message || ''} ${TAPCARTA_HISTORY_DELETED_MARKER}`.trim()
+          : livePayload.restaurant_message
       };
 
       const fallbackResult = await runSupabaseUpdate(fallbackPayload);
