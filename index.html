@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.11';
+            const APP_VERSION = 'V1.2.12';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3470,6 +3470,20 @@ function isRequestEligibleForPopupNotification(item) {
   );
 }
 
+function dismissRestaurantNewRequestNotification() {
+  document.getElementById('restaurant-new-request-notification')?.remove();
+
+  const state = window.tapCartaRestaurantRequestNotificationState;
+
+  if (state) {
+    const currentPopupIds = activeRequests
+      .filter(isRequestEligibleForPopupNotification)
+      .map((item) => String(item.id));
+
+    state.knownActionRequestIds = new Set(currentPopupIds);
+  }
+}
+
 function notifyIfNewActionRequests() {
   const popupRequests = activeRequests.filter(isRequestEligibleForPopupNotification);
   const popupIds = popupRequests.map((item) => String(item.id));
@@ -4178,7 +4192,7 @@ window.validateSelectedRequests = async function() {
 
   window.selectedRequestIds = new Set();
   syncRequestsState();
-  notifyIfNewActionRequests();
+  dismissRestaurantNewRequestNotification();
   renderMenu();
 };
 
@@ -4239,6 +4253,14 @@ window.deleteSelectedHistoryRequests = async function() {
     item.sourceRequest.historyDeleted = true;
     item.sourceRequest.historyUpdatedAt = nowIso;
     item.sourceRequest.updatedAt = nowIso;
+    item.sourceRequest.restaurantResponse = {
+      ...(item.sourceRequest.restaurantResponse || {}),
+      historyDeleted: true,
+      hiddenFromRestaurantHistory: true,
+      historyUpdatedAt: nowIso,
+      hiddenFromRestaurantHistoryAt: nowIso,
+      updatedBy: 'restaurant'
+    };
 
     const persisted = await persistRestaurantRequestUpdate(item.sourceRequest);
 
@@ -6821,7 +6843,7 @@ window.submitRequestAction = async function(requestId, mode) {
   closeRequestActionModal();
   closeRequestDetailsModal();
   syncRequestsState();
-  notifyIfNewActionRequests();
+  dismissRestaurantNewRequestNotification();
   renderMenu();
 };
 
@@ -7222,7 +7244,7 @@ window.validateRequest = async function(requestId) {
   }
 
   syncRequestsState();
-  notifyIfNewActionRequests();
+  dismissRestaurantNewRequestNotification();
   renderMenu();
   updateRestaurantSoundToggleIcon();
 };
@@ -7373,7 +7395,7 @@ window.closeRequestWithoutCompletion = async function(requestId) {
   }
 
   syncRequestsState();
-  notifyIfNewActionRequests();
+  dismissRestaurantNewRequestNotification();
   renderMenu();
 };
 
