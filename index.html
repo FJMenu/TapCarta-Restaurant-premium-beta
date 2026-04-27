@@ -3659,6 +3659,8 @@ function isSameLocalDay(timestampA, timestampB) {
   );
 }
 
+const pendingUnconfirmedHistoryClosures = new Set();
+
 async function markRequestAsUnconfirmedHistory(source, isBooking) {
   if (!source) {
     return false;
@@ -3713,6 +3715,27 @@ async function markRequestAsUnconfirmedHistory(source, isBooking) {
   return true;
 }
 
+function scheduleUnconfirmedHistoryClosure(source, isBooking) {
+  const requestKey = String(source?.liveRequestId || source?.requestId || source?.id || '');
+
+  if (!requestKey || pendingUnconfirmedHistoryClosures.has(requestKey)) {
+    return;
+  }
+
+  pendingUnconfirmedHistoryClosures.add(requestKey);
+
+  markRequestAsUnconfirmedHistory(source, isBooking)
+    .then((persisted) => {
+      if (persisted) {
+        syncRequestsState();
+        renderMenu();
+      }
+    })
+    .finally(() => {
+      pendingUnconfirmedHistoryClosures.delete(requestKey);
+    });
+}
+
 function getRestaurantRequestBucket(item) {
   const source = item?.sourceRequest || {};
   const status = source.status || '';
@@ -3748,8 +3771,8 @@ function getRestaurantRequestBucket(item) {
       const cleanupMs = getNextFiveAMCleanupMs(referenceMs);
 
       if (now >= cleanupMs) {
-        markRequestAsUnconfirmedHistory(source, false);
-        return 'history';
+        scheduleUnconfirmedHistoryClosure(source, false);
+        return 'verify';
       }
 
       if (isOrderTimeKnown) {
@@ -3787,8 +3810,8 @@ function getRestaurantRequestBucket(item) {
     const cleanupMs = getNextFiveAMCleanupMs(bookingTimeMs);
 
     if (now >= cleanupMs) {
-      markRequestAsUnconfirmedHistory(source, true);
-      return 'history';
+      scheduleUnconfirmedHistoryClosure(source, true);
+      return 'verify';
     }
 
     if (bookingTimeMs > now && !isSameLocalDay(bookingTimeMs, now)) {
