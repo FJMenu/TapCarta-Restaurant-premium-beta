@@ -2885,6 +2885,8 @@ async function syncLiveBookingsToLocalStorage() {
   }
 }
 
+window.syncLiveBookingsToLocalStorage = syncLiveBookingsToLocalStorage;
+
 function loadRestaurantRequests() {
   const historyRetentionMs = 30 * 24 * 60 * 60 * 1000;
   const activeRestaurantId =
@@ -9625,7 +9627,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   try {
-    await syncLiveBookingsToLocalStorage();
+    if (typeof window.syncLiveBookingsToLocalStorage === 'function') {
+      await window.syncLiveBookingsToLocalStorage();
+    }
+
     syncRequestsState();
     renderMenu();
   } catch (error) {
