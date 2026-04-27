@@ -4183,18 +4183,60 @@ window.deleteSelectedHistoryRequests = async function() {
 
   const nowIso = new Date().toISOString();
 
-  selectedItems.forEach((item) => {
-    if (!item.sourceRequest) return;
+  const results = await Promise.all(selectedItems.map(async (item) => {
+    if (!item.sourceRequest) {
+      return false;
+    }
+
+    const previousSourceRequest = {
+      ...item.sourceRequest,
+      restaurantResponse: {
+        ...(item.sourceRequest.restaurantResponse || {})
+      }
+    };
 
     item.sourceRequest.historyDeleted = true;
     item.sourceRequest.historyUpdatedAt = nowIso;
     item.sourceRequest.updatedAt = nowIso;
 
-    void persistRestaurantRequestUpdate(item.sourceRequest);
-  });
+    const persisted = await persistRestaurantRequestUpdate(item.sourceRequest);
+
+    if (!persisted) {
+      item.sourceRequest = previousSourceRequest;
+      return false;
+    }
+
+    return true;
+  }));
+
+  const hasFailure = results.some((result) => result !== true);
+
+  if (hasFailure) {
+    showRestaurantToast(
+      currentLang === 'es'
+        ? 'Uno o varios elementos no se han retirado del historial. Comprueba la conexión.'
+        : currentLang === 'en'
+          ? 'One or more items were not removed from history. Check the connection.'
+          : currentLang === 'nl'
+            ? 'Een of meerdere items zijn niet uit de geschiedenis verwijderd. Controleer de verbinding.'
+            : 'Un ou plusieurs éléments n’ont pas été retirés de l’historique. Vérifiez la connexion.',
+      'danger'
+    );
+  } else {
+    showRestaurantToast(
+      currentLang === 'es'
+        ? 'Retirado del historial visible.'
+        : currentLang === 'en'
+          ? 'Removed from visible history.'
+          : currentLang === 'nl'
+            ? 'Verwijderd uit zichtbare geschiedenis.'
+            : 'Retiré de l’historique visible.',
+      'info'
+    );
+  }
 
   window.selectedHistoryRequestIds = new Set();
-  showRestaurantToast(currentLang === 'es' ? 'Retirado del historial visible.' : currentLang === 'en' ? 'Removed from visible history.' : currentLang === 'nl' ? 'Verwijderd uit zichtbare geschiedenis.' : 'Retiré de l’historique visible.', 'info');
+  syncRequestsState();
   renderMenu();
 };
 
