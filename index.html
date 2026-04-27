@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.13';
+            const APP_VERSION = 'V1.2.14';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9560,9 +9560,55 @@ function renderRequestRow(item, displayMode = 'active') {
   const floatingSaveBtn = document.getElementById('restaurant-save-menu-floating-btn');
   const editorList = document.getElementById('restaurant-menu-categories-list');
 
+  function getMenuEditorUiStorageKey() {
+    const restaurantId =
+      activeRestaurantData?.identity?.id ||
+      activeRestaurantData?.id ||
+      'default';
+
+    return `tapcartaRestoMenuEditorOpen:${restaurantId}`;
+  }
+
+  function saveMenuEditorUiState(isOpen) {
+    try {
+      if (isOpen) {
+        localStorage.setItem(getMenuEditorUiStorageKey(), 'true');
+      } else {
+        localStorage.removeItem(getMenuEditorUiStorageKey());
+      }
+    } catch (error) {
+      console.warn('Impossible de mémoriser l’état UI de l’éditeur menu :', error);
+    }
+  }
+
+  function shouldRestoreMenuEditorOpen() {
+    try {
+      return localStorage.getItem(getMenuEditorUiStorageKey()) === 'true';
+    } catch (error) {
+      console.warn('Impossible de lire l’état UI de l’éditeur menu :', error);
+      return false;
+    }
+  }
+
   function syncMenuEditorUiState() {
     const isEditorOpen = !!editorSection && !editorSection.classList.contains('hidden');
     document.body.classList.toggle('menu-editor-open', isEditorOpen);
+    saveMenuEditorUiState(isEditorOpen);
+  }
+
+  function openMenuEditor({ scroll = true } = {}) {
+    if (!editorSection) return;
+
+    editorSection.classList.remove('hidden');
+    syncMenuEditorUiState();
+    renderRestaurantMenuEditor();
+    updateMenuEditorDirtyUi();
+
+    if (scroll) {
+      requestAnimationFrame(() => {
+        editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
   }
 
   function closeMenuEditor() {
@@ -9577,6 +9623,10 @@ function renderRequestRow(item, displayMode = 'active') {
   if (editorToggleBtn && editorSection) {
     syncMenuEditorUiState();
 
+    if (shouldRestoreMenuEditorOpen()) {
+      openMenuEditor({ scroll: false });
+    }
+
     editorToggleBtn.addEventListener('click', () => {
       const willOpen = editorSection.classList.contains('hidden');
 
@@ -9585,14 +9635,7 @@ function renderRequestRow(item, displayMode = 'active') {
         return;
       }
 
-      editorSection.classList.remove('hidden');
-      syncMenuEditorUiState();
-      renderRestaurantMenuEditor();
-      updateMenuEditorDirtyUi();
-
-      requestAnimationFrame(() => {
-        editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
+      openMenuEditor({ scroll: true });
     });
   }
 
