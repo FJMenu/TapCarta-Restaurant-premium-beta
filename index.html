@@ -9621,10 +9621,12 @@ function renderRequestRow(item, displayMode = 'active') {
   }
 
   if (editorToggleBtn && editorSection) {
-    syncMenuEditorUiState();
+    const mustRestoreMenuEditorOpen = shouldRestoreMenuEditorOpen();
 
-    if (shouldRestoreMenuEditorOpen()) {
+    if (mustRestoreMenuEditorOpen) {
       openMenuEditor({ scroll: false });
+    } else {
+      syncMenuEditorUiState();
     }
 
     editorToggleBtn.addEventListener('click', () => {
