@@ -9633,7 +9633,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       await window.syncLiveBookingsToLocalStorage();
     }
 
-    syncRequestsState();
+    if (typeof window.syncRequestsState === 'function') {
+      window.syncRequestsState();
+    }
+
     renderMenu();
   } catch (error) {
     console.error('TapCarta Resto: erreur pendant la synchronisation initiale Supabase', error);
