@@ -3453,7 +3453,7 @@ function showRestaurantNewRequestNotification(count) {
     <button
       type="button"
       class="btn-action px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all shadow-lg whitespace-nowrap"
-      onclick="dismissRestaurantNewRequestNotification(); document.getElementById('restaurant-requests-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });"
+      onclick="window.dismissRestaurantNewRequestNotification?.(); document.getElementById('restaurant-new-request-notification')?.remove(); document.getElementById('restaurant-requests-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });"
     >
       ${buttonLabel}
     </button>
@@ -3508,6 +3508,8 @@ function dismissRestaurantNewRequestNotification() {
     state.knownActionRequestIds = new Set(currentPopupKeys);
   }
 }
+
+window.dismissRestaurantNewRequestNotification = dismissRestaurantNewRequestNotification;
 
 function notifyIfNewActionRequests() {
   const popupRequests = getRestaurantPopupNotificationRequests();
