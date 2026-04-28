@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.15';
+            const APP_VERSION = 'V1.2.15.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2750,6 +2750,17 @@ async function syncLiveBookingsToLocalStorage() {
 
     const restaurantResponse = normalizeRestaurantResponse(row);
     const finalTimestamps = buildFinalTimestamps(row);
+    const sourceStatus = row.status || 'pending';
+    const proposedTime =
+      restaurantResponse?.proposal?.acceptedTime ||
+      restaurantResponse?.proposal?.proposedTime ||
+      '';
+    const effectiveBookingTime =
+      sourceStatus === 'accepted_by_client' && proposedTime
+        ? String(proposedTime).slice(0, 5)
+        : row.booking_time
+          ? String(row.booking_time).slice(0, 5)
+          : '';
 
     const preorderItems = Array.isArray(row.items)
       ? row.items.map((item) => ({
@@ -2768,7 +2779,7 @@ async function syncLiveBookingsToLocalStorage() {
       requestType: 'booking',
       createdAt: row.created_at || new Date().toISOString(),
       updatedAt: row.updated_at || null,
-      status: row.status || 'pending',
+      status: sourceStatus,
       customer: {
         name: row.client_name || '',
         phone: row.client_phone || '',
@@ -2776,7 +2787,7 @@ async function syncLiveBookingsToLocalStorage() {
       },
       booking: {
         date: row.booking_date || '',
-        time: row.booking_time ? String(row.booking_time).slice(0, 5) : '',
+        time: effectiveBookingTime,
         people: Number(row.party_size || 1),
         note: row.note || '',
         preorderIndicativeEnabled: true,
@@ -2794,6 +2805,17 @@ async function syncLiveBookingsToLocalStorage() {
 
     const restaurantResponse = normalizeRestaurantResponse(row);
     const finalTimestamps = buildFinalTimestamps(row);
+    const sourceStatus = row.status || 'pending';
+    const proposedTime =
+      restaurantResponse?.proposal?.acceptedTime ||
+      restaurantResponse?.proposal?.proposedTime ||
+      '';
+    const effectiveOrderTime =
+      sourceStatus === 'accepted_by_client' && proposedTime
+        ? String(proposedTime).slice(0, 5)
+        : row.booking_time
+          ? String(row.booking_time).slice(0, 5)
+          : '';
 
     const orderItems = Array.isArray(row.items)
       ? row.items.map((item) => {
@@ -2826,7 +2848,7 @@ async function syncLiveBookingsToLocalStorage() {
       requestType: 'order',
       createdAt: row.created_at || new Date().toISOString(),
       updatedAt: row.updated_at || null,
-      status: row.status || 'pending',
+      status: sourceStatus,
       customer: {
         name: row.client_name || '',
         phone: row.client_phone || '',
@@ -2834,7 +2856,7 @@ async function syncLiveBookingsToLocalStorage() {
       },
       order: {
         date: row.booking_date || '',
-        time: row.booking_time ? String(row.booking_time).slice(0, 5) : '',
+        time: effectiveOrderTime,
         note: row.note || '',
         items: orderItems,
         totalAmount: Number(totalAmount.toFixed(2))
@@ -3485,7 +3507,6 @@ function isRequestEligibleForPopupNotification(item) {
   return (
     sourceStatus === 'pending' ||
     sourceStatus === 'sent' ||
-    sourceStatus === 'modified' ||
     sourceStatus === 'accepted_by_client' ||
     sourceStatus === 'rejected_by_client'
   );
