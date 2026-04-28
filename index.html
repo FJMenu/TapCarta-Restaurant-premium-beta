@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.15.3';
+            const APP_VERSION = 'V1.2.15.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -6898,9 +6898,14 @@ function buildRequestActionModalHtml(item, mode) {
   const proposedTimeValue = existingProposal.proposedTime || currentTimeValue || '';
   const clientLang = source?.customer?.language || currentLang;
   const presets = getRequestActionPresets(isOrder, mode, clientLang, !!proposedTimeValue);
+  const defaultReason =
+    isOrder && mode === 'modify'
+      ? 'longer_delay'
+      : (presets[0]?.reason || 'other');
+
   const selectedReason = presets.some((entry) => entry.reason === existingResponse.reason)
     ? existingResponse.reason
-    : (presets[0]?.reason || 'other');
+    : defaultReason;
 
   const messageValue = existingResponse.message || (presets.find((entry) => entry.reason === selectedReason)?.message || '');
 
