@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.14';
+            const APP_VERSION = 'V1.2.15';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3018,8 +3018,21 @@ window.tapCartaRestaurantRefreshState = window.tapCartaRestaurantRefreshState ||
 
 window.tapCartaRestaurantRequestNotificationState = window.tapCartaRestaurantRequestNotificationState || {
   knownActionRequestIds: null,
+  dismissedActionRequestIds: null,
   lastNotificationAt: 0
 };
+
+function ensureRestaurantNotificationSet(value) {
+  if (value instanceof Set) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return new Set(value.map((entry) => String(entry)));
+  }
+
+  return new Set();
+}
 function showRestaurantToast(message, variant = 'info') {
   const existingToast = document.getElementById('restaurant-toast-message');
   if (existingToast) existingToast.remove();
@@ -3496,47 +3509,63 @@ function getRestaurantRequestNotificationKey(item) {
   return `${requestId}:${sourceStatus}`;
 }
 
+function getCurrentRestaurantPopupNotificationKeys() {
+  return getRestaurantPopupNotificationRequests()
+    .map(getRestaurantRequestNotificationKey)
+    .filter(Boolean);
+}
+
 function dismissRestaurantNewRequestNotification() {
   document.getElementById('restaurant-new-request-notification')?.remove();
 
   const state = window.tapCartaRestaurantRequestNotificationState;
 
-  if (state) {
-    const currentPopupKeys = getRestaurantPopupNotificationRequests()
-      .map(getRestaurantRequestNotificationKey);
+  if (!state) return;
 
-    state.knownActionRequestIds = new Set(currentPopupKeys);
-  }
+  const currentPopupKeys = getCurrentRestaurantPopupNotificationKeys();
+  const dismissedKeys = ensureRestaurantNotificationSet(state.dismissedActionRequestIds);
+
+  currentPopupKeys.forEach((key) => dismissedKeys.add(key));
+
+  state.dismissedActionRequestIds = dismissedKeys;
+  state.knownActionRequestIds = new Set(currentPopupKeys);
 }
 
 window.dismissRestaurantNewRequestNotification = dismissRestaurantNewRequestNotification;
 
 function notifyIfNewActionRequests() {
-  const popupRequests = getRestaurantPopupNotificationRequests();
-  const popupKeys = popupRequests.map(getRestaurantRequestNotificationKey);
+  const popupKeys = getCurrentRestaurantPopupNotificationKeys();
   const state = window.tapCartaRestaurantRequestNotificationState;
+
+  if (!state) return;
+
+  const knownKeys = state.knownActionRequestIds instanceof Set
+    ? state.knownActionRequestIds
+    : null;
+  const dismissedKeys = ensureRestaurantNotificationSet(state.dismissedActionRequestIds);
+
+  state.dismissedActionRequestIds = dismissedKeys;
 
   if (!popupKeys.length || isRestaurantRequestModalOpen()) {
     document.getElementById('restaurant-new-request-notification')?.remove();
-  }
-
-  if (!state.knownActionRequestIds) {
     state.knownActionRequestIds = new Set(popupKeys);
-
-    if (popupKeys.length) {
-      state.lastNotificationAt = Date.now();
-      notifyRestaurantNewRequestSound();
-
-      if (!isRestaurantRequestModalOpen()) {
-        showRestaurantNewRequestNotification(popupKeys.length);
-      }
-    }
-
     return;
   }
 
-  const newKeys = popupKeys.filter((key) => !state.knownActionRequestIds.has(key));
+  if (!knownKeys) {
+    state.knownActionRequestIds = new Set(popupKeys);
+    return;
+  }
+
+  const newKeys = popupKeys.filter((key) => !knownKeys.has(key) && !dismissedKeys.has(key));
   state.knownActionRequestIds = new Set(popupKeys);
+
+  const activePopupKeySet = new Set(popupKeys);
+  dismissedKeys.forEach((key) => {
+    if (!activePopupKeySet.has(key)) {
+      dismissedKeys.delete(key);
+    }
+  });
 
   if (newKeys.length) {
     const now = Date.now();
@@ -3555,8 +3584,12 @@ function notifyIfNewActionRequests() {
 
   const existingNotification = document.getElementById('restaurant-new-request-notification');
 
-  if (!popupKeys.length && existingNotification) {
-    existingNotification.remove();
+  if (existingNotification) {
+    const hasUndismissedAction = popupKeys.some((key) => !dismissedKeys.has(key));
+
+    if (!hasUndismissedAction) {
+      existingNotification.remove();
+    }
   }
 }
 
