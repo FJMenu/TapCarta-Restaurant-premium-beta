@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.15.2';
+            const APP_VERSION = 'V1.2.15.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -3064,6 +3064,7 @@ window.tapCartaRestaurantRefreshState = window.tapCartaRestaurantRefreshState ||
 window.tapCartaRestaurantRequestNotificationState = window.tapCartaRestaurantRequestNotificationState || {
   knownActionRequestIds: null,
   dismissedActionRequestIds: null,
+  responseNotificationCycles: null,
   lastNotificationAt: 0
 };
 
@@ -3457,33 +3458,40 @@ function isRestaurantRequestModalOpen() {
   );
 }
 
-function showRestaurantNewRequestNotification(count) {
-  const existingNotification = document.getElementById('restaurant-new-request-notification');
-  if (existingNotification) {
-    existingNotification.remove();
+function isRestaurantResponseStatus(status) {
+  return status === 'accepted_by_client' || status === 'rejected_by_client';
+}
+
+function getRestaurantNotificationType(item) {
+  const status = item?.sourceRequest?.status || '';
+
+  if (status === 'pending' || status === 'sent') {
+    return 'new_request';
   }
 
-  if (isRestaurantRequestModalOpen()) {
-    return;
+  if (status === 'accepted_by_client') {
+    return 'client_accepted';
   }
 
-  const label =
-    currentLang === 'es'
-      ? (count > 1 ? `${count} nuevas solicitudes por tratar` : 'Nueva solicitud por tratar')
-      : currentLang === 'en'
-        ? (count > 1 ? `${count} new requests to handle` : 'New request to handle')
-        : currentLang === 'nl'
-          ? (count > 1 ? `${count} nieuwe aanvragen te behandelen` : 'Nieuwe aanvraag te behandelen')
-          : (count > 1 ? `${count} nouvelles demandes à traiter` : 'Nouvelle demande à traiter');
+  if (status === 'rejected_by_client') {
+    return 'client_rejected';
+  }
 
-  const subLabel =
-    currentLang === 'es'
-      ? 'TapCarta Resto · acción requerida'
-      : currentLang === 'en'
-        ? 'TapCarta Resto · action required'
-        : currentLang === 'nl'
-          ? 'TapCarta Resto · actie vereist'
-          : 'TapCarta Resto · action requise';
+  return '';
+}
+
+function getRestaurantRequestNotificationKey(item) {
+  const sourceStatus = item?.sourceRequest?.status || '';
+  const requestId = String(item?.id || item?.sourceRequest?.requestId || item?.sourceRequest?.liveRequestId || '');
+
+  return `${requestId}:${sourceStatus}`;
+}
+
+function getRestaurantNotificationText(items) {
+  const firstItem = Array.isArray(items) && items.length ? items[0] : null;
+  const notificationType = getRestaurantNotificationType(firstItem);
+  const isOrder = !!firstItem?.sourceRequest?.order;
+  const customerName = firstItem?.sourceRequest?.customer?.name || '';
 
   const buttonLabel =
     currentLang === 'es'
@@ -3494,26 +3502,153 @@ function showRestaurantNewRequestNotification(count) {
           ? 'Bekijken'
           : 'Voir';
 
+  if (!firstItem || items.length > 1) {
+    const label =
+      currentLang === 'es'
+        ? `${items.length} acciones nuevas`
+        : currentLang === 'en'
+          ? `${items.length} new actions`
+          : currentLang === 'nl'
+            ? `${items.length} nieuwe acties`
+            : `${items.length} nouvelles actions`;
+
+    return {
+      label,
+      subLabel:
+        currentLang === 'es'
+          ? 'TapCarta Resto · revisar solicitudes'
+          : currentLang === 'en'
+            ? 'TapCarta Resto · check requests'
+            : currentLang === 'nl'
+              ? 'TapCarta Resto · aanvragen bekijken'
+              : 'TapCarta Resto · demandes à vérifier',
+      buttonLabel,
+      icon: 'bell-ring',
+      tone: 'gold'
+    };
+  }
+
+  if (notificationType === 'client_accepted') {
+    return {
+      label:
+        currentLang === 'es'
+          ? `Modificación de ${isOrder ? 'pedido' : 'reserva'} aceptada`
+          : currentLang === 'en'
+            ? `${isOrder ? 'Order' : 'Booking'} modification accepted`
+            : currentLang === 'nl'
+              ? `Wijziging van ${isOrder ? 'bestelling' : 'reservatie'} aanvaard`
+              : `Modification de ${isOrder ? 'commande' : 'réservation'} acceptée`,
+      subLabel: customerName
+        ? `${customerName} · ${currentLang === 'es' ? 'respuesta del cliente' : currentLang === 'en' ? 'customer response' : currentLang === 'nl' ? 'antwoord van de klant' : 'réponse client'}`
+        : (currentLang === 'es' ? 'Respuesta del cliente' : currentLang === 'en' ? 'Customer response' : currentLang === 'nl' ? 'Antwoord van de klant' : 'Réponse client'),
+      buttonLabel,
+      icon: 'check-circle',
+      tone: 'emerald'
+    };
+  }
+
+  if (notificationType === 'client_rejected') {
+    return {
+      label:
+        currentLang === 'es'
+          ? `Modificación de ${isOrder ? 'pedido' : 'reserva'} rechazada`
+          : currentLang === 'en'
+            ? `${isOrder ? 'Order' : 'Booking'} modification refused`
+            : currentLang === 'nl'
+              ? `Wijziging van ${isOrder ? 'bestelling' : 'reservatie'} geweigerd`
+              : `Modification de ${isOrder ? 'commande' : 'réservation'} refusée`,
+      subLabel: customerName
+        ? `${customerName} · ${currentLang === 'es' ? 'respuesta del cliente' : currentLang === 'en' ? 'customer response' : currentLang === 'nl' ? 'antwoord van de klant' : 'réponse client'}`
+        : (currentLang === 'es' ? 'Respuesta del cliente' : currentLang === 'en' ? 'Customer response' : currentLang === 'nl' ? 'Antwoord van de klant' : 'Réponse client'),
+      buttonLabel,
+      icon: 'x-circle',
+      tone: 'red'
+    };
+  }
+
+  return {
+    label:
+      currentLang === 'es'
+        ? (isOrder ? 'Nuevo pedido por tratar' : 'Nueva reserva por tratar')
+        : currentLang === 'en'
+          ? (isOrder ? 'New order to handle' : 'New booking to handle')
+          : currentLang === 'nl'
+            ? (isOrder ? 'Nieuwe bestelling te behandelen' : 'Nieuwe reservatie te behandelen')
+            : (isOrder ? 'Nouvelle commande à traiter' : 'Nouvelle réservation à traiter'),
+    subLabel:
+      currentLang === 'es'
+        ? 'TapCarta Resto · acción requerida'
+        : currentLang === 'en'
+          ? 'TapCarta Resto · action required'
+          : currentLang === 'nl'
+            ? 'TapCarta Resto · actie vereist'
+            : 'TapCarta Resto · action requise',
+    buttonLabel,
+    icon: 'bell-ring',
+    tone: 'gold'
+  };
+}
+
+function showRestaurantNewRequestNotification(items) {
+  const existingNotification = document.getElementById('restaurant-new-request-notification');
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
+  if (isRestaurantRequestModalOpen()) {
+    return;
+  }
+
+  const notificationItems = Array.isArray(items) ? items : [];
+  const text = getRestaurantNotificationText(notificationItems);
+
+  const toneClasses = text.tone === 'emerald'
+    ? {
+        border: 'border-emerald-300',
+        background: 'from-emerald-500/25 via-black/95 to-black',
+        ring: 'shadow-[0_0_0_4px_rgba(16,185,129,0.16),0_22px_80px_rgba(0,0,0,0.65)]',
+        icon: 'bg-emerald-300 text-black',
+        title: 'text-emerald-100',
+        button: 'border-emerald-300 bg-emerald-300 text-black hover:bg-emerald-200'
+      }
+    : text.tone === 'red'
+      ? {
+          border: 'border-red-300',
+          background: 'from-red-500/25 via-black/95 to-black',
+          ring: 'shadow-[0_0_0_4px_rgba(248,113,113,0.16),0_22px_80px_rgba(0,0,0,0.65)]',
+          icon: 'bg-red-300 text-black',
+          title: 'text-red-100',
+          button: 'border-red-300 bg-red-300 text-black hover:bg-red-200'
+        }
+      : {
+          border: 'border-gold',
+          background: 'from-gold/25 via-black/95 to-black',
+          ring: 'shadow-[0_0_0_4px_rgba(212,175,55,0.18),0_22px_80px_rgba(0,0,0,0.65)]',
+          icon: 'bg-gold text-black',
+          title: 'text-gold',
+          button: 'border-gold bg-gold text-black hover:bg-gold/90'
+        };
+
   const notification = document.createElement('div');
   notification.id = 'restaurant-new-request-notification';
-  notification.className = 'fixed left-3 right-3 bottom-4 z-[90] md:left-auto md:right-6 md:bottom-6 md:w-[430px] rounded-[24px] border-2 border-gold bg-gradient-to-br from-gold/25 via-black/95 to-black shadow-[0_0_0_4px_rgba(212,175,55,0.18),0_22px_80px_rgba(0,0,0,0.65)] px-5 py-5 flex items-center justify-between gap-4 animate-pulse';
+  notification.className = `fixed left-3 right-3 bottom-4 z-[90] md:left-auto md:right-6 md:bottom-6 md:w-[450px] rounded-[24px] border-2 ${toneClasses.border} bg-gradient-to-br ${toneClasses.background} ${toneClasses.ring} px-5 py-5 flex items-center justify-between gap-4 animate-pulse`;
 
   notification.innerHTML = `
     <div class="flex items-center gap-4 min-w-0">
-      <div class="w-12 h-12 rounded-2xl bg-gold text-black flex items-center justify-center shadow-lg flex-shrink-0">
-        <i data-lucide="bell-ring" class="w-6 h-6"></i>
+      <div class="w-12 h-12 rounded-2xl ${toneClasses.icon} flex items-center justify-center shadow-lg flex-shrink-0">
+        <i data-lucide="${text.icon}" class="w-6 h-6"></i>
       </div>
       <div class="min-w-0">
-        <div class="text-base font-extrabold text-gold uppercase tracking-wide">${label}</div>
-        <div class="text-sm text-cream/85 mt-1">${subLabel}</div>
+        <div class="text-base font-extrabold ${toneClasses.title} uppercase tracking-wide">${text.label}</div>
+        <div class="text-sm text-cream/85 mt-1">${text.subLabel}</div>
       </div>
     </div>
     <button
       type="button"
-      class="btn-action px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all shadow-lg whitespace-nowrap"
+      class="btn-action px-4 py-3 rounded-2xl border-2 ${toneClasses.button} text-sm font-extrabold transition-all shadow-lg whitespace-nowrap"
       onclick="window.dismissRestaurantNewRequestNotification?.(); document.getElementById('restaurant-new-request-notification')?.remove(); document.getElementById('restaurant-requests-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });"
     >
-      ${buttonLabel}
+      ${text.buttonLabel}
     </button>
   `;
 
@@ -3525,14 +3660,7 @@ function showRestaurantNewRequestNotification(count) {
 }
 
 function isRequestEligibleForPopupNotification(item) {
-  const sourceStatus = item?.sourceRequest?.status || '';
-
-  return (
-    sourceStatus === 'pending' ||
-    sourceStatus === 'sent' ||
-    sourceStatus === 'accepted_by_client' ||
-    sourceStatus === 'rejected_by_client'
-  );
+  return Boolean(getRestaurantNotificationType(item));
 }
 
 function getRestaurantPopupNotificationRequests() {
@@ -3544,13 +3672,6 @@ function getRestaurantPopupNotificationRequests() {
     const bucket = getRestaurantRequestBucket(item);
     return bucket !== 'history' && bucket !== 'hidden';
   });
-}
-
-function getRestaurantRequestNotificationKey(item) {
-  const sourceStatus = item?.sourceRequest?.status || '';
-  const requestId = String(item?.id || item?.sourceRequest?.requestId || item?.sourceRequest?.liveRequestId || '');
-
-  return `${requestId}:${sourceStatus}`;
 }
 
 function getCurrentRestaurantPopupNotificationKeys() {
@@ -3573,12 +3694,14 @@ function dismissRestaurantNewRequestNotification() {
 
   state.dismissedActionRequestIds = dismissedKeys;
   state.knownActionRequestIds = new Set(currentPopupKeys);
+  state.responseNotificationCycles = new Map();
 }
 
 window.dismissRestaurantNewRequestNotification = dismissRestaurantNewRequestNotification;
 
 function notifyIfNewActionRequests() {
-  const popupKeys = getCurrentRestaurantPopupNotificationKeys();
+  const popupItems = getRestaurantPopupNotificationRequests();
+  const popupKeys = popupItems.map(getRestaurantRequestNotificationKey).filter(Boolean);
   const state = window.tapCartaRestaurantRequestNotificationState;
 
   if (!state) return;
@@ -3586,9 +3709,14 @@ function notifyIfNewActionRequests() {
   const knownKeys = state.knownActionRequestIds instanceof Set
     ? state.knownActionRequestIds
     : null;
+
   const dismissedKeys = ensureRestaurantNotificationSet(state.dismissedActionRequestIds);
+  const responseCycles = state.responseNotificationCycles instanceof Map
+    ? state.responseNotificationCycles
+    : new Map();
 
   state.dismissedActionRequestIds = dismissedKeys;
+  state.responseNotificationCycles = responseCycles;
 
   if (!popupKeys.length || isRestaurantRequestModalOpen()) {
     document.getElementById('restaurant-new-request-notification')?.remove();
@@ -3601,6 +3729,10 @@ function notifyIfNewActionRequests() {
     return;
   }
 
+  const itemsByKey = new Map(
+    popupItems.map((item) => [getRestaurantRequestNotificationKey(item), item])
+  );
+
   const newKeys = popupKeys.filter((key) => !knownKeys.has(key) && !dismissedKeys.has(key));
   state.knownActionRequestIds = new Set(popupKeys);
 
@@ -3611,30 +3743,71 @@ function notifyIfNewActionRequests() {
     }
   });
 
-  if (newKeys.length) {
+  responseCycles.forEach((value, key) => {
+    if (!activePopupKeySet.has(key)) {
+      responseCycles.delete(key);
+    }
+  });
+
+  newKeys.forEach((key) => {
+    const item = itemsByKey.get(key);
+    const status = item?.sourceRequest?.status || '';
+
+    if (isRestaurantResponseStatus(status)) {
+      responseCycles.set(key, 2);
+    }
+  });
+
+  responseCycles.forEach((value, key) => {
+    if (value <= 0) {
+      responseCycles.delete(key);
+      dismissedKeys.add(key);
+    }
+  });
+
+  const visibleResponseKeys = popupKeys.filter((key) => {
+    const item = itemsByKey.get(key);
+    const status = item?.sourceRequest?.status || '';
+    return isRestaurantResponseStatus(status) && responseCycles.has(key) && !dismissedKeys.has(key);
+  });
+
+  const visibleNewRequestKeys = popupKeys.filter((key) => {
+    const item = itemsByKey.get(key);
+    const status = item?.sourceRequest?.status || '';
+    return !isRestaurantResponseStatus(status) && !dismissedKeys.has(key);
+  });
+
+  const keysToDisplay = newKeys.length
+    ? newKeys
+    : visibleResponseKeys.length
+      ? visibleResponseKeys
+      : visibleNewRequestKeys;
+
+  if (keysToDisplay.length) {
     const now = Date.now();
 
-    if (now - state.lastNotificationAt >= 5000) {
+    if (newKeys.length && now - state.lastNotificationAt >= 5000) {
       state.lastNotificationAt = now;
       notifyRestaurantNewRequestSound();
     }
 
     if (!isRestaurantRequestModalOpen()) {
-      showRestaurantNewRequestNotification(newKeys.length);
+      showRestaurantNewRequestNotification(
+        keysToDisplay
+          .map((key) => itemsByKey.get(key))
+          .filter(Boolean)
+      );
     }
+
+    visibleResponseKeys.forEach((key) => {
+      const currentCycles = Number(responseCycles.get(key) || 0);
+      responseCycles.set(key, currentCycles - 1);
+    });
 
     return;
   }
 
-  const existingNotification = document.getElementById('restaurant-new-request-notification');
-
-  if (existingNotification) {
-    const hasUndismissedAction = popupKeys.some((key) => !dismissedKeys.has(key));
-
-    if (!hasUndismissedAction) {
-      existingNotification.remove();
-    }
-  }
+  document.getElementById('restaurant-new-request-notification')?.remove();
 }
 
 const googleReviewsData = window.tapCartaGoogleReviewsData;
@@ -6579,9 +6752,10 @@ function getRequestActionPresets(isOrder, mode, targetLang = currentLang, hasPro
   if (targetLang === 'es') {
     if (isOrder && mode === 'modify') {
       return [
-        { reason: 'kitchen_temporary_closed', label: 'Cocina cerrada temporalmente', message: hasProposedTime ? 'La cocina está cerrada temporalmente en el horario solicitado. Le hemos propuesto otra hora.' : 'La cocina está cerrada temporalmente en el horario solicitado. Podemos proponerle otra hora.' },
+        { reason: 'time_unavailable', label: 'Horario no disponible', message: hasProposedTime ? 'El horario solicitado ya no está disponible. Le hemos propuesto otra hora para su pedido.' : 'El horario solicitado ya no está disponible. Podemos proponerle otra hora.' },
+        { reason: 'longer_delay', label: 'Plazo más largo que previsto', message: hasProposedTime ? 'El plazo es más largo de lo previsto en el horario solicitado. Le hemos propuesto otra hora.' : 'El plazo es más largo de lo previsto en el horario solicitado. Podemos proponerle otra hora.' },
         { reason: 'item_unavailable', label: 'Artículo no disponible', message: 'Uno de los artículos solicitados ya no está disponible. La carta ha sido actualizada en su aplicación.' },
-        { reason: 'longer_delay', label: 'Plazo más largo de lo previsto', message: hasProposedTime ? 'El plazo es más largo de lo previsto en el horario solicitado. Le hemos propuesto otra hora.' : 'El plazo es más largo de lo previsto en el horario solicitado. Podemos proponerle otra hora.' },
+        { reason: 'kitchen_temporary_closed', label: 'Cocina cerrada temporalmente', message: hasProposedTime ? 'La cocina está cerrada temporalmente en el horario solicitado. Le hemos propuesto otra hora.' : 'La cocina está cerrada temporalmente en el horario solicitado. Podemos proponerle otra hora.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
       ];
     }
@@ -6596,8 +6770,8 @@ function getRequestActionPresets(isOrder, mode, targetLang = currentLang, hasPro
 
     if (!isOrder && mode === 'modify') {
       return [
-        { reason: 'restaurant_full', label: 'Restaurante completo', message: hasProposedTime ? 'El restaurante está completo en el horario solicitado. Le hemos propuesto otra hora.' : 'El restaurante está completo en el horario solicitado. Podemos proponerle otra hora.' },
         { reason: 'slot_unavailable', label: 'Horario no disponible', message: hasProposedTime ? 'El horario solicitado ya no está disponible. Le hemos propuesto otra hora.' : 'El horario solicitado ya no está disponible. Podemos proponerle otra hora.' },
+        { reason: 'restaurant_full', label: 'Restaurante completo', message: hasProposedTime ? 'El restaurante está completo en el horario solicitado. Le hemos propuesto otra hora.' : 'El restaurante está completo en el horario solicitado. Podemos proponerle otra hora.' },
         { reason: 'party_size_not_possible', label: 'Número de personas no posible', message: hasProposedTime ? 'Lo sentimos, pero no podemos confirmar el número de personas solicitado en ese horario. Le hemos propuesto otra hora.' : 'Lo sentimos, pero no podemos confirmar el número de personas solicitado en ese horario. Podemos proponerle otra hora.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
       ];
@@ -6613,9 +6787,10 @@ function getRequestActionPresets(isOrder, mode, targetLang = currentLang, hasPro
   if (targetLang === 'en') {
     if (isOrder && mode === 'modify') {
       return [
-        { reason: 'kitchen_temporary_closed', label: 'Kitchen temporarily closed', message: hasProposedTime ? 'The kitchen is temporarily closed at the requested time. We have proposed another time for your order.' : 'The kitchen is temporarily closed at the requested time. We can offer you another time.' },
-        { reason: 'item_unavailable', label: 'Item unavailable', message: 'One of the requested items is no longer available. The menu has been updated in your app.' },
+        { reason: 'time_unavailable', label: 'Time unavailable', message: hasProposedTime ? 'The requested time is no longer available. We have proposed another time for your order.' : 'The requested time is no longer available. We can offer you another time.' },
         { reason: 'longer_delay', label: 'Longer delay than expected', message: hasProposedTime ? 'The delay is longer than expected at the requested time. We have proposed another time for your order.' : 'The delay is longer than expected at the requested time. We can offer you another time.' },
+        { reason: 'item_unavailable', label: 'Item unavailable', message: 'One of the requested items is no longer available. The menu has been updated in your app.' },
+        { reason: 'kitchen_temporary_closed', label: 'Kitchen temporarily closed', message: hasProposedTime ? 'The kitchen is temporarily closed at the requested time. We have proposed another time for your order.' : 'The kitchen is temporarily closed at the requested time. We can offer you another time.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
       ];
     }
@@ -6630,9 +6805,9 @@ function getRequestActionPresets(isOrder, mode, targetLang = currentLang, hasPro
 
     if (!isOrder && mode === 'modify') {
       return [
-        { reason: 'restaurant_full', label: 'Restaurant full', message: hasProposedTime ? 'The restaurant is fully booked at the requested time. We have proposed another time for your booking.' : 'The restaurant is fully booked at the requested time. We can offer you another time.' },
-        { reason: 'slot_unavailable', label: 'Time slot unavailable', message: hasProposedTime ? 'The requested time slot is no longer available. We have proposed another time for your booking.' : 'The requested time slot is no longer available. We can offer you another time.' },
-        { reason: 'party_size_not_possible', label: 'Party size not possible', message: hasProposedTime ? 'We are sorry, but we cannot confirm the requested party size at that time. We have proposed another time for your booking.' : 'We are sorry, but we cannot confirm the requested party size at that time. We can offer you another time.' },
+        { reason: 'slot_unavailable', label: 'Time slot unavailable', message: hasProposedTime ? 'The requested time slot is no longer available. We have proposed another time.' : 'The requested time slot is no longer available. We can offer you another time.' },
+        { reason: 'restaurant_full', label: 'Restaurant full', message: hasProposedTime ? 'The restaurant is fully booked at the requested time. We have proposed another time.' : 'The restaurant is fully booked at the requested time. We can offer you another time.' },
+        { reason: 'party_size_not_possible', label: 'Party size not possible', message: hasProposedTime ? 'We are sorry, but we cannot confirm the requested number of guests at that time. We have proposed another time.' : 'We are sorry, but we cannot confirm the requested number of guests at that time. We can offer you another time.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
       ];
     }
@@ -6647,9 +6822,10 @@ function getRequestActionPresets(isOrder, mode, targetLang = currentLang, hasPro
   if (targetLang === 'nl') {
     if (isOrder && mode === 'modify') {
       return [
+        { reason: 'time_unavailable', label: 'Uur niet beschikbaar', message: hasProposedTime ? 'Het gevraagde uur is niet meer beschikbaar. Wij hebben u een ander uur voorgesteld voor uw bestelling.' : 'Het gevraagde uur is niet meer beschikbaar. We kunnen u een ander uur voorstellen.' },
+        { reason: 'longer_delay', label: 'Langere wachttijd dan verwacht', message: hasProposedTime ? 'De wachttijd is langer dan verwacht op het gevraagde uur. Wij hebben u een ander uur voorgesteld.' : 'De wachttijd is langer dan verwacht op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
+        { reason: 'item_unavailable', label: 'Artikel niet beschikbaar', message: 'Een van de gevraagde artikelen is niet meer beschikbaar. De kaart is bijgewerkt in uw app.' },
         { reason: 'kitchen_temporary_closed', label: 'Keuken tijdelijk gesloten', message: hasProposedTime ? 'De keuken is tijdelijk gesloten op het gevraagde uur. Wij hebben u een ander uur voorgesteld.' : 'De keuken is tijdelijk gesloten op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
-        { reason: 'item_unavailable', label: 'Artikel niet beschikbaar', message: 'Eén van de gevraagde artikelen is niet meer beschikbaar. De kaart werd bijgewerkt in uw app.' },
-        { reason: 'longer_delay', label: 'Langere wachttijd dan voorzien', message: hasProposedTime ? 'De wachttijd is langer dan voorzien op het gevraagde uur. Wij hebben u een ander uur voorgesteld.' : 'De wachttijd is langer dan voorzien op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
       ];
     }
@@ -6664,8 +6840,8 @@ function getRequestActionPresets(isOrder, mode, targetLang = currentLang, hasPro
 
     if (!isOrder && mode === 'modify') {
       return [
-        { reason: 'restaurant_full', label: 'Restaurant volzet', message: hasProposedTime ? 'Het restaurant is volzet op het gevraagde uur. Wij hebben u een ander uur voorgesteld.' : 'Het restaurant is volzet op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
         { reason: 'slot_unavailable', label: 'Tijdslot niet beschikbaar', message: hasProposedTime ? 'Het gevraagde tijdslot is niet meer beschikbaar. Wij hebben u een ander uur voorgesteld.' : 'Het gevraagde tijdslot is niet meer beschikbaar. We kunnen u een ander uur voorstellen.' },
+        { reason: 'restaurant_full', label: 'Restaurant volzet', message: hasProposedTime ? 'Het restaurant is volzet op het gevraagde uur. Wij hebben u een ander uur voorgesteld.' : 'Het restaurant is volzet op het gevraagde uur. We kunnen u een ander uur voorstellen.' },
         { reason: 'party_size_not_possible', label: 'Aantal personen niet mogelijk', message: hasProposedTime ? 'Het spijt ons, maar we kunnen het gevraagde aantal personen op dat uur niet bevestigen. Wij hebben u een ander uur voorgesteld.' : 'Het spijt ons, maar we kunnen het gevraagde aantal personen op dat uur niet bevestigen. We kunnen u een ander uur voorstellen.' },
         { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
       ];
@@ -6680,9 +6856,10 @@ function getRequestActionPresets(isOrder, mode, targetLang = currentLang, hasPro
 
   if (isOrder && mode === 'modify') {
     return [
-      { reason: 'kitchen_temporary_closed', label: 'Cuisine fermée temporairement', message: hasProposedTime ? 'La cuisine est fermée temporairement sur le créneau demandé. Nous vous avons proposé un autre horaire pour votre commande.' : 'La cuisine est fermée temporairement sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
-      { reason: 'item_unavailable', label: 'Article indisponible', message: 'Un des articles demandés n’est plus disponible. La carte a été mise à jour dans votre application.' },
+      { reason: 'time_unavailable', label: 'Horaire indisponible', message: hasProposedTime ? 'Le créneau demandé n’est plus disponible. Nous vous avons proposé un autre horaire pour votre commande.' : 'Le créneau demandé n’est plus disponible. Nous pouvons vous proposer un autre horaire.' },
       { reason: 'longer_delay', label: 'Délai plus long que prévu', message: hasProposedTime ? 'Le délai est plus long que prévu sur le créneau demandé. Nous vous avons proposé un autre horaire pour votre commande.' : 'Le délai est plus long que prévu sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'item_unavailable', label: 'Article indisponible', message: 'Un des articles demandés n’est plus disponible. La carte a été mise à jour dans votre application.' },
+      { reason: 'kitchen_temporary_closed', label: 'Cuisine fermée temporairement', message: hasProposedTime ? 'La cuisine est fermée temporairement sur le créneau demandé. Nous vous avons proposé un autre horaire pour votre commande.' : 'La cuisine est fermée temporairement sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
       { reason: 'other', label: texts.otherReason, message: texts.modifiedOrderDefault }
     ];
   }
@@ -6697,8 +6874,8 @@ function getRequestActionPresets(isOrder, mode, targetLang = currentLang, hasPro
 
   if (!isOrder && mode === 'modify') {
     return [
-      { reason: 'restaurant_full', label: 'Restaurant complet', message: hasProposedTime ? 'Le restaurant est complet sur le créneau demandé. Nous vous avons proposé un autre horaire pour votre réservation.' : 'Le restaurant est complet sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
       { reason: 'slot_unavailable', label: 'Créneau indisponible', message: hasProposedTime ? 'Le créneau demandé n’est plus disponible. Nous vous avons proposé un autre horaire pour votre réservation.' : 'Le créneau demandé n’est plus disponible. Nous pouvons vous proposer un autre horaire.' },
+      { reason: 'restaurant_full', label: 'Restaurant complet', message: hasProposedTime ? 'Le restaurant est complet sur le créneau demandé. Nous vous avons proposé un autre horaire pour votre réservation.' : 'Le restaurant est complet sur le créneau demandé. Nous pouvons vous proposer un autre horaire.' },
       { reason: 'party_size_not_possible', label: 'Nombre de personnes non possible', message: hasProposedTime ? 'Nous sommes désolés mais nous ne pouvons pas confirmer le nombre de personnes demandé sur ce créneau. Nous vous avons proposé un autre horaire pour votre réservation.' : 'Nous sommes désolés mais nous ne pouvons pas confirmer le nombre de personnes demandé sur ce créneau. Nous pouvons vous proposer un autre horaire.' },
       { reason: 'other', label: texts.otherReason, message: texts.modifiedBookingDefault }
     ];
@@ -6755,36 +6932,48 @@ function buildRequestActionModalHtml(item, mode) {
               <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsCustomer}</div>
               <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.name || '-')}</div>
             </div>
+
             <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
               <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${t.restaurantDetailsPhone}</div>
               <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(source.customer?.phone || '-')}</div>
             </div>
+          </div>
+
+          <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
+            <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-3">${texts.reasonLabel}</div>
+            <input
+              id="restaurant-request-action-reason"
+              type="hidden"
+              value="${escapeRequestDetailsHtml(selectedReason)}"
+            >
+            <div class="flex flex-wrap gap-2">
+              ${presets.map((entry) => `
+                <button
+                  type="button"
+                  data-restaurant-action-reason="${escapeRequestDetailsHtml(entry.reason)}"
+                  class="btn-action restaurant-action-reason-chip px-3 py-2 rounded-xl border text-xs font-bold transition-all ${
+                    entry.reason === selectedReason
+                      ? 'border-gold bg-gold text-black'
+                      : 'border-white/12 bg-black/20 text-cream hover:bg-white/8'
+                  }"
+                >
+                  ${escapeRequestDetailsHtml(entry.label)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          ${mode === 'modify' ? `
             <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
-              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${texts.reasonLabel}</div>
-              <select
-                id="restaurant-request-action-reason"
+              <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${texts.timeLabel}</div>
+              <input
+                id="restaurant-request-action-time"
+                type="time"
+                value="${escapeRequestDetailsHtml(proposedTimeValue)}"
                 class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-cream outline-none"
               >
-                ${presets.map((entry) => `
-                  <option value="${escapeRequestDetailsHtml(entry.reason)}" ${entry.reason === selectedReason ? 'selected' : ''}>
-                    ${escapeRequestDetailsHtml(entry.label)}
-                  </option>
-                `).join('')}
-              </select>
             </div>
-
-            ${mode === 'modify' ? `
-              <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
-                <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${texts.timeLabel}</div>
-                <input
-                  id="restaurant-request-action-time"
-                  type="time"
-                  value="${escapeRequestDetailsHtml(proposedTimeValue)}"
-                  class="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-cream outline-none"
-                >
-              </div>
-            ` : ''}
-          </div>
+          ` : ''}
 
           <div class="rounded-xl border border-white/8 bg-black/20 px-4 py-3">
             <div class="text-[11px] uppercase tracking-wide text-cream/45 mb-1">${texts.messageLabel}</div>
@@ -6834,7 +7023,8 @@ window.openRequestActionModal = function(requestId, mode) {
   document.body.insertAdjacentHTML('beforeend', buildRequestActionModalHtml(item, mode));
 
   const modal = document.getElementById('restaurant-request-action-modal');
-  const reasonSelect = document.getElementById('restaurant-request-action-reason');
+  const reasonField = document.getElementById('restaurant-request-action-reason');
+  const reasonButtons = Array.from(document.querySelectorAll('[data-restaurant-action-reason]'));
   const messageField = document.getElementById('restaurant-request-action-message');
   const timeField = document.getElementById('restaurant-request-action-time');
   const source = item.sourceRequest || {};
@@ -6846,10 +7036,24 @@ window.openRequestActionModal = function(requestId, mode) {
     return getRequestActionPresets(isOrder, mode, clientLang, !!proposedTime);
   }
 
-  function syncMessageWithReason(forceReplace = false) {
-    if (!reasonSelect || !messageField) return;
+  function updateReasonButtons() {
+    if (!reasonField) return;
 
-    const selectedPreset = getCurrentPresets().find((entry) => entry.reason === reasonSelect.value);
+    reasonButtons.forEach((button) => {
+      const isSelected = button.dataset.restaurantActionReason === reasonField.value;
+      button.classList.toggle('border-gold', isSelected);
+      button.classList.toggle('bg-gold', isSelected);
+      button.classList.toggle('text-black', isSelected);
+      button.classList.toggle('border-white/12', !isSelected);
+      button.classList.toggle('bg-black/20', !isSelected);
+      button.classList.toggle('text-cream', !isSelected);
+    });
+  }
+
+  function syncMessageWithReason(forceReplace = false) {
+    if (!reasonField || !messageField) return;
+
+    const selectedPreset = getCurrentPresets().find((entry) => entry.reason === reasonField.value);
     if (!selectedPreset) return;
 
     if (forceReplace || !messageField.value.trim()) {
@@ -6857,14 +7061,22 @@ window.openRequestActionModal = function(requestId, mode) {
     }
   }
 
-  if (reasonSelect && messageField) {
-    reasonSelect.addEventListener('change', () => syncMessageWithReason(true));
-  }
+  reasonButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (!reasonField) return;
 
-  if (timeField && reasonSelect && messageField && mode === 'modify') {
+      reasonField.value = button.dataset.restaurantActionReason || 'other';
+      updateReasonButtons();
+      syncMessageWithReason(true);
+    });
+  });
+
+  if (timeField && messageField && mode === 'modify') {
     timeField.addEventListener('change', () => syncMessageWithReason(true));
     timeField.addEventListener('input', () => syncMessageWithReason(true));
   }
+
+  updateReasonButtons();
 
   if (modal) {
     modal.addEventListener('click', (event) => {
