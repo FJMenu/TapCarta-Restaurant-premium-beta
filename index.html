@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.15.1';
+            const APP_VERSION = 'V1.2.15.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -2699,18 +2699,41 @@ async function syncLiveBookingsToLocalStorage() {
         ? row.restaurant_response
         : {};
 
+    const rawModifiedItems = Array.isArray(row?.modified_items)
+      ? row.modified_items
+      : [];
+
+    const timeModification = rawModifiedItems.find((entry) =>
+      entry &&
+      typeof entry === 'object' &&
+      entry.field === 'time' &&
+      entry.proposedTime
+    );
+
     const rawMessage = String(rawRestaurantResponse.message || row?.restaurant_message || '');
     const messageHasHistoryDeletedMarker = rawMessage.includes(TAPCARTA_HISTORY_DELETED_MARKER);
     const cleanMessage = rawMessage.replace(TAPCARTA_HISTORY_DELETED_MARKER, '').trim();
 
+    const proposalFromModifiedItems = timeModification
+      ? {
+          ...(rawRestaurantResponse.proposal || {}),
+          previousTime: timeModification.previousTime || '',
+          proposedTime: timeModification.proposedTime || '',
+          acceptedTime: timeModification.acceptedTime || '',
+          changedAt: timeModification.changedAt || row?.updated_at || null
+        }
+      : rawRestaurantResponse.proposal || null;
+
     return {
       ...rawRestaurantResponse,
-      reason: rawRestaurantResponse.reason || row?.status || '',
+      reason: rawRestaurantResponse.reason || timeModification?.reason || row?.status || '',
       message: cleanMessage,
       updatedBy:
         rawRestaurantResponse.updatedBy ||
+        timeModification?.updatedBy ||
         (row?.restaurant_message ? 'restaurant' : ''),
-      proposal: rawRestaurantResponse.proposal || null,
+      proposal: proposalFromModifiedItems,
+      modifiedItems: rawModifiedItems,
       historyDeleted:
         rawRestaurantResponse.historyDeleted === true ||
         rawRestaurantResponse.hiddenFromRestaurantHistory === true ||
@@ -4453,6 +4476,12 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
         }
       : null;
 
+  const modifiedItems = Array.isArray(updatedRequest?.modifiedItems)
+    ? updatedRequest.modifiedItems
+    : Array.isArray(updatedRequest?.restaurantResponse?.modifiedItems)
+      ? updatedRequest.restaurantResponse.modifiedItems
+      : [];
+
   function updateLiveMemoryCache() {
     const cache = window.tapCartaRestaurantLiveRequestsCache || {
       bookings: [],
@@ -4487,9 +4516,11 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
         autoClosedAt: updatedRequest.autoClosedAt || entry.autoClosedAt || null,
         historyDeleted: updatedRequest.historyDeleted === true ? true : entry.historyDeleted === true,
         historyUpdatedAt: updatedRequest.historyUpdatedAt || entry.historyUpdatedAt || updatedAt,
+        modifiedItems: modifiedItems.length ? modifiedItems : entry.modifiedItems || [],
         restaurantResponse: {
           ...(entry.restaurantResponse || {}),
-          ...(restaurantResponse || {})
+          ...(restaurantResponse || {}),
+          modifiedItems: modifiedItems.length ? modifiedItems : entry.restaurantResponse?.modifiedItems || []
         }
       };
     });
@@ -4538,8 +4569,15 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
       restaurant_message: restaurantResponse?.message || null
     };
 
+    if (modifiedItems.length) {
+      livePayload.modified_items = modifiedItems;
+    }
+
     if (restaurantResponse) {
-      livePayload.restaurant_response = restaurantResponse;
+      livePayload.restaurant_response = {
+        ...restaurantResponse,
+        modifiedItems
+      };
     }
 
     let { error } = await runSupabaseUpdate(livePayload);
@@ -4553,12 +4591,16 @@ async function persistRestaurantRequestUpdate(updatedRequest) {
           : livePayload.restaurant_message
       };
 
+      if (modifiedItems.length) {
+        fallbackPayload.modified_items = modifiedItems;
+      }
+
       const fallbackResult = await runSupabaseUpdate(fallbackPayload);
       error = fallbackResult.error;
 
       if (!error) {
         console.warn(
-          'TapCarta Restaurant: champ restaurant_response non accepté par Supabase, fallback restaurant_message utilisé.'
+          'TapCarta Restaurant: champ restaurant_response non accepté par Supabase, fallback avec modified_items utilisé.'
         );
       }
     }
@@ -6848,7 +6890,10 @@ window.submitRequestAction = async function(requestId, mode) {
       ...item.sourceRequest,
       restaurantResponse: {
         ...(item.sourceRequest.restaurantResponse || {})
-      }
+      },
+      modifiedItems: Array.isArray(item.sourceRequest.modifiedItems)
+        ? [...item.sourceRequest.modifiedItems]
+        : []
     }
   };
 
@@ -6867,6 +6912,37 @@ window.submitRequestAction = async function(requestId, mode) {
   }
 
   const nowIso = new Date().toISOString();
+  const isOrder = !!item.sourceRequest?.order;
+  const currentTime = isOrder
+    ? String(item.sourceRequest?.order?.time || '').slice(0, 5)
+    : String(item.sourceRequest?.booking?.time || '').slice(0, 5);
+
+  if (mode === 'modify' && !proposedTime) {
+    alert(
+      currentLang === 'es'
+        ? 'Indique una nueva hora antes de enviar la modificación.'
+        : currentLang === 'en'
+          ? 'Please choose a new time before sending the modification.'
+          : currentLang === 'nl'
+            ? 'Kies een nieuw uur voordat u de wijziging verstuurt.'
+            : 'Indiquez un nouvel horaire avant d’envoyer la modification.'
+    );
+    return;
+  }
+
+  const modifiedItems = mode === 'modify'
+    ? [
+        {
+          field: 'time',
+          previousTime: currentTime || '',
+          proposedTime,
+          reason,
+          message,
+          updatedBy: 'restaurant',
+          changedAt: nowIso
+        }
+      ]
+    : [];
 
   if (mode === 'modify') {
     item.treated = false;
@@ -6881,10 +6957,12 @@ window.submitRequestAction = async function(requestId, mode) {
 
   if (mode === 'modify') {
     item.sourceRequest.modifiedAt = nowIso;
+    item.sourceRequest.modifiedItems = modifiedItems;
   }
 
   if (mode === 'cancel') {
     item.sourceRequest.cancelledAt = nowIso;
+    item.sourceRequest.modifiedItems = [];
   }
 
   item.sourceRequest.restaurantResponse = {
@@ -6893,10 +6971,13 @@ window.submitRequestAction = async function(requestId, mode) {
     message,
     updatedBy: 'restaurant',
     actionType: mode,
+    modifiedItems,
     proposal: mode === 'modify'
       ? {
           ...(item.sourceRequest.restaurantResponse?.proposal || {}),
-          proposedTime: proposedTime || null
+          previousTime: currentTime || '',
+          proposedTime,
+          changedAt: nowIso
         }
       : null
   };
