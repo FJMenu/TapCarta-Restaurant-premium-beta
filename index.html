@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.15.4';
+            const APP_VERSION = 'V1.2.16.1';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -8892,89 +8892,215 @@ function renderRequestRow(item, displayMode = 'active') {
         </section>
 
         <section id="restaurant-menu-editor-section" class="hidden mt-8">
-          <article class="rounded-[24px] border border-gold/18 bg-gradient-to-br from-white/[0.04] to-white/[0.015] shadow-[0_22px_60px_rgba(0,0,0,0.26)] p-5 md:p-6">
-            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
-              <div>
-                <h3 class="font-display text-xl font-bold text-cream">${currentLang === 'es'
-                  ? 'Gestión del menú'
-                  : currentLang === 'en'
-                    ? 'Menu management'
-                    : currentLang === 'nl'
-                      ? 'Menubeheer'
-                      : 'Gestion du menu'}</h3>
-                <p class="text-sm text-cream/60 mt-1">${currentLang === 'es'
-                  ? 'Modifique rápidamente las categorías, platos, visibilidad y disponibilidad.'
-                  : currentLang === 'en'
-                    ? 'Quickly edit categories, dishes, visibility and availability.'
-                    : currentLang === 'nl'
-                      ? 'Pas categorieën, gerechten, zichtbaarheid en beschikbaarheid snel aan.'
-                      : 'Modifiez rapidement les catégories, plats, visibilités et disponibilités.'}</p>
+          <article class="rounded-[28px] border border-gold/18 bg-gradient-to-br from-white/[0.05] to-white/[0.015] shadow-[0_26px_70px_rgba(0,0,0,0.30)] p-5 md:p-7">
 
-                <div
-                  id="restaurant-menu-unsaved-banner"
-                  class="hidden mt-3 inline-flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-200"
-                >
-                  <i data-lucide="triangle-alert" class="w-4 h-4"></i>
-                  <span>${currentLang === 'es'
-                    ? 'Cambios no validados'
+            <div id="restaurant-menu-editor-home">
+              <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+                <div>
+                  <h3 class="font-display text-2xl md:text-3xl font-bold text-cream">${currentLang === 'es'
+                    ? 'Modo edición del menú'
                     : currentLang === 'en'
-                      ? 'Unsaved changes'
+                      ? 'Menu edit mode'
                       : currentLang === 'nl'
-                        ? 'Niet-opgeslagen wijzigingen'
-                        : 'Modifications non validées'}</span>
-                </div>
-              </div>
+                        ? 'Menu bewerken'
+                        : 'Mode édition du menu'}</h3>
 
-              <div class="flex flex-wrap gap-3">
+                  <p class="text-sm md:text-base text-cream/65 mt-2 max-w-3xl">${currentLang === 'es'
+                    ? 'Va a modificar la estructura del menú. Los cambios deberán validarse antes de aplicarse.'
+                    : currentLang === 'en'
+                      ? 'You are about to edit the menu structure. Changes must be validated before being applied.'
+                      : currentLang === 'nl'
+                        ? 'U gaat de menustructuur aanpassen. Wijzigingen moeten worden bevestigd voordat ze worden toegepast.'
+                        : 'Vous allez modifier la structure du menu. Les changements devront être validés avant d’être appliqués.'}</p>
+
+                  <div class="mt-4 inline-flex items-start gap-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-100">
+                    <i data-lucide="triangle-alert" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                    <span>${currentLang === 'es'
+                      ? 'Este espacio sirve para modificar el menú. Si solo quiere verlo, use “Ver mi menú”.'
+                      : currentLang === 'en'
+                        ? 'This area is for editing the menu. To only view it, use “View my menu”.'
+                        : currentLang === 'nl'
+                          ? 'Deze zone is bedoeld om het menu te wijzigen. Wilt u alleen kijken, gebruik dan “Mijn menu bekijken”.'
+                          : 'Cet espace sert à modifier le menu. Pour seulement le consulter, utilisez “Voir mon menu”.'}</span>
+                  </div>
+                </div>
+
                 <button
                   id="restaurant-close-menu-editor-btn"
                   type="button"
-                  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+                  class="btn-action inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
                 >
                   <i data-lucide="arrow-left" class="w-4 h-4 text-cream"></i>
                   <span>${currentLang === 'es'
-                    ? 'Volver'
+                    ? 'Volver al inicio'
                     : currentLang === 'en'
-                      ? 'Back'
+                      ? 'Back to home'
                       : currentLang === 'nl'
-                        ? 'Terug'
-                        : 'Retour'}</span>
+                        ? 'Terug naar start'
+                        : 'Retour à l’accueil'}</span>
                 </button>
+              </div>
 
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
-                  id="restaurant-add-category-btn"
+                  id="restaurant-menu-editor-category-mode-btn"
                   type="button"
-                  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
+                  class="btn-action group rounded-[24px] border border-gold/25 bg-black/20 hover:bg-gold/10 transition-all p-5 text-left min-h-[150px]"
                 >
-                  <i data-lucide="folder-plus" class="w-4 h-4 text-gold"></i>
-                  <span>${currentLang === 'es'
+                  <div class="w-12 h-12 rounded-2xl bg-gold/12 border border-gold/25 flex items-center justify-center mb-4">
+                    <i data-lucide="folder-plus" class="w-6 h-6 text-gold"></i>
+                  </div>
+                  <div class="text-xl font-bold text-cream">${currentLang === 'es'
                     ? 'Añadir una categoría'
                     : currentLang === 'en'
                       ? 'Add a category'
                       : currentLang === 'nl'
                         ? 'Categorie toevoegen'
-                        : 'Ajouter une catégorie'}</span>
+                        : 'Ajouter une catégorie'}</div>
+                  <div class="text-sm text-cream/60 mt-2">${currentLang === 'es'
+                    ? 'Crear una nueva sección del menú.'
+                    : currentLang === 'en'
+                      ? 'Create a new menu section.'
+                      : currentLang === 'nl'
+                        ? 'Maak een nieuwe menusectie.'
+                        : 'Créer une nouvelle section du menu.'}</div>
                 </button>
 
                 <button
-                  id="restaurant-save-menu-json-btn"
+                  id="restaurant-menu-editor-dish-mode-btn"
                   type="button"
-                  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
+                  class="btn-action group rounded-[24px] border border-gold/35 bg-gold/10 hover:bg-gold/15 transition-all p-5 text-left min-h-[150px]"
                 >
-                  <i data-lucide="check" class="w-4 h-4 text-gold"></i>
-                  <span>${currentLang === 'es'
-                    ? 'Validar los cambios'
+                  <div class="w-12 h-12 rounded-2xl bg-gold/16 border border-gold/30 flex items-center justify-center mb-4">
+                    <i data-lucide="utensils" class="w-6 h-6 text-gold"></i>
+                  </div>
+                  <div class="text-xl font-bold text-cream">${currentLang === 'es'
+                    ? 'Añadir / modificar un plato'
                     : currentLang === 'en'
-                      ? 'Apply changes'
+                      ? 'Add / edit a dish'
                       : currentLang === 'nl'
-                        ? 'Wijzigingen bevestigen'
-                        : 'Valider les modifications'}</span>
+                        ? 'Gerecht toevoegen / wijzigen'
+                        : 'Ajouter / modifier un plat'}</div>
+                  <div class="text-sm text-cream/60 mt-2">${currentLang === 'es'
+                    ? 'Cambiar nombre, precio, disponibilidad y traducciones.'
+                    : currentLang === 'en'
+                      ? 'Edit name, price, availability and translations.'
+                      : currentLang === 'nl'
+                        ? 'Naam, prijs, beschikbaarheid en vertalingen wijzigen.'
+                        : 'Modifier nom, prix, disponibilité et traductions.'}</div>
+                </button>
+
+                <button
+                  id="restaurant-menu-editor-home-back-btn"
+                  type="button"
+                  class="btn-action group rounded-[24px] border border-white/12 bg-black/15 hover:bg-white/5 transition-all p-5 text-left min-h-[150px]"
+                >
+                  <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+                    <i data-lucide="home" class="w-6 h-6 text-cream"></i>
+                  </div>
+                  <div class="text-xl font-bold text-cream">${currentLang === 'es'
+                    ? 'Volver'
+                    : currentLang === 'en'
+                      ? 'Go back'
+                      : currentLang === 'nl'
+                        ? 'Terug'
+                        : 'Retour'}</div>
+                  <div class="text-sm text-cream/60 mt-2">${currentLang === 'es'
+                    ? 'Salir sin entrar en la edición.'
+                    : currentLang === 'en'
+                      ? 'Leave without entering edit mode.'
+                      : currentLang === 'nl'
+                        ? 'Verlaten zonder te bewerken.'
+                        : 'Quitter sans entrer dans l’édition.'}</div>
                 </button>
               </div>
             </div>
 
-            <div class="rounded-2xl border border-gold/15 bg-black/15 p-4 md:p-5">
-              <div id="restaurant-menu-categories-list" class="space-y-4"></div>
+            <div id="restaurant-menu-editor-workspace" class="hidden">
+              <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
+                <div>
+                  <h3 class="font-display text-xl font-bold text-cream">${currentLang === 'es'
+                    ? 'Gestión del menú'
+                    : currentLang === 'en'
+                      ? 'Menu management'
+                      : currentLang === 'nl'
+                        ? 'Menubeheer'
+                        : 'Gestion du menu'}</h3>
+
+                  <p class="text-sm text-cream/60 mt-1">${currentLang === 'es'
+                    ? 'Modifique rápidamente las categorías, platos, visibilidad y disponibilidad.'
+                    : currentLang === 'en'
+                      ? 'Quickly edit categories, dishes, visibility and availability.'
+                      : currentLang === 'nl'
+                        ? 'Pas categorieën, gerechten, zichtbaarheid en beschikbaarheid snel aan.'
+                        : 'Modifiez rapidement les catégories, plats, visibilités et disponibilités.'}</p>
+
+                  <div
+                    id="restaurant-menu-unsaved-banner"
+                    class="hidden mt-3 inline-flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-200"
+                  >
+                    <i data-lucide="triangle-alert" class="w-4 h-4"></i>
+                    <span>${currentLang === 'es'
+                      ? 'Cambios no validados'
+                      : currentLang === 'en'
+                        ? 'Unsaved changes'
+                        : currentLang === 'nl'
+                          ? 'Niet-opgeslagen wijzigingen'
+                          : 'Modifications non validées'}</span>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    id="restaurant-menu-editor-workspace-back-btn"
+                    type="button"
+                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+                  >
+                    <i data-lucide="arrow-left" class="w-4 h-4 text-cream"></i>
+                    <span>${currentLang === 'es'
+                      ? 'Opciones'
+                      : currentLang === 'en'
+                        ? 'Options'
+                        : currentLang === 'nl'
+                          ? 'Keuzes'
+                          : 'Choix'}</span>
+                  </button>
+
+                  <button
+                    id="restaurant-add-category-btn"
+                    type="button"
+                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-gold hover:bg-gold/10 transition-all"
+                  >
+                    <i data-lucide="folder-plus" class="w-4 h-4 text-gold"></i>
+                    <span>${currentLang === 'es'
+                      ? 'Añadir una categoría'
+                      : currentLang === 'en'
+                        ? 'Add a category'
+                        : currentLang === 'nl'
+                          ? 'Categorie toevoegen'
+                          : 'Ajouter une catégorie'}</span>
+                  </button>
+
+                  <button
+                    id="restaurant-save-menu-json-btn"
+                    type="button"
+                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all"
+                  >
+                    <i data-lucide="check" class="w-4 h-4 text-gold"></i>
+                    <span>${currentLang === 'es'
+                      ? 'Validar los cambios'
+                      : currentLang === 'en'
+                        ? 'Apply changes'
+                        : currentLang === 'nl'
+                          ? 'Wijzigingen bevestigen'
+                          : 'Valider les modifications'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-gold/15 bg-black/15 p-4 md:p-5">
+                <div id="restaurant-menu-categories-list" class="space-y-4"></div>
+              </div>
             </div>
           </article>
 
@@ -9908,7 +10034,13 @@ function renderRequestRow(item, displayMode = 'active') {
 
   const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
   const editorSection = document.getElementById('restaurant-menu-editor-section');
+  const editorHome = document.getElementById('restaurant-menu-editor-home');
+  const editorWorkspace = document.getElementById('restaurant-menu-editor-workspace');
   const closeEditorBtn = document.getElementById('restaurant-close-menu-editor-btn');
+  const editorHomeBackBtn = document.getElementById('restaurant-menu-editor-home-back-btn');
+  const editorWorkspaceBackBtn = document.getElementById('restaurant-menu-editor-workspace-back-btn');
+  const categoryModeBtn = document.getElementById('restaurant-menu-editor-category-mode-btn');
+  const dishModeBtn = document.getElementById('restaurant-menu-editor-dish-mode-btn');
   const addCategoryBtn = document.getElementById('restaurant-add-category-btn');
   const exportJsonBtn = document.getElementById('restaurant-save-menu-json-btn');
   const floatingSaveBtn = document.getElementById('restaurant-save-menu-floating-btn');
@@ -9950,12 +10082,31 @@ function renderRequestRow(item, displayMode = 'active') {
     saveMenuEditorUiState(isEditorOpen);
   }
 
+  function showMenuEditorHome() {
+    if (editorHome) editorHome.classList.remove('hidden');
+    if (editorWorkspace) editorWorkspace.classList.add('hidden');
+  }
+
+  function showMenuEditorWorkspace() {
+    if (editorHome) editorHome.classList.add('hidden');
+    if (editorWorkspace) editorWorkspace.classList.remove('hidden');
+
+    renderRestaurantMenuEditor();
+    updateMenuEditorDirtyUi();
+
+    if (window.lucide) {
+      requestAnimationFrame(() => {
+        lucide.createIcons();
+      });
+    }
+  }
+
   function openMenuEditor({ scroll = true } = {}) {
     if (!editorSection) return;
 
     editorSection.classList.remove('hidden');
+    showMenuEditorHome();
     syncMenuEditorUiState();
-    renderRestaurantMenuEditor();
     updateMenuEditorDirtyUi();
 
     if (scroll) {
@@ -9997,6 +10148,29 @@ function renderRequestRow(item, displayMode = 'active') {
 
   if (closeEditorBtn) {
     closeEditorBtn.addEventListener('click', closeMenuEditor);
+  }
+
+  if (editorHomeBackBtn) {
+    editorHomeBackBtn.addEventListener('click', closeMenuEditor);
+  }
+
+  if (editorWorkspaceBackBtn) {
+    editorWorkspaceBackBtn.addEventListener('click', () => {
+      if (!confirmLeaveMenuEditorIfDirty()) return;
+      showMenuEditorHome();
+    });
+  }
+
+  if (categoryModeBtn) {
+    categoryModeBtn.addEventListener('click', () => {
+      showMenuEditorWorkspace();
+    });
+  }
+
+  if (dishModeBtn) {
+    dishModeBtn.addEventListener('click', () => {
+      showMenuEditorWorkspace();
+    });
   }
 
   if (addCategoryBtn) {
