@@ -9885,8 +9885,14 @@ function renderRequestRow(item, displayMode = 'active') {
     renderRestaurantMenuEditor();
   }
 
-  function scrollToMenuEditorCard(selector) {
+  function scrollToMenuEditorAction(action, categoryIndex, itemIndex = null) {
     requestAnimationFrame(() => {
+      let selector = `[data-action="${action}"][data-category-index="${categoryIndex}"]`;
+
+      if (itemIndex !== null && itemIndex !== undefined && !Number.isNaN(itemIndex)) {
+        selector += `[data-item-index="${itemIndex}"]`;
+      }
+
       const target = document.querySelector(selector);
       if (!target) return;
 
@@ -9897,7 +9903,7 @@ function renderRequestRow(item, displayMode = 'active') {
     });
   }
 
-  function moveRestaurantItem(categoryIndex, itemIndex, direction) {
+  function moveRestaurantItem(categoryIndex, itemIndex, direction, action = null) {
     if (!activeRestaurantData?.menu?.categories?.[categoryIndex]?.items) return;
 
     const category = activeRestaurantData.menu.categories[categoryIndex];
@@ -9909,10 +9915,13 @@ function renderRequestRow(item, displayMode = 'active') {
     [items[itemIndex], items[targetIndex]] = [items[targetIndex], items[itemIndex]];
     syncRestaurantItemOrder(category);
     renderRestaurantMenuEditor();
-    scrollToMenuEditorCard(`[data-menu-item-card="true"][data-category-index="${categoryIndex}"][data-menu-item-index="${targetIndex}"]`);
+
+    if (action) {
+      scrollToMenuEditorAction(action, categoryIndex, targetIndex);
+    }
   }
 
-  function moveRestaurantCategory(categoryIndex, direction) {
+  function moveRestaurantCategory(categoryIndex, direction, action = null) {
     if (!activeRestaurantData?.menu?.categories) return;
 
     const categories = activeRestaurantData.menu.categories;
@@ -9923,7 +9932,10 @@ function renderRequestRow(item, displayMode = 'active') {
     [categories[categoryIndex], categories[targetIndex]] = [categories[targetIndex], categories[categoryIndex]];
     syncRestaurantCategoryOrder();
     renderRestaurantMenuEditor();
-    scrollToMenuEditorCard(`[data-menu-category-card="true"][data-menu-category-index="${targetIndex}"]`);
+
+    if (action) {
+      scrollToMenuEditorAction(action, targetIndex);
+    }
   }
 
   function deleteRestaurantItem(categoryIndex, itemIndex) {
@@ -10325,28 +10337,28 @@ function renderRequestRow(item, displayMode = 'active') {
 
       if (action === 'move-item-up') {
         markMenuEditorDirty();
-        moveRestaurantItem(categoryIndex, itemIndex, 'up');
+        moveRestaurantItem(categoryIndex, itemIndex, 'up', action);
         updateMenuEditorDirtyUi();
         return;
       }
 
       if (action === 'move-item-down') {
         markMenuEditorDirty();
-        moveRestaurantItem(categoryIndex, itemIndex, 'down');
+        moveRestaurantItem(categoryIndex, itemIndex, 'down', action);
         updateMenuEditorDirtyUi();
         return;
       }
 
       if (action === 'move-category-up') {
         markMenuEditorDirty();
-        moveRestaurantCategory(categoryIndex, 'up');
+        moveRestaurantCategory(categoryIndex, 'up', action);
         updateMenuEditorDirtyUi();
         return;
       }
 
       if (action === 'move-category-down') {
         markMenuEditorDirty();
-        moveRestaurantCategory(categoryIndex, 'down');
+        moveRestaurantCategory(categoryIndex, 'down', action);
         updateMenuEditorDirtyUi();
         return;
       }
