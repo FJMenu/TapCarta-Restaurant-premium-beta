@@ -10360,7 +10360,13 @@ function renderRequestRow(item, displayMode = 'active') {
     await syncLiveBookingsToLocalStorage();
     syncRequestsState();
     notifyIfNewActionRequests();
-    renderMenu();
+
+    const menuEditorSection = document.getElementById('restaurant-menu-editor-section');
+    const isMenuEditorOpen = !!menuEditorSection && !menuEditorSection.classList.contains('hidden');
+
+    if (!isMenuEditorOpen) {
+      renderMenu();
+    }
 
     updateRestaurantSoundToggleIcon();
 
