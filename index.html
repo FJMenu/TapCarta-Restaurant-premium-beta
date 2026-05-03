@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.1';
+            const APP_VERSION = 'V1.2.16.2';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9317,7 +9317,6 @@ function renderRequestRow(item, displayMode = 'active') {
       syncRestaurantItemOrder(category);
     });
   }
-
   function renderRestaurantMenuEditor() {
     const container = document.getElementById('restaurant-menu-categories-list');
     if (!container) return;
@@ -9356,12 +9355,12 @@ function renderRequestRow(item, displayMode = 'active') {
             ? 'gerecht(en)'
             : 'plat(s)',
       addDish: currentLang === 'es'
-        ? '+ Plato'
+        ? '+ Añadir plato'
         : currentLang === 'en'
-          ? '+ Dish'
+          ? '+ Add dish'
           : currentLang === 'nl'
-            ? '+ Gerecht'
-            : '+ Plat',
+            ? '+ Gerecht toevoegen'
+            : '+ Ajouter un plat',
       dishName: currentLang === 'es'
         ? 'Nombre del plato'
         : currentLang === 'en'
@@ -9370,12 +9369,12 @@ function renderRequestRow(item, displayMode = 'active') {
             ? 'Naam van het gerecht'
             : 'Nom du plat',
       subtitle: currentLang === 'es'
-        ? 'Subtítulo'
+        ? 'Descripción corta'
         : currentLang === 'en'
-          ? 'Subtitle'
+          ? 'Short description'
           : currentLang === 'nl'
-            ? 'Ondertitel'
-            : 'Sous-titre',
+            ? 'Korte beschrijving'
+            : 'Description courte',
       price: currentLang === 'es'
         ? 'Precio'
         : currentLang === 'en'
@@ -9460,21 +9459,21 @@ function renderRequestRow(item, displayMode = 'active') {
       const translations = item?.translations || {};
 
       return `
-        <details class="mt-4 rounded-lg border border-white/8 bg-black/15">
-          <summary class="cursor-pointer list-none px-3 py-3 flex items-center justify-between gap-3">
+        <details class="mt-4 rounded-2xl border border-white/10 bg-black/20 overflow-hidden">
+          <summary class="cursor-pointer list-none px-4 py-4 flex items-center justify-between gap-3 hover:bg-white/[0.04]">
             <div>
-              <div class="text-sm font-semibold text-cream">${editorText.translations}</div>
-              <div class="text-[11px] text-cream/50 mt-1">${editorText.manualTranslations}</div>
+              <div class="text-base font-bold text-cream">${editorText.translations}</div>
+              <div class="text-xs text-cream/55 mt-1">${editorText.manualTranslations}</div>
             </div>
-            <span class="text-[11px] text-gold">${translationLangs.map((lang) => lang.label).join(' · ')}</span>
+            <span class="rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-xs font-bold text-gold">${translationLangs.map((lang) => lang.label).join(' · ')}</span>
           </summary>
 
-          <div class="px-3 pb-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             ${translationLangs.map((lang) => `
-              <div class="rounded-lg border border-white/8 bg-black/20 p-3">
-                <div class="text-[11px] font-semibold uppercase tracking-wide text-gold mb-3">${lang.label}</div>
+              <div class="rounded-2xl border border-white/10 bg-black/25 p-4">
+                <div class="text-xs font-bold uppercase tracking-wide text-gold mb-4">${lang.label}</div>
 
-                <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2">
+                <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">
                   ${editorText.dishName}
                 </label>
                 <input
@@ -9484,10 +9483,10 @@ function renderRequestRow(item, displayMode = 'active') {
                   data-item-index="${itemIndex}"
                   data-lang="${lang.code}"
                   data-field="item-translation-name"
-                  class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+                  class="w-full rounded-xl border border-white/12 bg-black/25 px-4 py-3 text-base text-cream outline-none focus:border-gold/50"
                 >
 
-                <label class="block text-[11px] uppercase tracking-wide text-cream/45 mt-3 mb-2">
+                <label class="block text-xs uppercase tracking-wide text-cream/50 mt-4 mb-2">
                   ${editorText.subtitle}
                 </label>
                 <input
@@ -9497,7 +9496,7 @@ function renderRequestRow(item, displayMode = 'active') {
                   data-item-index="${itemIndex}"
                   data-lang="${lang.code}"
                   data-field="item-translation-subtitle"
-                  class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+                  class="w-full rounded-xl border border-white/12 bg-black/25 px-4 py-3 text-base text-cream outline-none focus:border-gold/50"
                 >
               </div>
             `).join('')}
@@ -9508,7 +9507,7 @@ function renderRequestRow(item, displayMode = 'active') {
 
     if (!categories.length) {
       container.innerHTML = `
-        <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-3 text-sm text-cream/55">
+        <div class="rounded-2xl border border-white/10 bg-black/20 px-5 py-5 text-base text-cream/65">
           ${editorText.noCategory}
         </div>
       `;
@@ -9516,10 +9515,19 @@ function renderRequestRow(item, displayMode = 'active') {
     }
 
     container.innerHTML = categories.map((category, categoryIndex) => `
-      <div class="rounded-xl border border-white/8 bg-black/15 px-4 py-4">
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0 flex-1">
-            <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2">
+      <div class="rounded-[24px] border border-amber-400/25 bg-black/22 p-4 md:p-5 shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
+        <div class="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-4 items-start">
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-xs font-bold text-gold">
+                ${(category.items || []).length} ${editorText.dishCountSuffix}
+              </span>
+              <span class="text-xs text-cream/50">
+                ID : ${escapeHtml(category.id || '—')} · ${editorText.order} : ${typeof category.order === 'number' ? category.order : categoryIndex + 1}
+              </span>
+            </div>
+
+            <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">
               ${editorText.categoryName}
             </label>
             <input
@@ -9527,77 +9535,88 @@ function renderRequestRow(item, displayMode = 'active') {
               value="${escapeHtml(category.name || '')}"
               data-category-index="${categoryIndex}"
               data-field="category-name"
-              class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+              class="w-full rounded-2xl border border-white/12 bg-black/25 px-4 py-4 text-xl font-bold text-cream outline-none focus:border-gold/50"
             >
-            <div class="text-xs text-cream/55 mt-2">
-              ID : ${escapeHtml(category.id || '—')} · ${editorText.order} : ${typeof category.order === 'number' ? category.order : categoryIndex + 1}
-            </div>
           </div>
 
-          <div class="flex flex-col items-end gap-2 flex-shrink-0 ml-3">
-            <div class="text-xs text-gold">
-              ${(category.items || []).length} ${editorText.dishCountSuffix}
-            </div>
-
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                data-action="move-category-up"
-                data-category-index="${categoryIndex}"
-                class="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-cream/80"
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                data-action="move-category-down"
-                data-category-index="${categoryIndex}"
-                class="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-cream/80"
-              >
-                ↓
-              </button>
-              <button
-                type="button"
-                data-action="delete-category"
-                data-category-index="${categoryIndex}"
-                class="rounded-lg border border-red-400/30 bg-red-500/12 px-3 py-1.5 text-sm font-bold text-red-300"
-              >
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
+          <div class="grid grid-cols-3 gap-2 xl:min-w-[260px]">
+            <button
+              type="button"
+              data-action="move-category-up"
+              data-category-index="${categoryIndex}"
+              class="rounded-2xl border border-white/12 bg-black/30 px-4 py-4 text-2xl font-bold text-cream hover:bg-white/8"
+              title="Monter"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              data-action="move-category-down"
+              data-category-index="${categoryIndex}"
+              class="rounded-2xl border border-white/12 bg-black/30 px-4 py-4 text-2xl font-bold text-cream hover:bg-white/8"
+              title="Descendre"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              data-action="delete-category"
+              data-category-index="${categoryIndex}"
+              class="rounded-2xl border border-red-400/35 bg-red-500/14 px-4 py-4 text-sm font-bold text-red-300 hover:bg-red-500/22"
+              title="Supprimer"
+            >
+              <i data-lucide="trash-2" class="w-5 h-5 mx-auto"></i>
+            </button>
 
             <button
               type="button"
               data-action="add-item"
               data-category-index="${categoryIndex}"
-              class="rounded-lg border border-gold/25 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold"
+              class="col-span-3 rounded-2xl border border-gold/35 bg-gold/12 px-4 py-4 text-base font-bold text-gold hover:bg-gold/18 flex items-center justify-center gap-2"
             >
-              ${editorText.addDish}
+              <i data-lucide="plus-circle" class="w-5 h-5"></i>
+              <span>${editorText.addDish}</span>
             </button>
           </div>
         </div>
 
-        <div class="mt-4 space-y-2">
+        <div class="mt-5 space-y-4">
           ${(category.items || []).length ? (category.items || []).map((item, itemIndex) => `
-            <div class="rounded-lg border border-white/6 bg-black/20 px-3 py-3">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0 flex-1">
-                  <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2">
-                    ${editorText.dishName}
-                  </label>
-                  <input
-                    type="text"
-                    value="${escapeHtml(item.name || '')}"
-                    data-category-index="${categoryIndex}"
-                    data-item-index="${itemIndex}"
-                    data-field="item-name"
-                    class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
-                  >
-                  <div class="text-xs text-cream/55 mt-2">
-                    ID : ${escapeHtml(item.id || '—')} · ${editorText.mainValueHint}
+            <div class="rounded-[22px] border border-white/10 bg-black/28 p-4 md:p-5">
+              <div class="grid grid-cols-1 xl:grid-cols-[1fr_190px] gap-4 items-start">
+                <div class="min-w-0">
+                  <div class="grid grid-cols-1 md:grid-cols-[1fr_150px] gap-4 items-end">
+                    <div>
+                      <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2">
+                        ${editorText.dishName}
+                      </label>
+                      <input
+                        type="text"
+                        value="${escapeHtml(item.name || '')}"
+                        data-category-index="${categoryIndex}"
+                        data-item-index="${itemIndex}"
+                        data-field="item-name"
+                        class="w-full rounded-2xl border border-white/12 bg-black/25 px-4 py-4 text-xl font-bold text-cream outline-none focus:border-gold/50"
+                      >
+                    </div>
+
+                    <div>
+                      <label class="block text-xs uppercase tracking-wide text-cream/50 mb-2 md:text-right">
+                        ${editorText.price}
+                      </label>
+                      <input
+                        type="text"
+                        inputmode="decimal"
+                        value="${typeof item.price === 'number' ? item.price : ''}"
+                        data-category-index="${categoryIndex}"
+                        data-item-index="${itemIndex}"
+                        data-field="item-price"
+                        class="w-full rounded-2xl border border-gold/25 bg-black/25 px-4 py-4 text-xl font-bold text-gold md:text-right outline-none focus:border-gold/60"
+                      >
+                    </div>
                   </div>
 
-                  <label class="block text-[11px] uppercase tracking-wide text-cream/45 mt-3 mb-2">
+                  <label class="block text-xs uppercase tracking-wide text-cream/50 mt-4 mb-2">
                     ${editorText.subtitle}
                   </label>
                   <input
@@ -9606,86 +9625,83 @@ function renderRequestRow(item, displayMode = 'active') {
                     data-category-index="${categoryIndex}"
                     data-item-index="${itemIndex}"
                     data-field="item-subtitle"
-                    class="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-cream outline-none"
+                    class="w-full rounded-2xl border border-white/12 bg-black/25 px-4 py-4 text-base text-cream outline-none focus:border-gold/50"
                   >
+
+                  <div class="text-xs text-cream/45 mt-3">
+                    ID : ${escapeHtml(item.id || '—')} · ${editorText.mainValueHint}
+                  </div>
 
                   ${renderTranslationFields(item, categoryIndex, itemIndex)}
                 </div>
 
-                <div class="text-right flex-shrink-0">
-                  <label class="block text-[11px] uppercase tracking-wide text-cream/45 mb-2 text-right">
-                    ${editorText.price}
+                <div class="space-y-3">
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      data-action="move-item-up"
+                      data-category-index="${categoryIndex}"
+                      data-item-index="${itemIndex}"
+                      class="rounded-2xl border border-white/12 bg-black/30 px-4 py-5 text-3xl font-bold text-cream hover:bg-white/8"
+                      title="Monter"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      data-action="move-item-down"
+                      data-category-index="${categoryIndex}"
+                      data-item-index="${itemIndex}"
+                      class="rounded-2xl border border-white/12 bg-black/30 px-4 py-5 text-3xl font-bold text-cream hover:bg-white/8"
+                      title="Descendre"
+                    >
+                      ↓
+                    </button>
+                  </div>
+
+                  <label class="flex items-center justify-between gap-3 rounded-2xl border ${item.visible !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+                    <span>${item.visible !== false ? editorText.visible : editorText.hidden}</span>
+                    <input
+                      type="checkbox"
+                      ${item.visible !== false ? 'checked' : ''}
+                      data-category-index="${categoryIndex}"
+                      data-item-index="${itemIndex}"
+                      data-field="item-visible"
+                      class="w-6 h-6 accent-yellow-400"
+                    >
                   </label>
-                  <input
-                    type="text"
-                    inputmode="decimal"
-                    value="${typeof item.price === 'number' ? item.price : ''}"
+
+                  <label class="flex items-center justify-between gap-3 rounded-2xl border ${item.available !== false ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/30 bg-red-500/12 text-red-300'} px-4 py-4 text-base font-bold">
+                    <span>${item.available !== false ? editorText.available : editorText.unavailable}</span>
+                    <input
+                      type="checkbox"
+                      ${item.available !== false ? 'checked' : ''}
+                      data-category-index="${categoryIndex}"
+                      data-item-index="${itemIndex}"
+                      data-field="item-available"
+                      class="w-6 h-6 accent-yellow-400"
+                    >
+                  </label>
+
+                  <!-- FUTUR: option commandable/non commandable.
+                       Emplacement prévu mais non affiché.
+                       Ne pas activer sans chantier commun Admin + Resto + Standard. -->
+                  <div class="hidden" data-future-field="item-orderable"></div>
+
+                  <button
+                    type="button"
+                    data-action="delete-item"
                     data-category-index="${categoryIndex}"
                     data-item-index="${itemIndex}"
-                    data-field="item-price"
-                    class="w-24 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-gold text-right outline-none"
+                    class="w-full rounded-2xl border border-red-400/35 bg-red-500/14 px-4 py-4 text-sm font-bold text-red-300 hover:bg-red-500/22 flex items-center justify-center gap-2"
                   >
-
-                  <div class="mt-2 flex flex-col items-end gap-2">
-                    <label class="inline-flex items-center justify-end gap-2 text-[11px] ${item.visible !== false ? 'text-emerald-300' : 'text-red-300'}">
-                      <span>${item.visible !== false ? editorText.visible : editorText.hidden}</span>
-                      <input
-                        type="checkbox"
-                        ${item.visible !== false ? 'checked' : ''}
-                        data-category-index="${categoryIndex}"
-                        data-item-index="${itemIndex}"
-                        data-field="item-visible"
-                        class="w-4 h-4 accent-yellow-400"
-                      >
-                    </label>
-
-                    <label class="inline-flex items-center justify-end gap-2 text-[11px] ${item.available !== false ? 'text-emerald-300' : 'text-red-300'}">
-                      <span>${item.available !== false ? editorText.available : editorText.unavailable}</span>
-                      <input
-                        type="checkbox"
-                        ${item.available !== false ? 'checked' : ''}
-                        data-category-index="${categoryIndex}"
-                        data-item-index="${itemIndex}"
-                        data-field="item-available"
-                        class="w-4 h-4 accent-yellow-400"
-                      >
-                    </label>
-
-                    <div class="flex items-center gap-2">
-                      <button
-                        type="button"
-                        data-action="move-item-up"
-                        data-category-index="${categoryIndex}"
-                        data-item-index="${itemIndex}"
-                        class="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-cream/80"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        data-action="move-item-down"
-                        data-category-index="${categoryIndex}"
-                        data-item-index="${itemIndex}"
-                        class="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[11px] text-cream/80"
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        data-action="delete-item"
-                        data-category-index="${categoryIndex}"
-                        data-item-index="${itemIndex}"
-                        class="rounded-lg border border-red-400/30 bg-red-500/12 px-3 py-1.5 text-sm font-bold text-red-300"
-                      >
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                      </button>
-                    </div>
-                  </div>
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                  </button>
                 </div>
               </div>
             </div>
           `).join('') : `
-            <div class="rounded-lg border border-white/6 bg-black/20 px-3 py-3 text-xs text-cream/50">
+            <div class="rounded-2xl border border-white/8 bg-black/20 px-4 py-4 text-sm text-cream/55">
               ${editorText.noDish}
             </div>
           `}
@@ -9699,7 +9715,6 @@ function renderRequestRow(item, displayMode = 'active') {
       });
     }
   }
-
   let menuTranslationWarningNeeded = false;
   let menuEditorDirty = false;
 
