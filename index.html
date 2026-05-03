@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.2';
+            const APP_VERSION = 'V1.2.16.3';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9515,7 +9515,7 @@ function renderRequestRow(item, displayMode = 'active') {
     }
 
     container.innerHTML = categories.map((category, categoryIndex) => `
-      <div class="rounded-[24px] border border-amber-400/25 bg-black/22 p-4 md:p-5 shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
+      <div data-menu-category-card="true" data-menu-category-index="${categoryIndex}" class="rounded-[24px] border border-amber-400/25 bg-black/22 p-4 md:p-5 shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
         <div class="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-4 items-start">
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-3 mb-3">
@@ -9582,7 +9582,7 @@ function renderRequestRow(item, displayMode = 'active') {
 
         <div class="mt-5 space-y-4">
           ${(category.items || []).length ? (category.items || []).map((item, itemIndex) => `
-            <div class="rounded-[22px] border border-white/10 bg-black/28 p-4 md:p-5">
+            <div data-menu-item-card="true" data-menu-category-index="${categoryIndex}" data-menu-item-index="${itemIndex}" class="rounded-[22px] border border-white/10 bg-black/28 p-4 md:p-5">
               <div class="grid grid-cols-1 xl:grid-cols-[1fr_190px] gap-4 items-start">
                 <div class="min-w-0">
                   <div class="grid grid-cols-1 md:grid-cols-[1fr_150px] gap-4 items-end">
@@ -9885,6 +9885,18 @@ function renderRequestRow(item, displayMode = 'active') {
     renderRestaurantMenuEditor();
   }
 
+  function scrollToMenuEditorCard(selector) {
+    requestAnimationFrame(() => {
+      const target = document.querySelector(selector);
+      if (!target) return;
+
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    });
+  }
+
   function moveRestaurantItem(categoryIndex, itemIndex, direction) {
     if (!activeRestaurantData?.menu?.categories?.[categoryIndex]?.items) return;
 
@@ -9897,6 +9909,7 @@ function renderRequestRow(item, displayMode = 'active') {
     [items[itemIndex], items[targetIndex]] = [items[targetIndex], items[itemIndex]];
     syncRestaurantItemOrder(category);
     renderRestaurantMenuEditor();
+    scrollToMenuEditorCard(`[data-menu-item-card="true"][data-category-index="${categoryIndex}"][data-menu-item-index="${targetIndex}"]`);
   }
 
   function moveRestaurantCategory(categoryIndex, direction) {
@@ -9910,6 +9923,7 @@ function renderRequestRow(item, displayMode = 'active') {
     [categories[categoryIndex], categories[targetIndex]] = [categories[targetIndex], categories[categoryIndex]];
     syncRestaurantCategoryOrder();
     renderRestaurantMenuEditor();
+    scrollToMenuEditorCard(`[data-menu-category-card="true"][data-menu-category-index="${targetIndex}"]`);
   }
 
   function deleteRestaurantItem(categoryIndex, itemIndex) {
