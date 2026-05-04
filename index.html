@@ -10285,11 +10285,19 @@ function closeDishEditorFlow() {
   if (flow) flow.classList.add('hidden');
 }
 
-function finishDishEditorFlow() {
-  closeDishEditorFlow();
-  closeDishEditorScreen();
-  exportRestaurantJson();
+let menuSaveInProgress = false;
+
+async function finishDishEditorFlow() {
+  if (menuSaveInProgress) return;
+
+  const saved = await exportRestaurantJson();
+
+  if (saved) {
+    closeDishEditorFlow();
+    closeDishEditorScreen();
+  }
 }
+
 function showTapCartaMessage(text) {
   const msg = document.createElement('div');
   msg.className = 'tapcarta-toast';
@@ -10304,127 +10312,141 @@ function showTapCartaMessage(text) {
     setTimeout(() => msg.remove(), 300);
   }, 2500);
 }
+
 async function exportRestaurantJson() {
-    if (!activeRestaurantData) return;
+  if (!activeRestaurantData || menuSaveInProgress) return false;
 
-    ensureRestaurantMenuShape();
+  menuSaveInProgress = true;
 
-if (menuTranslationWarningNeeded) {
-  let message;
+  ensureRestaurantMenuShape();
 
-  if (currentLang === 'es') {
-    message = 'Atención: los nuevos textos añadidos al menú no se traducen automáticamente.';
-  } else if (currentLang === 'en') {
-    message = 'Warning: new texts added to the menu are not translated automatically.';
-  } else if (currentLang === 'nl') {
-    message = 'Let op: nieuwe teksten worden niet automatisch vertaald.';
-  } else {
-    message = 'Attention : les nouveaux textes ne sont pas traduits automatiquement.';
-  }
+  const saveButton = document.getElementById('restaurant-save-menu-json-btn');
+  const floatingSaveButton = document.getElementById('restaurant-save-menu-floating-btn');
+  const dishFinishButton = document.getElementById('dishFinishBtn');
 
-  showTapCartaMessage(message);
-}
+  const loadingLabel = currentLang === 'es'
+    ? 'Guardando...'
+    : currentLang === 'en'
+      ? 'Saving...'
+      : currentLang === 'nl'
+        ? 'Opslaan...'
+        : 'Enregistrement...';
 
-    const previousMenuSnapshot = JSON.stringify(activeRestaurantData.menu || {});
-    const nowIso = new Date().toISOString();
+  const setSavingState = (isSaving) => {
+    [saveButton, floatingSaveButton, dishFinishButton].forEach((button) => {
+      if (!button) return;
+      button.disabled = isSaving;
+    });
 
-    if (activeRestaurantData.menu?.categories?.length) {
-      activeRestaurantData.menu.menuVersion = Math.max((activeRestaurantData.menu.menuVersion || 0) + 1, 1);
-      activeRestaurantData.menu.updatedAt = nowIso;
+    if (saveButton) {
+      saveButton.innerHTML = isSaving
+        ? `
+          <i data-lucide="loader-circle" class="w-4 h-4 text-gold animate-spin"></i>
+          <span>${loadingLabel}</span>
+        `
+        : `
+          <i data-lucide="save" class="w-4 h-4"></i>
+          <span>${getMenuSaveDefaultLabel()}</span>
+        `;
+    }
 
-      activeRestaurantData.menu.categories.forEach((category) => {
-        if (!Array.isArray(category.items)) return;
-        category.items.forEach((item) => {
-          item.updatedAt = nowIso;
-        });
+    if (window.lucide) {
+      requestAnimationFrame(() => {
+        lucide.createIcons();
       });
     }
+  };
 
-    const nextMenuSnapshot = JSON.stringify(activeRestaurantData.menu || {});
-    if (previousMenuSnapshot === nextMenuSnapshot && !activeRestaurantData.menu.updatedAt) {
-      activeRestaurantData.menu.updatedAt = nowIso;
-    }
+  if (menuTranslationWarningNeeded) {
+    const message = currentLang === 'es'
+      ? 'Atención: los nuevos textos añadidos al menú no se traducen automáticamente.'
+      : currentLang === 'en'
+        ? 'Warning: new texts added to the menu are not translated automatically.'
+        : currentLang === 'nl'
+          ? 'Let op: nieuwe teksten worden niet automatisch vertaald.'
+          : 'Attention : les nouveaux textes ne sont pas traduits automatiquement.';
 
-    const restaurantId =
-      activeRestaurantData?.identity?.id ||
-      activeRestaurantData?.id ||
-      'restaurant';
-
-    const saveButton = document.getElementById('restaurant-save-menu-json-btn');
-    const previousButtonHtml = saveButton ? saveButton.innerHTML : '';
-
-    try {
-      if (saveButton) {
-        saveButton.disabled = true;
-        saveButton.innerHTML = `
-          <i data-lucide="loader-circle" class="w-4 h-4 text-gold animate-spin"></i>
-          <span>${currentLang === 'es'
-            ? 'Guardando...'
-            : currentLang === 'en'
-              ? 'Saving...'
-              : currentLang === 'nl'
-                ? 'Opslaan...'
-                : 'Enregistrement...'}</span>
-        `;
-        if (window.lucide) {
-          requestAnimationFrame(() => {
-            lucide.createIcons();
-          });
-        }
-      }
-
-      const { error } = await supabaseClient
-        .from('restaurant_menus')
-        .upsert(
-          {
-            restaurant_id: restaurantId,
-            menu_json: activeRestaurantData.menu,
-            menu_version: activeRestaurantData.menu?.menuVersion || 1,
-            updated_at: activeRestaurantData.menu?.updatedAt || nowIso
-          },
-          { onConflict: 'restaurant_id' }
-        );
-
-      if (error) {
-        throw error;
-      }
-
-      menuTranslationWarningNeeded = false;
-      resetMenuEditorDirty();
-
-      alert(
-        currentLang === 'es'
-          ? 'Modificaciones del menú guardadas correctamente.'
-          : currentLang === 'en'
-            ? 'Menu changes saved successfully.'
-            : currentLang === 'nl'
-              ? 'Menuwijzigingen zijn succesvol opgeslagen.'
-              : 'Modifications du menu enregistrées avec succès.'
-      );
-    } catch (error) {
-      console.error('Erreur enregistrement menu Supabase :', error);
-
-      alert(
-        currentLang === 'es'
-          ? 'Error al guardar los cambios del menú.'
-          : currentLang === 'en'
-            ? 'Error while saving menu changes.'
-            : currentLang === 'nl'
-              ? 'Fout bij het opslaan van de menuwijzigingen.'
-              : 'Erreur lors de l’enregistrement des modifications du menu.'
-      );
-    } finally {
-      if (saveButton) {
-        saveButton.disabled = false;
-        saveButton.innerHTML = previousButtonHtml;
-        if (window.lucide) {
-          requestAnimationFrame(() => {
-            lucide.createIcons();
-          });
-        }
-      }
-    }
+    showTapCartaMessage(message);
   }
+
+  const previousMenuSnapshot = JSON.stringify(activeRestaurantData.menu || {});
+  const nowIso = new Date().toISOString();
+
+  if (activeRestaurantData.menu?.categories?.length) {
+    activeRestaurantData.menu.menuVersion = Math.max((activeRestaurantData.menu.menuVersion || 0) + 1, 1);
+    activeRestaurantData.menu.updatedAt = nowIso;
+
+    activeRestaurantData.menu.categories.forEach((category) => {
+      if (!Array.isArray(category.items)) return;
+      category.items.forEach((item) => {
+        item.updatedAt = nowIso;
+      });
+    });
+  }
+
+  const nextMenuSnapshot = JSON.stringify(activeRestaurantData.menu || {});
+  if (previousMenuSnapshot === nextMenuSnapshot && !activeRestaurantData.menu.updatedAt) {
+    activeRestaurantData.menu.updatedAt = nowIso;
+  }
+
+  const restaurantId =
+    activeRestaurantData?.identity?.id ||
+    activeRestaurantData?.id ||
+    'restaurant';
+
+  try {
+    setSavingState(true);
+
+    const { error } = await supabaseClient
+      .from('restaurant_menus')
+      .upsert(
+        {
+          restaurant_id: restaurantId,
+          menu_json: activeRestaurantData.menu,
+          menu_version: activeRestaurantData.menu?.menuVersion || 1,
+          updated_at: activeRestaurantData.menu?.updatedAt || nowIso
+        },
+        { onConflict: 'restaurant_id' }
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    menuTranslationWarningNeeded = false;
+    resetMenuEditorDirty();
+
+    showTapCartaMessage(
+      currentLang === 'es'
+        ? 'Modificaciones del menú guardadas correctamente.'
+        : currentLang === 'en'
+          ? 'Menu changes saved successfully.'
+          : currentLang === 'nl'
+            ? 'Menuwijzigingen zijn succesvol opgeslagen.'
+            : 'Modifications du menu enregistrées avec succès.'
+    );
+
+    return true;
+  } catch (error) {
+    console.error('Erreur enregistrement menu Supabase :', error);
+
+    showTapCartaMessage(
+      currentLang === 'es'
+        ? 'Error al guardar los cambios del menú.'
+        : currentLang === 'en'
+          ? 'Error while saving menu changes.'
+          : currentLang === 'nl'
+            ? 'Fout bij het opslaan van de menuwijzigingen.'
+            : 'Erreur lors de l’enregistrement des modifications du menu.'
+    );
+
+    return false;
+  } finally {
+    menuSaveInProgress = false;
+    setSavingState(false);
+    updateMenuEditorDirtyUi();
+  }
+}
 
   const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
   const editorSection = document.getElementById('restaurant-menu-editor-section');
