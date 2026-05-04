@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.8';
+            const APP_VERSION = 'V1.2.16.9';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10191,9 +10191,22 @@ function saveDishEditorScreen() {
   markMenuTranslationWarningNeeded();
   renderRestaurantMenuEditor();
   updateMenuEditorDirtyUi();
-  closeDishEditorScreen();
+
+  const flow = document.getElementById('dishEditorFlow');
+  if (flow) {
+    flow.classList.remove('hidden');
+  }
 }
-  async function exportRestaurantJson() {
+function closeDishEditorFlow() {
+  const flow = document.getElementById('dishEditorFlow');
+  if (flow) flow.classList.add('hidden');
+}
+
+function finishDishEditorFlow() {
+  closeDishEditorFlow();
+  closeDishEditorScreen();
+  exportRestaurantJson();
+}
     if (!activeRestaurantData) return;
 
     ensureRestaurantMenuShape();
@@ -10476,7 +10489,10 @@ const dishSaveBtn = document.getElementById('dishEditorSaveBtn');
 if (dishSaveBtn) {
   dishSaveBtn.addEventListener('click', saveDishEditorScreen);
 }
-
+const dishFinishBtn = document.getElementById('dishFinishBtn');
+if (dishFinishBtn) {
+  dishFinishBtn.addEventListener('click', finishDishEditorFlow);
+}
   if (editorList) {
     editorList.addEventListener('input', (e) => {
       if (!activeRestaurantData) return;
@@ -10835,6 +10851,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   </script>
   <!-- FICHE PLAT (édition plein écran) -->
   <div id="dishEditorScreen" class="dish-editor-screen hidden">
+        <div id="dishEditorFlow" class="dish-editor-flow hidden">
+
+      <div class="dish-editor-flow-panel">
+
+        <div class="dish-editor-flow-title">
+          <span data-i18n="dish.flow.title">Plat enregistré</span>
+        </div>
+
+        <div class="dish-editor-flow-sub">
+          <span data-i18n="dish.flow.subtitle">Souhaitez-vous traduire ce plat ?</span>
+        </div>
+
+        <div class="dish-editor-flow-actions">
+
+          <button id="dishTranslateNowBtn" class="dish-flow-btn primary">
+            <span data-i18n="dish.flow.translate_now">Traduire maintenant</span>
+          </button>
+
+          <button id="dishTranslateLaterBtn" class="dish-flow-btn">
+            <span data-i18n="dish.flow.translate_later">Traduire plus tard</span>
+          </button>
+
+        </div>
+
+        <div class="dish-editor-flow-secondary">
+
+          <button id="dishAddAnotherBtn" class="dish-flow-link">
+            <span data-i18n="dish.flow.add_another">Ajouter un autre plat</span>
+          </button>
+
+          <button id="dishAddCategoryBtn" class="dish-flow-link">
+            <span data-i18n="dish.flow.add_category">Ajouter une catégorie</span>
+          </button>
+
+          <button id="dishFinishBtn" class="dish-flow-btn final">
+            <span data-i18n="dish.flow.finish">Terminer</span>
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
 
     <div class="dish-editor-header">
       <button id="dishEditorBackBtn" class="dish-editor-back">←</button>
