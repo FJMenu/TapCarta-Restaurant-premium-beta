@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.6';
+            const APP_VERSION = 'V1.2.16.7';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -811,7 +811,9 @@
     .dish-editor-screen {
       position: fixed;
       inset: 0;
-      background: #111;
+      background:
+        radial-gradient(circle at top left, rgba(242, 199, 68, 0.16), transparent 34%),
+        linear-gradient(135deg, #0d0b08 0%, #14100a 52%, #090909 100%);
       z-index: 9999;
       display: flex;
       flex-direction: column;
@@ -827,41 +829,62 @@
       align-items: center;
       justify-content: space-between;
       padding: 14px 18px;
-      background: #1c1c1c;
-      border-bottom: 1px solid rgba(242, 199, 68, 0.25);
+      background: rgba(14, 12, 9, 0.96);
+      border-bottom: 1px solid rgba(242, 199, 68, 0.28);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
     }
 
     .dish-editor-title {
       font-size: 17px;
-      font-weight: 700;
+      font-weight: 800;
       color: #f8f5eb;
+      letter-spacing: -0.01em;
     }
 
     .dish-editor-back {
-      background: none;
-      border: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid rgba(248, 245, 235, 0.14);
+      background: rgba(255, 255, 255, 0.035);
       color: #f8f5eb;
       font-size: 22px;
       cursor: pointer;
     }
 
     .dish-editor-save {
-      background: #f59e0b;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-weight: 800;
+      background: linear-gradient(135deg, #f2c744, #f59e0b);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 11px 16px;
+      border-radius: 13px;
+      font-weight: 900;
       color: #111;
       cursor: pointer;
+      box-shadow: 0 10px 26px rgba(245, 158, 11, 0.22);
     }
 
     .dish-editor-content {
       flex: 1;
       overflow-y: auto;
-      padding: 18px;
-      max-width: 980px;
+      padding: 26px 18px;
+      max-width: 1040px;
       width: 100%;
       margin: 0 auto;
+    }
+
+    .dish-editor-panel {
+      border: 1px solid rgba(242, 199, 68, 0.22);
+      border-radius: 26px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+      padding: 22px;
+    }
+
+    .dish-editor-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 210px;
+      gap: 18px;
+      align-items: end;
     }
 
     .dish-editor-field {
@@ -871,41 +894,92 @@
     .dish-editor-field label {
       display: block;
       margin-bottom: 7px;
-      font-size: 13px;
-      font-weight: 800;
-      color: rgba(248, 245, 235, 0.82);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: rgba(248, 245, 235, 0.72);
     }
 
     .dish-editor-field input,
     .dish-editor-field textarea {
       width: 100%;
-      padding: 13px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(248, 245, 235, 0.22);
-      background: rgba(255, 255, 255, 0.045);
+      padding: 14px 15px;
+      border-radius: 15px;
+      border: 1px solid rgba(248, 245, 235, 0.18);
+      background: rgba(0, 0, 0, 0.24);
       color: #fff;
       font-size: 16px;
       outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+    }
+
+    .dish-editor-field input:focus,
+    .dish-editor-field textarea:focus {
+      border-color: rgba(242, 199, 68, 0.55);
+      box-shadow: 0 0 0 3px rgba(242, 199, 68, 0.10);
     }
 
     .dish-editor-field textarea {
-      min-height: 92px;
+      min-height: 58px;
       resize: vertical;
     }
 
     .dish-editor-switches {
       display: flex;
-      gap: 18px;
-      margin-top: 12px;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
       color: #f8f5eb;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     .dish-editor-switches label {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 42px;
+      padding: 10px 13px;
+      border-radius: 14px;
+      border: 1px solid rgba(242, 199, 68, 0.22);
+      background: rgba(242, 199, 68, 0.075);
+      cursor: pointer;
+    }
+
+    .dish-editor-brand-note {
+      margin-top: 22px;
+      padding: 14px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(242, 199, 68, 0.18);
+      background: rgba(0, 0, 0, 0.18);
       display: flex;
       align-items: center;
-      gap: 8px;
-      cursor: pointer;
+      justify-content: space-between;
+      gap: 14px;
+      color: rgba(248, 245, 235, 0.72);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .dish-editor-brand-note img {
+      width: 112px;
+      max-height: 42px;
+      object-fit: contain;
+    }
+
+    @media (max-width: 720px) {
+      .dish-editor-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dish-editor-content {
+        padding: 18px 12px;
+      }
+
+      .dish-editor-panel {
+        padding: 16px;
+        border-radius: 22px;
+      }
     }
   </style>
 
@@ -10722,39 +10796,50 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     <div class="dish-editor-content">
 
-      <div class="dish-editor-field">
-        <label data-i18n="dish.name">Nom du plat</label>
-        <input type="text" id="dishEditorName" />
+      <div class="dish-editor-panel">
+
+        <div class="dish-editor-grid">
+          <div class="dish-editor-field">
+            <label data-i18n="dish.name">Nom du plat</label>
+            <input type="text" id="dishEditorName" />
+          </div>
+
+          <div class="dish-editor-field">
+            <label data-i18n="dish.price">Prix</label>
+            <input type="number" id="dishEditorPrice" />
+          </div>
+        </div>
+
+        <div class="dish-editor-field">
+          <label data-i18n="dish.description">Description</label>
+          <textarea id="dishEditorDescription"></textarea>
+        </div>
+
+        <div class="dish-editor-switches">
+
+          <label>
+            <input type="checkbox" id="dishEditorVisible" />
+            <span data-i18n="dish.visible">Visible</span>
+          </label>
+
+          <label>
+            <input type="checkbox" id="dishEditorAvailable" />
+            <span data-i18n="dish.available">Disponible</span>
+          </label>
+
+        </div>
+
+        <!-- FUTUR : emplacement prévu pour l’option "commandable".
+             Ne pas afficher maintenant.
+             Ne pas ajouter de champ JSON.
+             Ne pas modifier la structure des données. -->
+
+        <div class="dish-editor-brand-note">
+          <span data-i18n="dish.editor.brand_note">Votre menu reste clair, rapide et professionnel avec TapCarta.</span>
+          <img src="./logo-app-web-sans-fond.png" alt="TapCarta" />
+        </div>
+
       </div>
-
-      <div class="dish-editor-field">
-        <label data-i18n="dish.price">Prix</label>
-        <input type="number" id="dishEditorPrice" />
-      </div>
-
-      <div class="dish-editor-field">
-        <label data-i18n="dish.description">Description</label>
-        <textarea id="dishEditorDescription"></textarea>
-      </div>
-
-      <div class="dish-editor-switches">
-
-        <label>
-          <input type="checkbox" id="dishEditorVisible" />
-          <span data-i18n="dish.visible">Visible</span>
-        </label>
-
-        <label>
-          <input type="checkbox" id="dishEditorAvailable" />
-          <span data-i18n="dish.available">Disponible</span>
-        </label>
-
-      </div>
-
-      <!-- FUTUR : emplacement prévu pour l’option "commandable".
-           Ne pas afficher maintenant.
-           Ne pas ajouter de champ JSON.
-           Ne pas modifier la structure des données. -->
 
     </div>
 
