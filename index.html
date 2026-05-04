@@ -808,81 +808,105 @@
     }
     /* ===== FICHE PLAT ===== */
 
-.dish-editor-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #111;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-}
+    .dish-editor-screen {
+      position: fixed;
+      inset: 0;
+      background: #111;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      color: #f8f5eb;
+    }
 
-.hidden {
-  display: none;
-}
+    .hidden {
+      display: none !important;
+    }
 
-.dish-editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px;
-  background: #1c1c1c;
-  border-bottom: 1px solid #333;
-}
+    .dish-editor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: #1c1c1c;
+      border-bottom: 1px solid rgba(242, 199, 68, 0.25);
+    }
 
-.dish-editor-title {
-  font-size: 16px;
-  font-weight: 600;
-}
+    .dish-editor-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #f8f5eb;
+    }
 
-.dish-editor-back {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 18px;
-}
+    .dish-editor-back {
+      background: none;
+      border: none;
+      color: #f8f5eb;
+      font-size: 22px;
+      cursor: pointer;
+    }
 
-.dish-editor-save {
-  background: #f59e0b;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-weight: 600;
-}
+    .dish-editor-save {
+      background: #f59e0b;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 800;
+      color: #111;
+      cursor: pointer;
+    }
 
-.dish-editor-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-}
+    .dish-editor-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      max-width: 980px;
+      width: 100%;
+      margin: 0 auto;
+    }
 
-.dish-editor-placeholder {
-  opacity: 0.6;
-  text-align: center;
-  margin-top: 40px;
-}
-.dish-editor-field {
-  margin-bottom: 16px;
-}
+    .dish-editor-field {
+      margin-bottom: 18px;
+    }
 
-.dish-editor-field input,
-.dish-editor-field textarea {
-  width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #333;
-  background: #1a1a1a;
-  color: #fff;
-}
+    .dish-editor-field label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 800;
+      color: rgba(248, 245, 235, 0.82);
+    }
 
-.dish-editor-switches {
-  display: flex;
-  gap: 20px;
-  margin-top: 10px;
-}
+    .dish-editor-field input,
+    .dish-editor-field textarea {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(248, 245, 235, 0.22);
+      background: rgba(255, 255, 255, 0.045);
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .dish-editor-field textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .dish-editor-switches {
+      display: flex;
+      gap: 18px;
+      margin-top: 12px;
+      color: #f8f5eb;
+      font-weight: 700;
+    }
+
+    .dish-editor-switches label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
   </style>
 
 </head>
@@ -10686,59 +10710,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
   </script>
   <!-- FICHE PLAT (édition plein écran) -->
-<div id="dishEditorScreen" class="dish-editor-screen hidden">
+  <div id="dishEditorScreen" class="dish-editor-screen hidden">
 
-  <div class="dish-editor-header">
-    <button id="dishEditorBackBtn" class="dish-editor-back">←</button>
-    <div class="dish-editor-title" data-i18n="dish.editor.title">Édition du plat</div>
-    <div class="dish-editor-actions">
-      <button id="dishEditorSaveBtn" class="dish-editor-save" data-i18n="dish.editor.save">Valider</button>
+    <div class="dish-editor-header">
+      <button id="dishEditorBackBtn" class="dish-editor-back">←</button>
+      <div class="dish-editor-title" data-i18n="dish.editor.title">Édition du plat</div>
+      <div class="dish-editor-actions">
+        <button id="dishEditorSaveBtn" class="dish-editor-save" data-i18n="dish.editor.save">Valider</button>
+      </div>
     </div>
-  </div>
 
-  <div class="dish-editor-content">
+    <div class="dish-editor-content">
 
-  <div class="dish-editor-field">
-    <label data-i18n="dish.name">Nom du plat</label>
-    <input type="text" id="dishEditorName" />
-  </div>
+      <div class="dish-editor-field">
+        <label data-i18n="dish.name">Nom du plat</label>
+        <input type="text" id="dishEditorName" />
+      </div>
 
-  <div class="dish-editor-field">
-    <label data-i18n="dish.price">Prix</label>
-    <input type="number" id="dishEditorPrice" />
-  </div>
+      <div class="dish-editor-field">
+        <label data-i18n="dish.price">Prix</label>
+        <input type="number" id="dishEditorPrice" />
+      </div>
 
-  <div class="dish-editor-field">
-    <label data-i18n="dish.description">Description</label>
-    <textarea id="dishEditorDescription"></textarea>
-  </div>
+      <div class="dish-editor-field">
+        <label data-i18n="dish.description">Description</label>
+        <textarea id="dishEditorDescription"></textarea>
+      </div>
 
-  <div class="dish-editor-switches">
+      <div class="dish-editor-switches">
 
-    <label>
-      <input type="checkbox" id="dishEditorVisible" />
-      <span data-i18n="dish.visible">Visible</span>
-    </label>
+        <label>
+          <input type="checkbox" id="dishEditorVisible" />
+          <span data-i18n="dish.visible">Visible</span>
+        </label>
 
-    <label>
-      <input type="checkbox" id="dishEditorAvailable" />
-      <span data-i18n="dish.available">Disponible</span>
-    </label>
+        <label>
+          <input type="checkbox" id="dishEditorAvailable" />
+          <span data-i18n="dish.available">Disponible</span>
+        </label>
 
-  </div>
+      </div>
 
-</div>
+      <!-- FUTUR : emplacement prévu pour l’option "commandable".
+           Ne pas afficher maintenant.
+           Ne pas ajouter de champ JSON.
+           Ne pas modifier la structure des données. -->
 
-  <!-- Zone principale (sera remplie étape suivante) -->
-  <div class="dish-editor-placeholder">
-    <span data-i18n="dish.editor.placeholder">Fiche en construction</span>
-  </div>
-
-</div>
-
-    <!-- Zone principale (sera remplie étape suivante) -->
-    <div class="dish-editor-placeholder">
-      <span data-i18n="dish.editor.placeholder">Fiche en construction</span>
     </div>
 
   </div>
