@@ -10207,6 +10207,8 @@ function finishDishEditorFlow() {
   closeDishEditorScreen();
   exportRestaurantJson();
 }
+
+async function exportRestaurantJson() {
     if (!activeRestaurantData) return;
 
     ensureRestaurantMenuShape();
