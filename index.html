@@ -10129,6 +10129,21 @@ function openDishEditorScreen(categoryIndex, itemIndex) {
   const screen = document.getElementById('dishEditorScreen');
   if (!screen) return;
 
+  const item = activeRestaurantData?.menu?.categories?.[categoryIndex]?.items?.[itemIndex];
+  if (!item) return;
+
+  const nameInput = document.getElementById('dishEditorName');
+  const priceInput = document.getElementById('dishEditorPrice');
+  const descriptionInput = document.getElementById('dishEditorDescription');
+  const visibleInput = document.getElementById('dishEditorVisible');
+  const availableInput = document.getElementById('dishEditorAvailable');
+
+  if (nameInput) nameInput.value = item.name || '';
+  if (priceInput) priceInput.value = typeof item.price === 'number' ? item.price : '';
+  if (descriptionInput) descriptionInput.value = item.subtitle || '';
+  if (visibleInput) visibleInput.checked = item.visible !== false;
+  if (availableInput) availableInput.checked = item.available !== false;
+
   screen.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
