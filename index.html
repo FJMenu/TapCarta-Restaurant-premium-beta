@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.4';
+            const APP_VERSION = 'V1.2.16.5';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10403,67 +10403,78 @@ if (dishBackBtn) {
 
     editorList.addEventListener('click', (e) => {
       const actionButton = e.target.closest('[data-action]');
-      if (!actionButton) return;
 
-      const categoryIndex = Number(actionButton.dataset.categoryIndex);
-      const itemIndex = Number(actionButton.dataset.itemIndex);
-      const action = actionButton.dataset.action;
+      if (actionButton) {
+        const categoryIndex = Number(actionButton.dataset.categoryIndex);
+        const itemIndex = Number(actionButton.dataset.itemIndex);
+        const action = actionButton.dataset.action;
 
-      if (action === 'add-item') {
-  markMenuEditorDirty();
-  addRestaurantItemToCategory(categoryIndex);
-  updateMenuEditorDirtyUi();
+        if (action === 'add-item') {
+          markMenuEditorDirty();
+          addRestaurantItemToCategory(categoryIndex);
+          updateMenuEditorDirtyUi();
 
-  const newIndex = activeRestaurantData.menu.categories[categoryIndex].items.length - 1;
-  openDishEditorScreen(categoryIndex, newIndex);
+          const newIndex = activeRestaurantData.menu.categories[categoryIndex].items.length - 1;
+          openDishEditorScreen(categoryIndex, newIndex);
 
-  return;
-}
-        markMenuEditorDirty();
-        addRestaurantItemToCategory(categoryIndex);
-        updateMenuEditorDirtyUi();
-        return;
+          return;
+        }
+
+        if (action === 'move-item-up') {
+          markMenuEditorDirty();
+          moveRestaurantItem(categoryIndex, itemIndex, 'up', action);
+          updateMenuEditorDirtyUi();
+          return;
+        }
+
+        if (action === 'move-item-down') {
+          markMenuEditorDirty();
+          moveRestaurantItem(categoryIndex, itemIndex, 'down', action);
+          updateMenuEditorDirtyUi();
+          return;
+        }
+
+        if (action === 'move-category-up') {
+          markMenuEditorDirty();
+          moveRestaurantCategory(categoryIndex, 'up', action);
+          updateMenuEditorDirtyUi();
+          return;
+        }
+
+        if (action === 'move-category-down') {
+          markMenuEditorDirty();
+          moveRestaurantCategory(categoryIndex, 'down', action);
+          updateMenuEditorDirtyUi();
+          return;
+        }
+
+        if (action === 'delete-item') {
+          markMenuEditorDirty();
+          deleteRestaurantItem(categoryIndex, itemIndex);
+          updateMenuEditorDirtyUi();
+          return;
+        }
+
+        if (action === 'delete-category') {
+          markMenuEditorDirty();
+          deleteRestaurantCategory(categoryIndex);
+          updateMenuEditorDirtyUi();
+          return;
+        }
       }
 
-      if (action === 'move-item-up') {
-        markMenuEditorDirty();
-        moveRestaurantItem(categoryIndex, itemIndex, 'up', action);
-        updateMenuEditorDirtyUi();
-        return;
-      }
+      const itemCard = e.target.closest('[data-menu-item-card="true"]');
 
-      if (action === 'move-item-down') {
-        markMenuEditorDirty();
-        moveRestaurantItem(categoryIndex, itemIndex, 'down', action);
-        updateMenuEditorDirtyUi();
-        return;
-      }
+      if (
+        itemCard &&
+        !e.target.closest('button, input, textarea, select, label')
+      ) {
+        const categoryIndex = Number(itemCard.dataset.menuCategoryIndex);
+        const itemIndex = Number(itemCard.dataset.menuItemIndex);
 
-      if (action === 'move-category-up') {
-        markMenuEditorDirty();
-        moveRestaurantCategory(categoryIndex, 'up', action);
-        updateMenuEditorDirtyUi();
-        return;
-      }
-
-      if (action === 'move-category-down') {
-        markMenuEditorDirty();
-        moveRestaurantCategory(categoryIndex, 'down', action);
-        updateMenuEditorDirtyUi();
-        return;
-      }
-
-      if (action === 'delete-item') {
-        markMenuEditorDirty();
-        deleteRestaurantItem(categoryIndex, itemIndex);
-        updateMenuEditorDirtyUi();
-        return;
-      }
-
-      if (action === 'delete-category') {
-        markMenuEditorDirty();
-        deleteRestaurantCategory(categoryIndex);
-        updateMenuEditorDirtyUi();
+        if (!Number.isNaN(categoryIndex) && !Number.isNaN(itemIndex)) {
+          openDishEditorScreen(categoryIndex, itemIndex);
+        }
       }
     });
   }
