@@ -10013,7 +10013,24 @@ let dishEditorState = null;
     syncRestaurantCategoryOrder();
     renderRestaurantMenuEditor();
   }
+function openDishEditorScreen(categoryIndex, itemIndex) {
+  const screen = document.getElementById('dishEditorScreen');
+  if (!screen) return;
 
+  screen.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  window._dishEditorContext = { categoryIndex, itemIndex };
+}
+
+function closeDishEditorScreen() {
+  const screen = document.getElementById('dishEditorScreen');
+  if (!screen) return;
+
+  screen.classList.add('hidden');
+  document.body.style.overflow = '';
+  window._dishEditorContext = null;
+}
   async function exportRestaurantJson() {
     if (!activeRestaurantData) return;
 
@@ -10280,13 +10297,18 @@ let dishEditorState = null;
     });
   }
 
-  if (exportJsonBtn) {
-    exportJsonBtn.addEventListener('click', exportRestaurantJson);
-  }
+if (exportJsonBtn) {
+  exportJsonBtn.addEventListener('click', exportRestaurantJson);
+}
 
-  if (floatingSaveBtn) {
-    floatingSaveBtn.addEventListener('click', exportRestaurantJson);
-  }
+if (floatingSaveBtn) {
+  floatingSaveBtn.addEventListener('click', exportRestaurantJson);
+}
+
+const dishBackBtn = document.getElementById('dishEditorBackBtn');
+if (dishBackBtn) {
+  dishBackBtn.addEventListener('click', closeDishEditorScreen);
+}
 
   if (editorList) {
     editorList.addEventListener('input', (e) => {
@@ -10388,6 +10410,15 @@ let dishEditorState = null;
       const action = actionButton.dataset.action;
 
       if (action === 'add-item') {
+  markMenuEditorDirty();
+  addRestaurantItemToCategory(categoryIndex);
+  updateMenuEditorDirtyUi();
+
+  const newIndex = activeRestaurantData.menu.categories[categoryIndex].items.length - 1;
+  openDishEditorScreen(categoryIndex, newIndex);
+
+  return;
+}
         markMenuEditorDirty();
         addRestaurantItemToCategory(categoryIndex);
         updateMenuEditorDirtyUi();
