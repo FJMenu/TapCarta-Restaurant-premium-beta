@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.9';
+            const APP_VERSION = 'V1.2.16.10';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -965,7 +965,70 @@
       max-height: 42px;
       object-fit: contain;
     }
+    .dish-editor-flow {
+      position: absolute;
+      inset: 0;
+      z-index: 10030;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: rgba(9, 6, 3, 0.86);
+      backdrop-filter: blur(10px);
+    }
 
+    .dish-editor-flow-panel {
+      width: min(520px, 100%);
+      border-radius: 26px;
+      border: 1px solid rgba(242, 199, 68, 0.28);
+      background: linear-gradient(180deg, rgba(42, 27, 10, 0.96), rgba(18, 11, 5, 0.98));
+      box-shadow: 0 26px 80px rgba(0, 0, 0, 0.48);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .dish-editor-flow-title {
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #f8f5eb;
+      margin-bottom: 8px;
+    }
+
+    .dish-editor-flow-sub {
+      color: rgba(248, 245, 235, 0.72);
+      font-weight: 700;
+      margin-bottom: 22px;
+    }
+
+    .dish-editor-flow-actions,
+    .dish-editor-flow-secondary {
+      display: grid;
+      gap: 10px;
+    }
+
+    .dish-editor-flow-secondary {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(242, 199, 68, 0.18);
+    }
+
+    .dish-flow-btn,
+    .dish-flow-link {
+      border: 1px solid rgba(242, 199, 68, 0.24);
+      border-radius: 16px;
+      padding: 13px 15px;
+      background: rgba(255, 255, 255, 0.055);
+      color: #f8f5eb;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .dish-flow-btn.primary,
+    .dish-flow-btn.final {
+      background: linear-gradient(135deg, #f2c744, #f59e0b);
+      color: #111;
+      box-shadow: 0 14px 32px rgba(245, 158, 11, 0.22);
+    }
     @media (max-width: 720px) {
       .dish-editor-grid {
         grid-template-columns: 1fr;
