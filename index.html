@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.3';
+            const APP_VERSION = 'V1.2.16.4';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -806,6 +806,64 @@
       background: rgba(242, 199, 68, 0.12);
       box-shadow: 0 0 0 1px rgba(242, 199, 68, 0.35), 0 12px 35px rgba(0, 0, 0, 0.3);
     }
+    /* ===== FICHE PLAT ===== */
+
+.dish-editor-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #111;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden {
+  display: none;
+}
+
+.dish-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  background: #1c1c1c;
+  border-bottom: 1px solid #333;
+}
+
+.dish-editor-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.dish-editor-back {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+}
+
+.dish-editor-save {
+  background: #f59e0b;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.dish-editor-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.dish-editor-placeholder {
+  opacity: 0.6;
+  text-align: center;
+  margin-top: 40px;
+}
   </style>
 
 </head>
@@ -10565,6 +10623,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
   </script>
+  <!-- FICHE PLAT (édition plein écran) -->
+<div id="dishEditorScreen" class="dish-editor-screen hidden">
+
+  <div class="dish-editor-header">
+    <button id="dishEditorBackBtn" class="dish-editor-back">←</button>
+    <div class="dish-editor-title" data-i18n="dish.editor.title">Édition du plat</div>
+    <div class="dish-editor-actions">
+      <button id="dishEditorSaveBtn" class="dish-editor-save" data-i18n="dish.editor.save">Valider</button>
+    </div>
+  </div>
+
+  <div class="dish-editor-content">
+
+    <!-- Zone principale (sera remplie étape suivante) -->
+    <div class="dish-editor-placeholder">
+      <span data-i18n="dish.editor.placeholder">Fiche en construction</span>
+    </div>
+
+  </div>
+
+</div>
 </body>
 </html>
 
