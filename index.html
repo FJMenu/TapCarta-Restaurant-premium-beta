@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.5';
+            const APP_VERSION = 'V1.2.16.6';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -863,6 +863,25 @@
   opacity: 0.6;
   text-align: center;
   margin-top: 40px;
+}
+.dish-editor-field {
+  margin-bottom: 16px;
+}
+
+.dish-editor-field input,
+.dish-editor-field textarea {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.dish-editor-switches {
+  display: flex;
+  gap: 20px;
+  margin-top: 10px;
 }
   </style>
 
@@ -10678,6 +10697,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   </div>
 
   <div class="dish-editor-content">
+
+  <div class="dish-editor-field">
+    <label data-i18n="dish.name">Nom du plat</label>
+    <input type="text" id="dishEditorName" />
+  </div>
+
+  <div class="dish-editor-field">
+    <label data-i18n="dish.price">Prix</label>
+    <input type="number" id="dishEditorPrice" />
+  </div>
+
+  <div class="dish-editor-field">
+    <label data-i18n="dish.description">Description</label>
+    <textarea id="dishEditorDescription"></textarea>
+  </div>
+
+  <div class="dish-editor-switches">
+
+    <label>
+      <input type="checkbox" id="dishEditorVisible" />
+      <span data-i18n="dish.visible">Visible</span>
+    </label>
+
+    <label>
+      <input type="checkbox" id="dishEditorAvailable" />
+      <span data-i18n="dish.available">Disponible</span>
+    </label>
+
+  </div>
+
+</div>
+
+  <!-- Zone principale (sera remplie étape suivante) -->
+  <div class="dish-editor-placeholder">
+    <span data-i18n="dish.editor.placeholder">Fiche en construction</span>
+  </div>
+
+</div>
 
     <!-- Zone principale (sera remplie étape suivante) -->
     <div class="dish-editor-placeholder">
