@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.10';
+            const APP_VERSION = 'V1.2.16.11';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1029,6 +1029,26 @@
       color: #111;
       box-shadow: 0 14px 32px rgba(245, 158, 11, 0.22);
     }
+    .tapcarta-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  background: rgba(20, 14, 6, 0.95);
+  border: 1px solid rgba(242, 199, 68, 0.4);
+  padding: 12px 18px;
+  border-radius: 14px;
+  color: #f8f5eb;
+  font-weight: 700;
+  z-index: 10050;
+  opacity: 0;
+  transition: all 0.25s ease;
+}
+
+.tapcarta-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
     @media (max-width: 720px) {
       .dish-editor-grid {
         grid-template-columns: 1fr;
@@ -10270,23 +10290,40 @@ function finishDishEditorFlow() {
   closeDishEditorScreen();
   exportRestaurantJson();
 }
+function showTapCartaMessage(text) {
+  const msg = document.createElement('div');
+  msg.className = 'tapcarta-toast';
+  msg.textContent = text;
 
+  document.body.appendChild(msg);
+
+  setTimeout(() => msg.classList.add('visible'), 10);
+
+  setTimeout(() => {
+    msg.classList.remove('visible');
+    setTimeout(() => msg.remove(), 300);
+  }, 2500);
+}
 async function exportRestaurantJson() {
     if (!activeRestaurantData) return;
 
     ensureRestaurantMenuShape();
 
-    if (menuTranslationWarningNeeded) {
-      alert(
-        currentLang === 'es'
-          ? 'Atención: los nuevos textos añadidos al menú no se traducen automáticamente. Si su menú existe en varios idiomas, las traducciones deberán actualizarse manualmente si lo desea.'
-          : currentLang === 'en'
-            ? 'Warning: new texts added to the menu are not translated automatically. If your menu exists in several languages, translations will need to be updated manually if you wish.'
-            : currentLang === 'nl'
-              ? 'Let op: nieuwe teksten die aan het menu worden toegevoegd, worden niet automatisch vertaald. Als uw menu in meerdere talen bestaat, moeten de vertalingen handmatig worden bijgewerkt als u dat wenst.'
-              : 'Attention : les nouveaux textes ajoutés au menu ne sont pas traduits automatiquement. Si votre menu existe en plusieurs langues, les traductions devront être mises à jour manuellement si vous le souhaitez.'
-      );
-    }
+if (menuTranslationWarningNeeded) {
+  let message;
+
+  if (currentLang === 'es') {
+    message = 'Atención: los nuevos textos añadidos al menú no se traducen automáticamente.';
+  } else if (currentLang === 'en') {
+    message = 'Warning: new texts added to the menu are not translated automatically.';
+  } else if (currentLang === 'nl') {
+    message = 'Let op: nieuwe teksten worden niet automatisch vertaald.';
+  } else {
+    message = 'Attention : les nouveaux textes ne sont pas traduits automatiquement.';
+  }
+
+  showTapCartaMessage(message);
+}
 
     const previousMenuSnapshot = JSON.stringify(activeRestaurantData.menu || {});
     const nowIso = new Date().toISOString();
