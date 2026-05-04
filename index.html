@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.7';
+            const APP_VERSION = 'V1.2.16.8';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10158,6 +10158,37 @@ function closeDishEditorScreen() {
   document.body.style.overflow = '';
   window._dishEditorContext = null;
 }
+
+function saveDishEditorScreen() {
+  if (!activeRestaurantData || !window._dishEditorContext) return;
+
+  const { categoryIndex, itemIndex } = window._dishEditorContext;
+  const item = activeRestaurantData?.menu?.categories?.[categoryIndex]?.items?.[itemIndex];
+  if (!item) return;
+
+  const nameInput = document.getElementById('dishEditorName');
+  const priceInput = document.getElementById('dishEditorPrice');
+  const descriptionInput = document.getElementById('dishEditorDescription');
+  const visibleInput = document.getElementById('dishEditorVisible');
+  const availableInput = document.getElementById('dishEditorAvailable');
+
+  if (nameInput) item.name = nameInput.value.trim();
+  if (descriptionInput) item.subtitle = descriptionInput.value.trim();
+
+  if (priceInput) {
+    const parsedPrice = parseFloat(String(priceInput.value).replace(',', '.'));
+    item.price = Number.isNaN(parsedPrice) ? 0 : parsedPrice;
+  }
+
+  if (visibleInput) item.visible = visibleInput.checked;
+  if (availableInput) item.available = availableInput.checked;
+
+  markMenuEditorDirty();
+  markMenuTranslationWarningNeeded();
+  renderRestaurantMenuEditor();
+  updateMenuEditorDirtyUi();
+  closeDishEditorScreen();
+}
   async function exportRestaurantJson() {
     if (!activeRestaurantData) return;
 
@@ -10435,6 +10466,11 @@ if (floatingSaveBtn) {
 const dishBackBtn = document.getElementById('dishEditorBackBtn');
 if (dishBackBtn) {
   dishBackBtn.addEventListener('click', closeDishEditorScreen);
+}
+
+const dishSaveBtn = document.getElementById('dishEditorSaveBtn');
+if (dishSaveBtn) {
+  dishSaveBtn.addEventListener('click', saveDishEditorScreen);
 }
 
   if (editorList) {
