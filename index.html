@@ -10594,7 +10594,7 @@ if (dishBackBtn) {
 
       if (
         itemCard &&
-        !e.target.closest('button, input, textarea, select, label')
+        !e.target.closest('button, select, label')
       ) {
         const categoryIndex = Number(itemCard.dataset.menuCategoryIndex);
         const itemIndex = Number(itemCard.dataset.menuItemIndex);
