@@ -11088,6 +11088,13 @@ if (dishTranslateLaterBtn) {
   dishTranslateLaterBtn.addEventListener('click', handleDishTranslateLaterFlow);
 }
 
+const dishAddCategoryBtn = document.getElementById('dishAddCategoryBtn');
+if (dishAddCategoryBtn) {
+  dishAddCategoryBtn.addEventListener('click', () => {
+    addRestaurantCategory();
+  });
+}
+
 const dishFinishBtn = document.getElementById('dishFinishBtn');
 if (dishFinishBtn) {
   dishFinishBtn.addEventListener('click', finishDishEditorFlow);
