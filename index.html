@@ -9062,10 +9062,10 @@ function renderRequestRow(item, displayMode = 'active') {
 
             <div class="space-y-3">
               ${siteConfig.clientMenuUrl && siteConfig.clientMenuUrl !== '#' ? `
-              <a href="${siteConfig.clientMenuUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
+              <button type="button" id="restaurant-menu-preview-btn" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
                 <i data-lucide="book-open" class="w-4 h-4 text-gold"></i>
                 <span>${t.restaurantMenuView}</span>
-              </a>
+              </button>
               ` : ''}
 
               ${siteConfig.qrMenuUrl && siteConfig.qrMenuUrl !== '#' ? `
