@@ -10403,17 +10403,17 @@ function showDishFinishConfirmDialog() {
   });
 }
 
-function showDishSavedChoiceDialog() {
+function showDishSavedAutoDialog() {
   return new Promise((resolve) => {
-    document.getElementById('dish-saved-choice-dialog')?.remove();
+    document.getElementById('dish-saved-auto-dialog')?.remove();
 
     const overlay = document.createElement('div');
-    overlay.id = 'dish-saved-choice-dialog';
-    overlay.className = 'fixed inset-0 z-[10080] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4';
+    overlay.id = 'dish-saved-auto-dialog';
+    overlay.className = 'fixed inset-0 z-[10080] bg-black/65 backdrop-blur-sm flex items-center justify-center p-4 pointer-events-none';
 
     overlay.innerHTML = `
       <div class="w-full max-w-md rounded-[28px] border border-gold/35 bg-[#12110d] shadow-[0_28px_90px_rgba(0,0,0,0.55)] p-6">
-        <div class="flex items-start gap-4 mb-5">
+        <div class="flex items-start gap-4">
           <div class="w-11 h-11 rounded-2xl bg-gold/15 border border-gold/30 flex items-center justify-center shrink-0">
             <i data-lucide="check-circle-2" class="w-5 h-5 text-gold"></i>
           </div>
@@ -10426,32 +10426,19 @@ function showDishSavedChoiceDialog() {
             </p>
           </div>
         </div>
-
-        <div class="grid grid-cols-1 gap-3 mt-6">
-          <button type="button" data-return-menu-after-save class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all">
-            Revenir au menu
-          </button>
-
-          <button type="button" data-continue-dish-after-save class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
-            Continuer
-          </button>
-        </div>
       </div>
     `;
-
-    const close = (result) => {
-      overlay.remove();
-      resolve(result);
-    };
-
-    overlay.querySelector('[data-return-menu-after-save]')?.addEventListener('click', () => close('return-menu'));
-    overlay.querySelector('[data-continue-dish-after-save]')?.addEventListener('click', () => close('continue'));
 
     document.body.appendChild(overlay);
 
     if (window.lucide) {
       requestAnimationFrame(() => lucide.createIcons());
     }
+
+    setTimeout(() => {
+      overlay.remove();
+      resolve();
+    }, 3000);
   });
 }
 
@@ -10470,15 +10457,10 @@ async function finishDishEditorFlow() {
     return;
   }
 
-  const nextAction = await showDishSavedChoiceDialog();
-
-  if (nextAction === 'return-menu') {
-    closeDishEditorFlow();
-    closeDishEditorScreen();
-    return;
-  }
+  await showDishSavedAutoDialog();
 
   closeDishEditorFlow();
+  closeDishEditorScreen();
 }
 
 function showTapCartaMessage(text) {
