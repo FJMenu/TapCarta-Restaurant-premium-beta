@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.19';
+            const APP_VERSION = 'V1.2.16.20';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -858,7 +858,11 @@
     }
 
     .dish-editor-back::after {
-      content: "Retour";
+      content: "";
+    }
+
+    .dish-editor-back-label {
+      display: inline-block;
     }
 
     .dish-editor-back:hover {
@@ -887,6 +891,10 @@
 
       .dish-editor-back::after {
         content: "";
+      }
+
+      .dish-editor-back-label {
+        display: none;
       }
     }
 
@@ -1475,6 +1483,48 @@ const dishTranslations = {
     newDish: "Nieuw gerecht"
   }
 };
+
+function getDishText(key) {
+  const langPack = dishTranslations[currentLang] || dishTranslations.fr;
+  return langPack[key] || dishTranslations.fr[key] || '';
+}
+
+function applyDishEditorTranslations() {
+  const map = {
+    'dish.flow.title': 'dishSaved',
+    'dish.flow.subtitle': 'translateQuestion',
+    'dish.flow.translate_now': 'translateNow',
+    'dish.flow.translate_later': 'translateLater',
+    'dish.flow.add_another': 'addDishSameCategory',
+    'dish.flow.add_category': 'addCategory',
+    'dish.flow.finish': 'finish',
+    'dish.editor.title': 'editDish',
+    'dish.editor.save': 'validate',
+    'dish.name': 'dishName',
+    'dish.price': 'price',
+    'dish.description': 'description',
+    'dish.visible': 'visible',
+    'dish.available': 'available',
+    'dish.editor.brand_note': 'brandNote'
+  };
+
+  document.querySelectorAll('[data-i18n]').forEach((element) => {
+    const key = element.dataset.i18n;
+    if (!map[key]) return;
+    element.textContent = getDishText(map[key]);
+  });
+
+  const backButton = document.getElementById('dishEditorBackBtn');
+  if (backButton) {
+    backButton.setAttribute('aria-label', getDishText('back'));
+  }
+
+  const backLabel = document.querySelector('[data-dish-back-label]');
+  if (backLabel) {
+    backLabel.textContent = getDishText('back');
+  }
+}
+
     const translations = {
       fr: {
         snacks: 'Snacks',
@@ -10261,7 +10311,7 @@ let dishEditorState = null;
 
     category.items.unshift({
       id: `nouveau-plat-${Date.now()}`,
-      name: 'Nouveau plat',
+      name: getDishText('newDish'),
       subtitle: '',
       price: 0,
       visible: true,
@@ -10472,21 +10522,21 @@ function showDishTranslationLaterDialog() {
           </div>
           <div>
             <div class="font-display text-xl font-bold text-cream">
-              Traduction du plat
+              ${getDishText('translationTitle')}
             </div>
             <p class="text-sm text-cream/70 mt-2 leading-relaxed">
-              Vos clients parlant une autre langue risquent de ne pas comprendre votre plat.
+              ${getDishText('translationText')}
             </p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 gap-3 mt-6">
           <button type="button" data-validate-without-translation class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all">
-            Valider sans traduction
+            ${getDishText('confirmWithoutTranslation')}
           </button>
 
           <button type="button" data-translate-now class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
-            Traduire maintenant
+            ${getDishText('translateNow')}
           </button>
         </div>
       </div>
@@ -10538,21 +10588,21 @@ function showDishFinishConfirmDialog() {
           </div>
           <div>
             <div class="font-display text-xl font-bold text-cream">
-              Terminer les modifications
+              ${getDishText('finishTitle')}
             </div>
             <p class="text-sm text-cream/70 mt-2 leading-relaxed">
-              Confirmez-vous l’enregistrement final de ce plat dans votre menu ?
+              ${getDishText('finishText')}
             </p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 gap-3 mt-6">
           <button type="button" data-confirm-dish-finish class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all">
-            Confirmer et enregistrer
+            ${getDishText('confirmSave')}
           </button>
 
           <button type="button" data-cancel-dish-finish class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
-            Retour
+            ${getDishText('back')}
           </button>
         </div>
       </div>
@@ -10590,10 +10640,10 @@ function showDishSavedAutoDialog() {
           </div>
           <div>
             <div class="font-display text-xl font-bold text-cream">
-              Modifications enregistrées
+              ${getDishText('savedTitle')}
             </div>
             <p class="text-sm text-cream/70 mt-2 leading-relaxed">
-              Votre plat a bien été enregistré dans votre menu.
+              ${getDishText('savedText')}
             </p>
           </div>
         </div>
@@ -11185,6 +11235,7 @@ if (dishFinishBtn) {
 
   updateInstallUI();
   updateLangButtons();
+  applyDishEditorTranslations();
 }
 
 function ensureFreshHtmlVersion() {
@@ -11363,6 +11414,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     <div class="dish-editor-header">
       <button id="dishEditorBackBtn" class="dish-editor-back" aria-label="Retour">
         <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        <span class="dish-editor-back-label" data-dish-back-label>Retour</span>
       </button>
       <div class="dish-editor-title" data-i18n="dish.editor.title">Édition du plat</div>
       <div class="dish-editor-actions">
