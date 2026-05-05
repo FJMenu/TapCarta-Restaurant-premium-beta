@@ -10359,7 +10359,9 @@ function updateDishFlowCustomLabels() {
           : currentLang === 'nl'
             ? 'Terug naar gerecht'
             : 'Retour au plat';
-   const closeAllTranslationsLabel = document.getElementById('closeAllTranslationsLabel');
+  }
+
+  const closeAllTranslationsLabel = document.getElementById('closeAllTranslationsLabel');
   if (closeAllTranslationsLabel) {
     closeAllTranslationsLabel.textContent =
       currentLang === 'es'
