@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.11';
+            const APP_VERSION = 'V1.2.16.12';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10289,6 +10289,43 @@ let menuSaveInProgress = false;
 
 async function finishDishEditorFlow() {
   if (menuSaveInProgress) return;
+
+  const confirmed = await showRestaurantConfirmDialog({
+    title:
+      currentLang === 'es'
+        ? 'Validar los cambios del menú'
+        : currentLang === 'en'
+          ? 'Validate menu changes'
+          : currentLang === 'nl'
+            ? 'Menuwijzigingen bevestigen'
+            : 'Valider les modifications du menu',
+    message:
+      currentLang === 'es'
+        ? 'Esta acción guardará definitivamente los cambios realizados en este plato y en el menú.'
+        : currentLang === 'en'
+          ? 'This action will permanently save the changes made to this dish and the menu.'
+          : currentLang === 'nl'
+            ? 'Deze actie slaat de wijzigingen aan dit gerecht en het menu definitief op.'
+            : 'Cette action enregistrera définitivement les modifications apportées à ce plat et au menu.',
+    confirmLabel:
+      currentLang === 'es'
+        ? 'Confirmar y validar los cambios'
+        : currentLang === 'en'
+          ? 'Confirm and validate changes'
+          : currentLang === 'nl'
+            ? 'Bevestigen en wijzigingen valideren'
+            : 'Confirmer et valider les modifications',
+    cancelLabel:
+      currentLang === 'es'
+        ? 'Cancelar'
+        : currentLang === 'en'
+          ? 'Cancel'
+          : currentLang === 'nl'
+            ? 'Annuleren'
+            : 'Annuler'
+  });
+
+  if (!confirmed) return;
 
   const saved = await exportRestaurantJson();
 
