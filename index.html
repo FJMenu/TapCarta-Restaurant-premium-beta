@@ -10613,7 +10613,18 @@ async function exportRestaurantJson() {
     menuPreviewContent.innerHTML = visibleCategories.map((category) => {
       const visibleItems = Array.isArray(category.items)
         ? category.items
-            .filter((item) => item.visible !== false)
+            .filter((item) => {
+              if (item.visible === false) return false;
+
+              const itemName = String(item.name || '').trim().toLowerCase();
+              const itemPrice = Number(item.price || 0);
+
+              const isDraftNewDish =
+                itemPrice === 0 &&
+                ['nouveau plat', 'nuevo plato', 'new dish', 'nieuw gerecht'].includes(itemName);
+
+              return !isDraftNewDish;
+            })
             .sort((a, b) => (a.order || 0) - (b.order || 0))
         : [];
 
