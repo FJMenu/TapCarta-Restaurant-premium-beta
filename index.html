@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.17';
+            const APP_VERSION = 'V1.2.16.18';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -11170,7 +11170,7 @@ if (dishFinishBtn) {
 
       if (
         itemCard &&
-        !e.target.closest('button, select, label')
+        !e.target.closest('button, select, label, input, textarea, details, summary')
       ) {
         const categoryIndex = Number(itemCard.dataset.menuCategoryIndex);
         const itemIndex = Number(itemCard.dataset.menuItemIndex);
