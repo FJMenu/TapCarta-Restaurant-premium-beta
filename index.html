@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.21';
+            const APP_VERSION = 'V1.2.16.22';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9543,12 +9543,12 @@ function renderRequestRow(item, displayMode = 'active') {
                   >
                     <i data-lucide="arrow-left" class="w-4 h-4 text-cream"></i>
                     <span>${currentLang === 'es'
-                      ? 'Opciones'
+                      ? 'Salir sin guardar'
                       : currentLang === 'en'
-                        ? 'Options'
+                        ? 'Exit without saving'
                         : currentLang === 'nl'
-                          ? 'Keuzes'
-                          : 'Choix'}</span>
+                          ? 'Afsluiten zonder opslaan'
+                          : 'Quitter sans enregistrer'}</span>
                   </button>
 
                   <button
@@ -9612,7 +9612,7 @@ function renderRequestRow(item, displayMode = 'active') {
       </div>
     </main>
 
-    <div class="restaurant-manual-action-bar" aria-label="Actions rapides restaurant">
+    <div class="restaurant-manual-action-bar" id="manualActionBar" aria-label="Actions rapides restaurant">
       <div class="restaurant-manual-action-inner">
         <button
           id="restaurant-manual-booking-btn"
@@ -10982,7 +10982,14 @@ async function exportRestaurantJson() {
 
   function syncMenuEditorUiState() {
     const isEditorOpen = !!editorSection && !editorSection.classList.contains('hidden');
+    const manualActionBar = document.getElementById('manualActionBar');
+
     document.body.classList.toggle('menu-editor-open', isEditorOpen);
+
+    if (manualActionBar) {
+      manualActionBar.style.display = isEditorOpen ? 'none' : '';
+    }
+
     saveMenuEditorUiState(isEditorOpen);
   }
 
@@ -11084,12 +11091,28 @@ async function exportRestaurantJson() {
     });
   }
 
+async function saveMenuAndCloseEditor() {
+  const saved = await exportRestaurantJson();
+
+  if (!saved) {
+    return;
+  }
+
+  if (editorSection) {
+    editorSection.classList.add('hidden');
+  }
+
+  syncMenuEditorUiState();
+  showMenuEditorHome();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 if (exportJsonBtn) {
-  exportJsonBtn.addEventListener('click', exportRestaurantJson);
+  exportJsonBtn.addEventListener('click', saveMenuAndCloseEditor);
 }
 
 if (floatingSaveBtn) {
-  floatingSaveBtn.addEventListener('click', exportRestaurantJson);
+  floatingSaveBtn.addEventListener('click', saveMenuAndCloseEditor);
 }
 
 const dishBackBtn = document.getElementById('dishEditorBackBtn');
