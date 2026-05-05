@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.15';
+            const APP_VERSION = 'V1.2.16.16';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10920,6 +10920,33 @@ const dishSaveBtn = document.getElementById('dishEditorSaveBtn');
 if (dishSaveBtn) {
   dishSaveBtn.addEventListener('click', saveDishEditorScreen);
 }
+const dishBackToDishBtn = document.getElementById('dishBackToDishBtn');
+if (dishBackToDishBtn) {
+  dishBackToDishBtn.addEventListener('click', () => {
+    closeDishEditorFlow();
+  });
+}
+
+const dishOpenAllTranslationsBtn = document.getElementById('dishOpenAllTranslationsBtn');
+if (dishOpenAllTranslationsBtn) {
+  dishOpenAllTranslationsBtn.addEventListener('click', () => {
+    closeDishEditorFlow();
+    closeDishEditorScreen();
+
+    if (editorSection && editorSection.classList.contains('hidden')) {
+      openMenuEditor({ scroll: false });
+    }
+
+    showMenuEditorWorkspace();
+
+    requestAnimationFrame(() => {
+      document.querySelectorAll('[data-translation-block]').forEach(block => {
+        block.open = true;
+      });
+    });
+  });
+}
+
 const dishTranslateNowBtn = document.getElementById('dishTranslateNowBtn');
 if (dishTranslateNowBtn) {
   dishTranslateNowBtn.addEventListener('click', translateCurrentDishNow);
@@ -11320,7 +11347,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             <span data-i18n="dish.flow.translate_now">Traduire maintenant</span>
           </button>
 
-          <button id="dishTranslateLaterBtn" class="dish-flow-btn">
+          <button id="dishBackToDishBtn"
+  class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/10 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
+  <span>
+    ${currentLang === 'es'
+      ? 'Volver al plato'
+      : currentLang === 'en'
+        ? 'Back to dish'
+        : currentLang === 'nl'
+          ? 'Terug naar gerecht'
+          : 'Retour au plat'}
+  </span>
+</button>
+
+<button id="dishTranslateLaterBtn" class="dish-flow-btn">
             <span data-i18n="dish.flow.translate_later">Traduire plus tard</span>
           </button>
 
@@ -11328,7 +11368,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         <div class="dish-editor-flow-secondary">
 
-          <button id="dishAddAnotherBtn" class="dish-flow-link">
+          <button id="dishOpenAllTranslationsBtn"
+  class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/25 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+  <span>
+    ${currentLang === 'es'
+      ? 'Ver todas las traducciones'
+      : currentLang === 'en'
+        ? 'View all translations'
+        : currentLang === 'nl'
+          ? 'Bekijk alle vertalingen'
+          : 'Voir toutes les traductions'}
+  </span>
+</button>
+
+<button id="dishAddAnotherBtn" class="dish-flow-link">
             <span data-i18n="dish.flow.add_another">Ajouter un autre plat</span>
           </button>
 
