@@ -9522,16 +9522,48 @@ function renderRequestRow(item, displayMode = 'active') {
 
                   <div
                     id="restaurant-menu-unsaved-banner"
-                    class="hidden mt-3 inline-flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-200"
+                    class="hidden sticky top-20 z-40 mt-4 rounded-3xl border border-gold/35 bg-[#16120a]/95 px-4 py-3 text-sm font-semibold text-cream shadow-[0_18px_45px_rgba(0,0,0,0.38)] backdrop-blur-xl"
                   >
-                    <i data-lucide="triangle-alert" class="w-4 h-4"></i>
-                    <span>${currentLang === 'es'
-                      ? 'Cambios no validados'
-                      : currentLang === 'en'
-                        ? 'Unsaved changes'
-                        : currentLang === 'nl'
-                          ? 'Niet-opgeslagen wijzigingen'
-                          : 'Modifications non validées'}</span>
+                    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div class="flex items-start gap-3">
+                        <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-gold/30 bg-gold/12">
+                          <i data-lucide="sparkles" class="h-4 w-4 text-gold"></i>
+                        </div>
+                        <div>
+                          <div class="text-sm font-extrabold text-gold">
+                            ${currentLang === 'es'
+                              ? 'Cambios pendientes'
+                              : currentLang === 'en'
+                                ? 'Pending changes'
+                                : currentLang === 'nl'
+                                  ? 'Wijzigingen in behandeling'
+                                  : 'Modifications en attente'}
+                          </div>
+                          <div class="mt-1 text-xs leading-relaxed text-cream/70">
+                            ${currentLang === 'es'
+                              ? 'El menú todavía no está publicado. Valide los cambios para ponerlos en línea.'
+                              : currentLang === 'en'
+                                ? 'The menu is not published yet. Apply the changes to put them online.'
+                                : currentLang === 'nl'
+                                  ? 'Het menu is nog niet gepubliceerd. Bevestig de wijzigingen om ze online te zetten.'
+                                  : 'Le menu n’est pas encore publié. Validez les modifications pour les mettre en ligne.'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button type="button" id="restaurant-menu-unsaved-save-btn" class="btn-action inline-flex items-center justify-center gap-2 rounded-2xl border border-gold bg-gold px-4 py-2 text-xs font-extrabold text-black shadow-[0_12px_28px_rgba(242,199,68,0.18)] hover:bg-gold/90">
+                        <i data-lucide="check-circle-2" class="h-4 w-4"></i>
+                        <span>
+                          ${currentLang === 'es'
+                            ? 'Validar ahora'
+                            : currentLang === 'en'
+                              ? 'Apply now'
+                              : currentLang === 'nl'
+                                ? 'Nu bevestigen'
+                                : 'Valider maintenant'}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -11048,6 +11080,7 @@ async function exportRestaurantJson() {
   const addCategoryBtn = document.getElementById('restaurant-add-category-btn');
   const exportJsonBtn = document.getElementById('restaurant-save-menu-json-btn');
   const floatingSaveBtn = document.getElementById('restaurant-save-menu-floating-btn');
+const unsavedBannerSaveBtn = document.getElementById('restaurant-menu-unsaved-save-btn');
   const editorList = document.getElementById('restaurant-menu-categories-list');
 
   function getMenuEditorUiStorageKey() {
@@ -11213,6 +11246,10 @@ if (exportJsonBtn) {
 
 if (floatingSaveBtn) {
   floatingSaveBtn.addEventListener('click', saveMenuAndCloseEditor);
+}
+
+if (unsavedBannerSaveBtn) {
+  unsavedBannerSaveBtn.addEventListener('click', saveMenuAndCloseEditor);
 }
 
 const dishBackBtn = document.getElementById('dishEditorBackBtn');
