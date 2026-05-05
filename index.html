@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.23';
+            const APP_VERSION = 'V1.2.16.24';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9224,16 +9224,16 @@ function renderRequestRow(item, displayMode = 'active') {
                         ? 'U gaat de menustructuur aanpassen. Wijzigingen moeten worden bevestigd voordat ze worden toegepast.'
                         : 'Vous allez modifier la structure du menu. Les changements devront être validés avant d’être appliqués.'}</p>
 
-                  <div class="mt-4 inline-flex items-start gap-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-100">
-                    <i data-lucide="triangle-alert" class="w-5 h-5 shrink-0 mt-0.5"></i>
-                    <span>${currentLang === 'es'
-                      ? 'Este espacio sirve para modificar el menú. Si solo quiere verlo, use “Ver mi menú”.'
-                      : currentLang === 'en'
-                        ? 'This area is for editing the menu. To only view it, use “View my menu”.'
-                        : currentLang === 'nl'
-                          ? 'Deze zone is bedoeld om het menu te wijzigen. Wilt u alleen kijken, gebruik dan “Mijn menu bekijken”.'
-                          : 'Cet espace sert à modifier le menu. Pour seulement le consulter, utilisez “Voir mon menu”.'}</span>
-                  </div>
+<div class="mt-5 flex items-start gap-4 rounded-2xl border-2 border-amber-300 bg-amber-400/20 px-5 py-4 text-base font-extrabold text-amber-50 shadow-[0_18px_55px_rgba(245,158,11,0.28)] ring-2 ring-amber-300/30">
+  <i data-lucide="triangle-alert" class="w-7 h-7 shrink-0 mt-0.5 text-amber-200"></i>
+  <span>${currentLang === 'es'
+    ? 'ATENCIÓN: está en modo edición. Este espacio modifica el menú. Si solo quiere verlo, use “Ver mi menú”.'
+    : currentLang === 'en'
+      ? 'WARNING: you are in edit mode. This area changes the menu. To only view it, use “View my menu”.'
+      : currentLang === 'nl'
+        ? 'LET OP: u bent in bewerkingsmodus. Deze zone wijzigt het menu. Wilt u alleen kijken, gebruik dan “Mijn menu bekijken”.'
+        : 'ATTENTION : vous êtes en mode édition. Cet espace modifie le menu. Pour seulement le consulter, utilisez “Voir mon menu”.'}</span>
+</div>
                 </div>
 
                 <button
@@ -9327,9 +9327,9 @@ function renderRequestRow(item, displayMode = 'active') {
               </div>
             </div>
 
-<div id="restaurant-translation-exit-bar" class="hidden mb-4">
+<div id="restaurant-translation-exit-bar" class="hidden mb-5 flex justify-center">
   <button id="closeAllTranslationsBtn"
-    class="btn-action inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-gold bg-gold/10 text-sm font-bold text-gold hover:bg-gold/20 transition-all shadow-lg">
+    class="btn-action inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-gold bg-gold/15 text-sm font-bold text-gold hover:bg-gold/25 transition-all shadow-[0_18px_45px_rgba(242,199,68,0.20)]">
     <i data-lucide="arrow-left" class="w-5 h-5"></i>
     <span id="closeAllTranslationsLabel">Revenir au menu</span>
   </button>
