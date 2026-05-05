@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.14';
+            const APP_VERSION = 'V1.2.16.15';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10324,9 +10324,97 @@ function saveDishEditorScreen() {
     flow.classList.remove('hidden');
   }
 }
-function closeDishEditorFlow() {
+ function closeDishEditorFlow() {
   const flow = document.getElementById('dishEditorFlow');
   if (flow) flow.classList.add('hidden');
+}
+
+function getCurrentDishEditorContext() {
+  if (!window._dishEditorContext) return null;
+
+  const categoryIndex = Number(window._dishEditorContext.categoryIndex);
+  const itemIndex = Number(window._dishEditorContext.itemIndex);
+
+  if (Number.isNaN(categoryIndex) || Number.isNaN(itemIndex)) return null;
+
+  return { categoryIndex, itemIndex };
+}
+
+function returnToMenuEditorWorkspace() {
+  closeDishEditorFlow();
+  closeDishEditorScreen();
+
+  if (editorSection && editorSection.classList.contains('hidden')) {
+    openMenuEditor({ scroll: false });
+  }
+
+  showMenuEditorWorkspace();
+}
+
+function scrollToDishEditorCard(categoryIndex, itemIndex, openTranslations = false) {
+  requestAnimationFrame(() => {
+    const card = document.querySelector(
+      `[data-menu-item-card="true"][data-menu-category-index="${categoryIndex}"][data-menu-item-index="${itemIndex}"]`
+    );
+
+    if (!card) return;
+
+    if (openTranslations) {
+      const details = card.querySelector('details');
+      if (details) details.open = true;
+    }
+
+    card.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    });
+  });
+}
+
+function translateCurrentDishNow() {
+  const context = getCurrentDishEditorContext();
+  if (!context) return;
+
+  returnToMenuEditorWorkspace();
+  scrollToDishEditorCard(context.categoryIndex, context.itemIndex, true);
+}
+
+function translateCurrentDishLater() {
+  returnToMenuEditorWorkspace();
+}
+
+function addAnotherDishFromFlow() {
+  const context = getCurrentDishEditorContext();
+  if (!context) return;
+
+  closeDishEditorFlow();
+  closeDishEditorScreen();
+
+  if (editorSection && editorSection.classList.contains('hidden')) {
+    openMenuEditor({ scroll: false });
+  }
+
+  showMenuEditorWorkspace();
+
+  addRestaurantItemToCategory(context.categoryIndex);
+  updateMenuEditorDirtyUi();
+
+  openDishEditorScreen(context.categoryIndex, 0);
+}
+
+function addCategoryFromDishFlow() {
+  closeDishEditorFlow();
+  closeDishEditorScreen();
+
+  if (editorSection && editorSection.classList.contains('hidden')) {
+    openMenuEditor({ scroll: false });
+  }
+
+  showMenuEditorWorkspace();
+
+  markMenuEditorDirty();
+  addRestaurantCategory();
+  updateMenuEditorDirtyUi();
 }
 
 let menuSaveInProgress = false;
@@ -10832,6 +10920,26 @@ const dishSaveBtn = document.getElementById('dishEditorSaveBtn');
 if (dishSaveBtn) {
   dishSaveBtn.addEventListener('click', saveDishEditorScreen);
 }
+const dishTranslateNowBtn = document.getElementById('dishTranslateNowBtn');
+if (dishTranslateNowBtn) {
+  dishTranslateNowBtn.addEventListener('click', translateCurrentDishNow);
+}
+
+const dishTranslateLaterBtn = document.getElementById('dishTranslateLaterBtn');
+if (dishTranslateLaterBtn) {
+  dishTranslateLaterBtn.addEventListener('click', translateCurrentDishLater);
+}
+
+const dishAddAnotherBtn = document.getElementById('dishAddAnotherBtn');
+if (dishAddAnotherBtn) {
+  dishAddAnotherBtn.addEventListener('click', addAnotherDishFromFlow);
+}
+
+const dishAddCategoryBtn = document.getElementById('dishAddCategoryBtn');
+if (dishAddCategoryBtn) {
+  dishAddCategoryBtn.addEventListener('click', addCategoryFromDishFlow);
+}
+
 const dishFinishBtn = document.getElementById('dishFinishBtn');
 if (dishFinishBtn) {
   dishFinishBtn.addEventListener('click', finishDishEditorFlow);
