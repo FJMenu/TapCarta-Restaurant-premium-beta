@@ -9746,7 +9746,7 @@ function renderRequestRow(item, displayMode = 'active') {
       { code: 'es', label: 'ES' },
       { code: 'en', label: 'EN' },
       { code: 'nl', label: 'NL' }
-    ];
+    ].filter((lang) => lang.code !== currentLang);
 
     function escapeHtml(value) {
       return String(value || '')
