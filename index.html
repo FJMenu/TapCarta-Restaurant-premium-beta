@@ -9336,6 +9336,24 @@ function renderRequestRow(item, displayMode = 'active') {
     <span id="closeAllTranslationsLabel">Revenir au menu</span>
   </button>
 </div>
+
+<div class="mb-5 flex justify-center">
+  <button
+    id="restaurant-menu-editor-workspace-back-btn"
+    type="button"
+    class="btn-action inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-gold bg-gold/15 text-sm font-bold text-gold hover:bg-gold/25 transition-all shadow-[0_18px_45px_rgba(242,199,68,0.20)]"
+  >
+    <i data-lucide="arrow-left" class="w-5 h-5 text-gold"></i>
+    <span>${currentLang === 'es'
+      ? 'Volver al menú'
+      : currentLang === 'en'
+        ? 'Back to menu'
+        : currentLang === 'nl'
+          ? 'Terug naar menu'
+          : 'Revenir au menu'}</span>
+  </button>
+</div>
+
               <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
                 <div>
                   <h3 class="font-display text-xl font-bold text-cream">${currentLang === 'es'
@@ -9370,20 +9388,6 @@ function renderRequestRow(item, displayMode = 'active') {
                 </div>
 
                 <div class="flex flex-wrap gap-3">
-                <button
-  id="restaurant-menu-editor-workspace-back-btn"
-  type="button"
-  class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
->
-  <i data-lucide="arrow-left" class="w-4 h-4 text-cream"></i>
-  <span>${currentLang === 'es'
-    ? 'Salir sin guardar'
-    : currentLang === 'en'
-      ? 'Exit without saving'
-      : currentLang === 'nl'
-        ? 'Afsluiten zonder opslaan'
-        : 'Quitter sans enregistrer'}</span>
-</button>
 
                   <button
                     id="restaurant-add-category-btn"
