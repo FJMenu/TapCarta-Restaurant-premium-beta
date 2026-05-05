@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.13';
+            const APP_VERSION = 'V1.2.16.14';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9148,6 +9148,50 @@ function renderRequestRow(item, displayMode = 'active') {
           </article>
         </section>
 
+        <section id="restaurant-menu-preview-section" class="hidden mt-8">
+          <article class="rounded-[28px] border border-gold/22 bg-gradient-to-br from-white/[0.045] to-white/[0.015] shadow-[0_24px_70px_rgba(0,0,0,0.32)] p-5 md:p-7">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+              <div>
+                <h3 class="font-display text-2xl md:text-3xl font-bold text-cream">
+                  ${currentLang === 'es'
+                    ? 'Vista previa del menú'
+                    : currentLang === 'en'
+                      ? 'Menu preview'
+                      : currentLang === 'nl'
+                        ? 'Menuvoorbeeld'
+                        : 'Prévisualisation du menu'}
+                </h3>
+                <p class="text-sm md:text-base text-cream/65 mt-2 max-w-3xl">
+                  ${currentLang === 'es'
+                    ? 'Vista interna solo lectura. Para modificar el menú, usa “Gestionar el menú”.'
+                    : currentLang === 'en'
+                      ? 'Internal read-only view. To edit the menu, use “Manage menu”.'
+                      : currentLang === 'nl'
+                        ? 'Interne weergave alleen-lezen. Gebruik “Menu beheren” om te wijzigen.'
+                        : 'Vue interne en lecture seule. Pour modifier le menu, utilisez “Gérer le menu”.'}
+                </p>
+              </div>
+
+              <button
+                id="restaurant-menu-preview-close-btn"
+                type="button"
+                class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/10 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+              >
+                <i data-lucide="x" class="w-4 h-4"></i>
+                <span>${currentLang === 'es'
+                  ? 'Cerrar'
+                  : currentLang === 'en'
+                    ? 'Close'
+                    : currentLang === 'nl'
+                      ? 'Sluiten'
+                      : 'Fermer'}</span>
+              </button>
+            </div>
+
+            <div id="restaurant-menu-preview-content" class="space-y-6"></div>
+          </article>
+        </section>
+
         <section id="restaurant-menu-editor-section" class="hidden mt-8">
           <article class="rounded-[28px] border-2 border-amber-400/55 bg-gradient-to-br from-amber-500/[0.18] via-amber-950/30 to-black shadow-[0_28px_80px_rgba(245,158,11,0.18)] p-5 md:p-7">
 
@@ -10487,6 +10531,10 @@ async function exportRestaurantJson() {
   }
 }
 
+  const menuPreviewBtn = document.getElementById('restaurant-menu-preview-btn');
+  const menuPreviewSection = document.getElementById('restaurant-menu-preview-section');
+  const menuPreviewContent = document.getElementById('restaurant-menu-preview-content');
+  const menuPreviewCloseBtn = document.getElementById('restaurant-menu-preview-close-btn');
   const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
   const editorSection = document.getElementById('restaurant-menu-editor-section');
   const editorHome = document.getElementById('restaurant-menu-editor-home');
@@ -10537,6 +10585,119 @@ async function exportRestaurantJson() {
     saveMenuEditorUiState(isEditorOpen);
   }
 
+  function renderRestaurantMenuReadonlyPreview() {
+    if (!menuPreviewContent) return;
+
+    ensureRestaurantMenuShape();
+
+    const categories = activeRestaurantData?.menu?.categories || [];
+    const visibleCategories = categories
+      .filter((category) => category.visible !== false)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    if (!visibleCategories.length) {
+      menuPreviewContent.innerHTML = `
+        <div class="rounded-2xl border border-white/10 bg-black/20 px-4 py-5 text-sm text-cream/65">
+          ${currentLang === 'es'
+            ? 'No hay categorías visibles en el menú.'
+            : currentLang === 'en'
+              ? 'No visible categories in the menu.'
+              : currentLang === 'nl'
+                ? 'Geen zichtbare categorieën in het menu.'
+                : 'Aucune catégorie visible dans le menu.'}
+        </div>
+      `;
+      return;
+    }
+
+    menuPreviewContent.innerHTML = visibleCategories.map((category) => {
+      const visibleItems = Array.isArray(category.items)
+        ? category.items
+            .filter((item) => item.visible !== false)
+            .sort((a, b) => (a.order || 0) - (b.order || 0))
+        : [];
+
+      return `
+        <div class="rounded-2xl border border-white/10 bg-black/18 p-4 md:p-5">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-9 h-9 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center">
+              <i data-lucide="utensils-crossed" class="w-4 h-4 text-gold"></i>
+            </div>
+            <h4 class="font-display text-lg md:text-xl font-bold text-cream">${escapeRequestDetailsHtml(category.name || '-')}</h4>
+          </div>
+
+          <div class="space-y-2">
+            ${visibleItems.length
+              ? visibleItems.map((item) => `
+                <div class="rounded-xl border border-white/8 bg-black/18 px-4 py-3 flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                    <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(item.name || '-')}</div>
+                    ${item.subtitle ? `<div class="text-xs text-cream/55 mt-1">${escapeRequestDetailsHtml(item.subtitle)}</div>` : ''}
+                    ${item.available === false ? `
+                      <div class="text-[11px] font-bold text-red-200 mt-2">
+                        ${currentLang === 'es'
+                          ? 'No disponible'
+                          : currentLang === 'en'
+                            ? 'Unavailable'
+                            : currentLang === 'nl'
+                              ? 'Niet beschikbaar'
+                              : 'Indisponible'}
+                      </div>
+                    ` : ''}
+                  </div>
+
+                  <div class="text-sm font-bold text-gold whitespace-nowrap">
+                    ${typeof item.price === 'number'
+                      ? `${item.price.toFixed(2).replace('.', ',')} €`
+                      : ''}
+                  </div>
+                </div>
+              `).join('')
+              : `
+                <div class="rounded-xl border border-white/8 bg-black/18 px-4 py-3 text-sm text-cream/55">
+                  ${currentLang === 'es'
+                    ? 'Ningún plato visible en esta categoría.'
+                    : currentLang === 'en'
+                      ? 'No visible dish in this category.'
+                      : currentLang === 'nl'
+                        ? 'Geen zichtbaar gerecht in deze categorie.'
+                        : 'Aucun plat visible dans cette catégorie.'}
+                </div>
+              `}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (window.lucide) {
+      requestAnimationFrame(() => {
+        lucide.createIcons();
+      });
+    }
+  }
+
+  function openRestaurantMenuReadonlyPreview() {
+    if (!menuPreviewSection) return;
+
+    if (editorSection && !editorSection.classList.contains('hidden')) {
+      closeMenuEditor({ force: true });
+    }
+
+    renderRestaurantMenuReadonlyPreview();
+    menuPreviewSection.classList.remove('hidden');
+
+    requestAnimationFrame(() => {
+      menuPreviewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  function closeRestaurantMenuReadonlyPreview() {
+    if (!menuPreviewSection) return;
+
+    menuPreviewSection.classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   function showMenuEditorHome() {
     if (editorHome) editorHome.classList.remove('hidden');
     if (editorWorkspace) editorWorkspace.classList.add('hidden');
@@ -10578,6 +10739,14 @@ async function exportRestaurantJson() {
     editorSection.classList.add('hidden');
     syncMenuEditorUiState();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  if (menuPreviewBtn) {
+    menuPreviewBtn.addEventListener('click', openRestaurantMenuReadonlyPreview);
+  }
+
+  if (menuPreviewCloseBtn) {
+    menuPreviewCloseBtn.addEventListener('click', closeRestaurantMenuReadonlyPreview);
   }
 
   if (editorToggleBtn && editorSection) {
