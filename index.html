@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.20';
+            const APP_VERSION = 'V1.2.16.21';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1378,6 +1378,8 @@ const dishTranslations = {
     translateLater: "Traduire plus tard",
     addDishSameCategory: "Ajouter un plat dans cette catégorie",
     addCategory: "Ajouter une catégorie",
+categoryAddedTitle: "Catégorie ajoutée",
+categoryAddedText: "Votre nouvelle catégorie a bien été ajoutée au menu.",
     finish: "Terminer",
     editDish: "Édition du plat",
     validate: "Valider",
@@ -1406,6 +1408,8 @@ const dishTranslations = {
     translateLater: "Traducir más tarde",
     addDishSameCategory: "Añadir un plato en esta categoría",
     addCategory: "Añadir una categoría",
+categoryAddedTitle: "Categoría añadida",
+categoryAddedText: "Su nueva categoría se ha añadido correctamente al menú.",
     finish: "Terminar",
     editDish: "Edición del plato",
     validate: "Validar",
@@ -1434,6 +1438,8 @@ const dishTranslations = {
     translateLater: "Translate later",
     addDishSameCategory: "Add a dish in this category",
     addCategory: "Add a category",
+categoryAddedTitle: "Category added",
+categoryAddedText: "Your new category has been added to the menu.",
     finish: "Finish",
     editDish: "Dish editing",
     validate: "Validate",
@@ -1462,6 +1468,8 @@ const dishTranslations = {
     translateLater: "Later vertalen",
     addDishSameCategory: "Gerecht toevoegen in deze categorie",
     addCategory: "Categorie toevoegen",
+categoryAddedTitle: "Categorie toegevoegd",
+categoryAddedText: "Uw nieuwe categorie is toegevoegd aan het menu.",
     finish: "Voltooien",
     editDish: "Gerecht bewerken",
     validate: "Valideren",
@@ -10377,6 +10385,105 @@ function createCategory(categoryName) {
   markMenuTranslationWarningNeeded();
   renderRestaurantMenuEditor();
 
+  const flowTitle = document.querySelector('[data-i18n="dish.flow.title"]');
+  if (flowTitle) {
+    flowTitle.textContent = getDishText('categoryAddedTitle');
+  }
+
+  const flowSubtitle = document.querySelector('[data-i18n="dish.flow.subtitle"]');
+  if (flowSubtitle) {
+    flowSubtitle.textContent = getDishText('categoryAddedText');
+  }
+
+  showTapCartaMessage(
+    currentLang === 'es'
+      ? 'Categoría añadida'
+      : currentLang === 'en'
+        ? 'Category added'
+        : currentLang === 'nl'
+          ? 'Categorie toegevoegd'
+          : 'Catégorie ajoutée'
+  );
+}
+  const menu = activeRestaurantData.menu;
+
+  const newCategory = {
+    id: 'cat_' + Date.now(),
+    name: categoryName,
+    items: []
+  };
+
+  menu.categories.push(newCategory);
+
+  markMenuTranslationWarningNeeded();
+  renderRestaurantMenuEditor();
+
+  const flowTitle = document.querySelector('[data-i18n="dish.flow.title"]');
+  if (flowTitle) {
+    flowTitle.textContent = getDishText('categoryAddedTitle');
+  }
+
+  const flowSubtitle = document.querySelector('[data-i18n="dish.flow.subtitle"]');
+  if (flowSubtitle) {
+    flowSubtitle.textContent = getDishText('categoryAddedText');
+  }
+
+  showTapCartaMessage(
+    currentLang === 'es'
+      ? 'Categoría añadida'
+      : currentLang === 'en'
+        ? 'Category added'
+        : currentLang === 'nl'
+          ? 'Categorie toegevoegd'
+          : 'Catégorie ajoutée'
+  );
+}
+  const menu = activeRestaurantData.menu;
+
+  const newCategory = {
+    id: 'cat_' + Date.now(),
+    name: categoryName,
+    items: []
+  };
+
+  menu.categories.push(newCategory);
+
+  markMenuTranslationWarningNeeded();
+  renderRestaurantMenuEditor();
+
+  const flowTitle = document.querySelector('[data-i18n="dish.flow.title"]');
+  if (flowTitle) {
+    flowTitle.textContent = getDishText('categoryAddedTitle');
+  }
+
+  const flowSubtitle = document.querySelector('[data-i18n="dish.flow.subtitle"]');
+  if (flowSubtitle) {
+    flowSubtitle.textContent = getDishText('categoryAddedText');
+  }
+
+  showTapCartaMessage(
+    currentLang === 'es'
+      ? 'Categoría añadida'
+      : currentLang === 'en'
+        ? 'Category added'
+        : currentLang === 'nl'
+          ? 'Categorie toegevoegd'
+          : 'Catégorie ajoutée'
+  );
+}
+  const menu = activeRestaurantData.menu;
+
+  const newCategory = {
+    id: 'cat_' + Date.now(),
+    name: categoryName,
+    items: []
+  };
+
+  menu.categories.push(newCategory);
+
+  markMenuTranslationWarningNeeded();
+  renderRestaurantMenuEditor();
+
   showTapCartaMessage(
     currentLang === 'es'
       ? 'Categoría añadida'
@@ -11086,6 +11193,19 @@ if (dishSaveBtn) {
 const dishTranslateLaterBtn = document.getElementById('dishTranslateLaterBtn');
 if (dishTranslateLaterBtn) {
   dishTranslateLaterBtn.addEventListener('click', handleDishTranslateLaterFlow);
+}
+
+const dishAddAnotherBtn = document.getElementById('dishAddAnotherBtn');
+if (dishAddAnotherBtn) {
+  dishAddAnotherBtn.addEventListener('click', () => {
+    const categoryIndex = currentDishEditorState?.categoryIndex;
+
+    if (typeof categoryIndex !== 'number') return;
+
+    closeDishEditorFlow();
+
+    addRestaurantMenuItem(categoryIndex);
+  });
 }
 
 const dishAddCategoryBtn = document.getElementById('dishAddCategoryBtn');
