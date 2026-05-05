@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.18';
+            const APP_VERSION = 'V1.2.16.19';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -1362,7 +1362,119 @@ activeRestaurantData = restaurantData;
       ],
       boissons: []
     };
+const dishTranslations = {
+  fr: {
+    dishSaved: "Plat enregistré",
+    translateQuestion: "Souhaitez-vous traduire ce plat ?",
+    translateNow: "Traduire maintenant",
+    translateLater: "Traduire plus tard",
+    addDishSameCategory: "Ajouter un plat dans cette catégorie",
+    addCategory: "Ajouter une catégorie",
+    finish: "Terminer",
+    editDish: "Édition du plat",
+    validate: "Valider",
+    dishName: "Nom du plat",
+    price: "Prix",
+    description: "Description",
+    visible: "Visible",
+    available: "Disponible",
+    brandNote: "Votre menu reste clair, rapide et professionnel avec TapCarta",
+    translationTitle: "Traduction du plat",
+    translationText: "Vos clients parlant une autre langue risquent de ne pas comprendre votre plat.",
+    confirmWithoutTranslation: "Valider sans traduction",
+    finishTitle: "Terminer les modifications",
+    finishText: "Confirmez-vous l’enregistrement final de ce plat dans votre menu ?",
+    confirmSave: "Confirmer et enregistrer",
+    back: "Retour",
+    savedTitle: "Modifications enregistrées",
+    savedText: "Votre plat a bien été enregistré dans votre menu.",
+    newDish: "Nouveau plat"
+  },
 
+  es: {
+    dishSaved: "Plato guardado",
+    translateQuestion: "¿Desea traducir este plato?",
+    translateNow: "Traducir ahora",
+    translateLater: "Traducir más tarde",
+    addDishSameCategory: "Añadir un plato en esta categoría",
+    addCategory: "Añadir una categoría",
+    finish: "Terminar",
+    editDish: "Edición del plato",
+    validate: "Validar",
+    dishName: "Nombre del plato",
+    price: "Precio",
+    description: "Descripción",
+    visible: "Visible",
+    available: "Disponible",
+    brandNote: "Su menú sigue siendo claro, rápido y profesional con TapCarta",
+    translationTitle: "Traducción del plato",
+    translationText: "Los clientes que hablan otro idioma pueden no entender su plato.",
+    confirmWithoutTranslation: "Validar sin traducción",
+    finishTitle: "Finalizar modificaciones",
+    finishText: "¿Confirma el guardado final de este plato en su menú?",
+    confirmSave: "Confirmar y guardar",
+    back: "Volver",
+    savedTitle: "Modificaciones guardadas",
+    savedText: "Su plato se ha guardado correctamente en su menú.",
+    newDish: "Nuevo plato"
+  },
+
+  en: {
+    dishSaved: "Dish saved",
+    translateQuestion: "Do you want to translate this dish?",
+    translateNow: "Translate now",
+    translateLater: "Translate later",
+    addDishSameCategory: "Add a dish in this category",
+    addCategory: "Add a category",
+    finish: "Finish",
+    editDish: "Dish editing",
+    validate: "Validate",
+    dishName: "Dish name",
+    price: "Price",
+    description: "Description",
+    visible: "Visible",
+    available: "Available",
+    brandNote: "Your menu stays clear, fast and professional with TapCarta",
+    translationTitle: "Dish translation",
+    translationText: "Customers speaking another language may not understand your dish.",
+    confirmWithoutTranslation: "Validate without translation",
+    finishTitle: "Finish changes",
+    finishText: "Do you confirm the final saving of this dish in your menu?",
+    confirmSave: "Confirm and save",
+    back: "Back",
+    savedTitle: "Changes saved",
+    savedText: "Your dish has been successfully saved in your menu.",
+    newDish: "New dish"
+  },
+
+  nl: {
+    dishSaved: "Gerecht opgeslagen",
+    translateQuestion: "Wilt u dit gerecht vertalen?",
+    translateNow: "Nu vertalen",
+    translateLater: "Later vertalen",
+    addDishSameCategory: "Gerecht toevoegen in deze categorie",
+    addCategory: "Categorie toevoegen",
+    finish: "Voltooien",
+    editDish: "Gerecht bewerken",
+    validate: "Valideren",
+    dishName: "Naam van het gerecht",
+    price: "Prijs",
+    description: "Beschrijving",
+    visible: "Zichtbaar",
+    available: "Beschikbaar",
+    brandNote: "Uw menu blijft duidelijk, snel en professioneel met TapCarta",
+    translationTitle: "Vertaling van het gerecht",
+    translationText: "Klanten die een andere taal spreken, begrijpen uw gerecht mogelijk niet.",
+    confirmWithoutTranslation: "Valideren zonder vertaling",
+    finishTitle: "Wijzigingen voltooien",
+    finishText: "Bevestigt u het definitief opslaan van dit gerecht in uw menu?",
+    confirmSave: "Bevestigen en opslaan",
+    back: "Terug",
+    savedTitle: "Wijzigingen opgeslagen",
+    savedText: "Uw gerecht is succesvol opgeslagen in uw menu.",
+    newDish: "Nieuw gerecht"
+  }
+};
     const translations = {
       fr: {
         snacks: 'Snacks',
