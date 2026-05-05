@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.21';
+            const APP_VERSION = 'V1.2.16.22';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9327,22 +9327,14 @@ function renderRequestRow(item, displayMode = 'active') {
               </div>
             </div>
 
-            <div id="restaurant-menu-editor-workspace">
-
-  <div id="restaurant-translation-exit-bar" class="hidden mb-4">
-    <button id="closeAllTranslationsBtn"
-      class="btn-action inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gold/30 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
-      <i data-lucide="arrow-left" class="w-4 h-4"></i>
-      <span id="closeAllTranslationsLabel">Revenir au menu</span>
-    </button>
-  </div> class="hidden">
+            <div id="restaurant-menu-editor-workspace" class="hidden">
               <div id="restaurant-translation-exit-bar" class="hidden mb-4">
-  <button id="closeAllTranslationsBtn"
-    class="btn-action inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gold/30 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
-    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-    <span id="closeAllTranslationsLabel">Revenir au menu</span>
-  </button>
-</div>
+                <button id="closeAllTranslationsBtn"
+                  class="btn-action inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gold/30 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                  <span id="closeAllTranslationsLabel">Revenir au menu</span>
+                </button>
+              </div>
               <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
                 <div>
                   <h3 class="font-display text-xl font-bold text-cream">${currentLang === 'es'
@@ -10351,22 +10343,12 @@ function saveDishEditorScreen() {
     flow.classList.remove('hidden');
   }
 }
- function closeDishEditorFlow() {
+function closeDishEditorFlow() {
   const flow = document.getElementById('dishEditorFlow');
   if (flow) flow.classList.add('hidden');
 }
 
-  const closeAllTranslationsLabel = document.getElementById('closeAllTranslationsLabel');
-  if (closeAllTranslationsLabel) {
-    closeAllTranslationsLabel.textContent =
-      currentLang === 'es'
-        ? 'Volver al menú'
-        : currentLang === 'en'
-          ? 'Back to menu'
-          : currentLang === 'nl'
-            ? 'Terug naar menu'
-            : 'Revenir au menu';
-  }
+function updateDishFlowCustomLabels() {
   const backLabel = document.getElementById('dishBackToDishLabel');
   if (backLabel) {
     backLabel.textContent =
@@ -10403,6 +10385,7 @@ function saveDishEditorScreen() {
             : 'Voir toutes les traductions';
   }
 }
+
 
 function getCurrentDishEditorContext() {
   if (!window._dishEditorContext) return null;
@@ -11037,48 +11020,10 @@ if (dishOpenAllTranslationsBtn) {
 
     showMenuEditorWorkspace();
     renderRestaurantMenuEditor();
+    updateDishFlowCustomLabels();
 
     const exitBar = document.getElementById('restaurant-translation-exit-bar');
     if (exitBar) exitBar.classList.remove('hidden');
-
-    requestAnimationFrame(() => {
-      document.querySelectorAll('[data-menu-item-card="true"] details').forEach((d) => {
-        d.open = true;
-      });
-    });
-  });
-}
-    closeDishEditorFlow();
-    closeDishEditorScreen();
-
-    if (editorSection && editorSection.classList.contains('hidden')) {
-      openMenuEditor({ scroll: false });
-    }
-
-    showMenuEditorWorkspace();
-    renderRestaurantMenuEditor();
-
-    const exitBar = document.getElementById('restaurant-translation-exit-bar');
-    if (exitBar) exitBar.classList.remove('hidden');
-
-    requestAnimationFrame(() => {
-      document.querySelectorAll('[data-menu-item-card="true"] details').forEach((d) => {
-        d.open = true;
-      });
-    });
-  });
-}
-if (dishOpenAllTranslationsBtn) {
-  dishOpenAllTranslationsBtn.addEventListener('click', () => {
-    closeDishEditorFlow();
-    closeDishEditorScreen();
-
-    if (editorSection && editorSection.classList.contains('hidden')) {
-      openMenuEditor({ scroll: false });
-    }
-
-    showMenuEditorWorkspace();
-    renderRestaurantMenuEditor();
 
     requestAnimationFrame(() => {
       document.querySelectorAll('[data-menu-item-card="true"] details').forEach((details) => {
