@@ -11059,6 +11059,13 @@ const dishAddCategoryBtn = document.getElementById('dishAddCategoryBtn');
 if (dishAddCategoryBtn) {
   dishAddCategoryBtn.addEventListener('click', addCategoryFromDishFlow);
 }
+const dishExitSafeBtn = document.getElementById('dishExitSafeBtn');
+if (dishExitSafeBtn) {
+  dishExitSafeBtn.addEventListener('click', () => {
+    closeDishEditorScreen();
+  });
+}
+
 const closeAllTranslationsBtn = document.getElementById('closeAllTranslationsBtn');
 if (closeAllTranslationsBtn) {
   closeAllTranslationsBtn.addEventListener('click', () => {
@@ -11496,6 +11503,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     <div class="dish-editor-content">
 
       <div class="dish-editor-panel">
+  <div class="flex justify-center mb-4">
+    <button id="dishExitSafeBtn"
+      class="btn-action inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gold bg-gold/10 text-sm font-bold text-gold hover:bg-gold/20 transition-all">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+      <span>Retour à la gestion du menu</span>
+    </button>
+  </div>
 
         <div class="dish-editor-grid">
           <div class="dish-editor-field">
