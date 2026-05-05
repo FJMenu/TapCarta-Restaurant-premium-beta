@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.25';
+            const APP_VERSION = 'V1.2.16.11';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -836,25 +836,15 @@
       letter-spacing: -0.01em;
     }
 
-       .dish-editor-back {
-      width: 46px;
-      height: 46px;
-      border-radius: 16px;
-      border: 1px solid rgba(242, 199, 68, 0.32);
-      background: linear-gradient(135deg, rgba(242, 199, 68, 0.16), rgba(255, 255, 255, 0.035));
-      color: #f2c744;
+    .dish-editor-back {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid rgba(248, 245, 235, 0.14);
+      background: rgba(255, 255, 255, 0.035);
+      color: #f8f5eb;
+      font-size: 22px;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
-      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-    }
-
-    .dish-editor-back:hover {
-      transform: translateY(-1px);
-      border-color: rgba(242, 199, 68, 0.55);
-      background: linear-gradient(135deg, rgba(242, 199, 68, 0.22), rgba(255, 255, 255, 0.055));
     }
 
     .dish-editor-save {
@@ -9072,10 +9062,10 @@ function renderRequestRow(item, displayMode = 'active') {
 
             <div class="space-y-3">
               ${siteConfig.clientMenuUrl && siteConfig.clientMenuUrl !== '#' ? `
-              <button type="button" id="restaurant-menu-preview-btn" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
+              <a href="${siteConfig.clientMenuUrl}" class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gold/35 text-sm font-semibold text-cream hover:bg-gold/10 transition-all">
                 <i data-lucide="book-open" class="w-4 h-4 text-gold"></i>
                 <span>${t.restaurantMenuView}</span>
-              </button>
+              </a>
               ` : ''}
 
               ${siteConfig.qrMenuUrl && siteConfig.qrMenuUrl !== '#' ? `
@@ -9158,72 +9148,11 @@ function renderRequestRow(item, displayMode = 'active') {
           </article>
         </section>
 
-        <section id="restaurant-menu-preview-section" class="hidden mt-8">
-          <article class="rounded-[28px] border border-gold/22 bg-gradient-to-br from-white/[0.045] to-white/[0.015] shadow-[0_24px_70px_rgba(0,0,0,0.32)] p-5 md:p-7">
-            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
-              <div>
-                <h3 class="font-display text-2xl md:text-3xl font-bold text-cream">
-                  ${currentLang === 'es'
-                    ? 'Vista previa del menú'
-                    : currentLang === 'en'
-                      ? 'Menu preview'
-                      : currentLang === 'nl'
-                        ? 'Menuvoorbeeld'
-                        : 'Prévisualisation du menu'}
-                </h3>
-                <p class="text-sm md:text-base text-cream/65 mt-2 max-w-3xl">
-                  ${currentLang === 'es'
-                    ? 'Vista interna solo lectura. Para modificar el menú, usa “Gestionar el menú”.'
-                    : currentLang === 'en'
-                      ? 'Internal read-only view. To edit the menu, use “Manage menu”.'
-                      : currentLang === 'nl'
-                        ? 'Interne weergave alleen-lezen. Gebruik “Menu beheren” om te wijzigen.'
-                        : 'Vue interne en lecture seule. Pour modifier le menu, utilisez “Gérer le menu”.'}
-                </p>
-              </div>
-
-              <button
-                id="restaurant-menu-preview-close-btn"
-                type="button"
-                class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/10 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
-              >
-                <i data-lucide="x" class="w-4 h-4"></i>
-                <span>${currentLang === 'es'
-                  ? 'Cerrar'
-                  : currentLang === 'en'
-                    ? 'Close'
-                    : currentLang === 'nl'
-                      ? 'Sluiten'
-                      : 'Fermer'}</span>
-              </button>
-            </div>
-
-            <div id="restaurant-menu-preview-content" class="space-y-6"></div>
-          </article>
-        </section>
-
         <section id="restaurant-menu-editor-section" class="hidden mt-8">
           <article class="rounded-[28px] border-2 border-amber-400/55 bg-gradient-to-br from-amber-500/[0.18] via-amber-950/30 to-black shadow-[0_28px_80px_rgba(245,158,11,0.18)] p-5 md:p-7">
 
             <div id="restaurant-menu-editor-home">
-              <div class="mb-6">
-                <div class="mb-5 flex justify-center">
-                  <button
-                    id="restaurant-close-menu-editor-btn"
-                    type="button"
-                    class="btn-action inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-gold bg-gold/15 text-sm font-bold text-gold hover:bg-gold/25 transition-all shadow-[0_18px_45px_rgba(242,199,68,0.20)]"
-                  >
-                    <i data-lucide="arrow-left" class="w-5 h-5 text-gold"></i>
-                    <span>${currentLang === 'es'
-                      ? 'Volver al menú'
-                      : currentLang === 'en'
-                        ? 'Back to menu'
-                        : currentLang === 'nl'
-                          ? 'Terug naar menu'
-                          : 'Revenir au menu'}</span>
-                  </button>
-                </div>
-
+              <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
                 <div>
                   <h3 class="inline-flex items-center gap-3 rounded-2xl border border-amber-300/35 bg-amber-500/18 px-4 py-3 font-display text-2xl md:text-3xl font-bold text-cream shadow-[0_12px_32px_rgba(245,158,11,0.12)]">${currentLang === 'es'
                     ? 'Modo edición del menú'
@@ -9241,17 +9170,32 @@ function renderRequestRow(item, displayMode = 'active') {
                         ? 'U gaat de menustructuur aanpassen. Wijzigingen moeten worden bevestigd voordat ze worden toegepast.'
                         : 'Vous allez modifier la structure du menu. Les changements devront être validés avant d’être appliqués.'}</p>
 
-<div class="mt-5 flex items-start gap-4 rounded-2xl border-2 border-amber-300 bg-amber-400/20 px-5 py-4 text-base font-extrabold text-amber-50 shadow-[0_18px_55px_rgba(245,158,11,0.28)] ring-2 ring-amber-300/30">
-  <i data-lucide="triangle-alert" class="w-7 h-7 shrink-0 mt-0.5 text-amber-200"></i>
-  <span>${currentLang === 'es'
-    ? 'ATENCIÓN: está en modo edición. Este espacio modifica el menú. Si solo quiere verlo, use “Ver mi menú”.'
-    : currentLang === 'en'
-      ? 'WARNING: you are in edit mode. This area changes the menu. To only view it, use “View my menu”.'
-      : currentLang === 'nl'
-        ? 'LET OP: u bent in bewerkingsmodus. Deze zone wijzigt het menu. Wilt u alleen kijken, gebruik dan “Mijn menu bekijken”.'
-        : 'ATTENTION : vous êtes en mode édition. Cet espace modifie le menu. Pour seulement le consulter, utilisez “Voir mon menu”.'}</span>
-</div>
+                  <div class="mt-4 inline-flex items-start gap-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-100">
+                    <i data-lucide="triangle-alert" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                    <span>${currentLang === 'es'
+                      ? 'Este espacio sirve para modificar el menú. Si solo quiere verlo, use “Ver mi menú”.'
+                      : currentLang === 'en'
+                        ? 'This area is for editing the menu. To only view it, use “View my menu”.'
+                        : currentLang === 'nl'
+                          ? 'Deze zone is bedoeld om het menu te wijzigen. Wilt u alleen kijken, gebruik dan “Mijn menu bekijken”.'
+                          : 'Cet espace sert à modifier le menu. Pour seulement le consulter, utilisez “Voir mon menu”.'}</span>
+                  </div>
                 </div>
+
+                <button
+                  id="restaurant-close-menu-editor-btn"
+                  type="button"
+                  class="btn-action inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+                >
+                  <i data-lucide="arrow-left" class="w-4 h-4 text-cream"></i>
+                  <span>${currentLang === 'es'
+                    ? 'Volver al inicio'
+                    : currentLang === 'en'
+                      ? 'Back to home'
+                      : currentLang === 'nl'
+                        ? 'Terug naar start'
+                        : 'Retour à l’accueil'}</span>
+                </button>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -9302,35 +9246,34 @@ function renderRequestRow(item, displayMode = 'active') {
                         ? 'Naam, prijs, beschikbaarheid en vertalingen wijzigen.'
                         : 'Modifier nom, prix, disponibilité et traductions.'}</div>
                 </button>
+
+                <button
+                  id="restaurant-menu-editor-home-back-btn"
+                  type="button"
+                  class="btn-action group rounded-[24px] border-2 border-white/18 bg-black/35 hover:bg-white/8 transition-all p-5 text-left min-h-[150px]"
+                >
+                  <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+                    <i data-lucide="home" class="w-6 h-6 text-cream"></i>
+                  </div>
+                  <div class="text-xl font-bold text-cream">${currentLang === 'es'
+                    ? 'Volver'
+                    : currentLang === 'en'
+                      ? 'Go back'
+                      : currentLang === 'nl'
+                        ? 'Terug'
+                        : 'Retour'}</div>
+                  <div class="text-sm text-cream/60 mt-2">${currentLang === 'es'
+                    ? 'Salir sin entrar en la edición.'
+                    : currentLang === 'en'
+                      ? 'Leave without entering edit mode.'
+                      : currentLang === 'nl'
+                        ? 'Verlaten zonder te bewerken.'
+                        : 'Quitter sans entrer dans l’édition.'}</div>
+                </button>
               </div>
             </div>
 
-<div id="restaurant-menu-editor-workspace" class="hidden">
-<div id="restaurant-translation-exit-bar" class="hidden mb-5 flex justify-center">
-  <button id="closeAllTranslationsBtn"
-    class="btn-action inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-gold bg-gold/15 text-sm font-bold text-gold hover:bg-gold/25 transition-all shadow-[0_18px_45px_rgba(242,199,68,0.20)]">
-    <i data-lucide="arrow-left" class="w-5 h-5"></i>
-    <span id="closeAllTranslationsLabel">Revenir au menu</span>
-  </button>
-</div>
-
-<div class="mb-5 flex justify-center">
-  <button
-    id="restaurant-menu-editor-workspace-back-btn"
-    type="button"
-    class="btn-action inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-gold bg-gold/15 text-sm font-bold text-gold hover:bg-gold/25 transition-all shadow-[0_18px_45px_rgba(242,199,68,0.20)]"
-  >
-    <i data-lucide="arrow-left" class="w-5 h-5 text-gold"></i>
-    <span>${currentLang === 'es'
-      ? 'Volver al menú'
-      : currentLang === 'en'
-        ? 'Back to menu'
-        : currentLang === 'nl'
-          ? 'Terug naar menu'
-          : 'Revenir au menu'}</span>
-  </button>
-</div>
-
+            <div id="restaurant-menu-editor-workspace" class="hidden">
               <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
                 <div>
                   <h3 class="font-display text-xl font-bold text-cream">${currentLang === 'es'
@@ -9365,6 +9308,20 @@ function renderRequestRow(item, displayMode = 'active') {
                 </div>
 
                 <div class="flex flex-wrap gap-3">
+                  <button
+                    id="restaurant-menu-editor-workspace-back-btn"
+                    type="button"
+                    class="btn-action inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
+                  >
+                    <i data-lucide="arrow-left" class="w-4 h-4 text-cream"></i>
+                    <span>${currentLang === 'es'
+                      ? 'Opciones'
+                      : currentLang === 'en'
+                        ? 'Options'
+                        : currentLang === 'nl'
+                          ? 'Keuzes'
+                          : 'Choix'}</span>
+                  </button>
 
                   <button
                     id="restaurant-add-category-btn"
@@ -9745,7 +9702,7 @@ function renderRequestRow(item, displayMode = 'active') {
       { code: 'es', label: 'ES' },
       { code: 'en', label: 'EN' },
       { code: 'nl', label: 'NL' }
-    ].filter((lang) => lang.code !== currentLang);
+    ];
 
     function escapeHtml(value) {
       return String(value || '')
@@ -10319,8 +10276,6 @@ function saveDishEditorScreen() {
   updateMenuEditorDirtyUi();
 
   const flow = document.getElementById('dishEditorFlow');
-  updateDishFlowCustomLabels();
-
   if (flow) {
     flow.classList.remove('hidden');
   }
@@ -10330,205 +10285,16 @@ function closeDishEditorFlow() {
   if (flow) flow.classList.add('hidden');
 }
 
-function updateDishFlowCustomLabels() {
-  const backLabel = document.getElementById('dishBackToDishLabel');
-  if (backLabel) {
-    backLabel.textContent =
-      currentLang === 'es'
-        ? 'Volver al plato'
-        : currentLang === 'en'
-          ? 'Back to dish'
-          : currentLang === 'nl'
-            ? 'Terug naar gerecht'
-            : 'Retour au plat';
-  }
-
-  const closeAllTranslationsLabel = document.getElementById('closeAllTranslationsLabel');
-  if (closeAllTranslationsLabel) {
-    closeAllTranslationsLabel.textContent =
-      currentLang === 'es'
-        ? 'Volver al menú'
-        : currentLang === 'en'
-          ? 'Back to menu'
-          : currentLang === 'nl'
-            ? 'Terug naar menu'
-            : 'Revenir au menu';
-  }
-
-  const allTranslationsLabel = document.getElementById('dishOpenAllTranslationsLabel');
-  if (allTranslationsLabel) {
-    allTranslationsLabel.textContent =
-      currentLang === 'es'
-        ? 'Ver todas las traducciones'
-        : currentLang === 'en'
-          ? 'View all translations'
-          : currentLang === 'nl'
-            ? 'Bekijk alle vertalingen'
-            : 'Voir toutes les traductions';
-  }
-}
-
-
-function getCurrentDishEditorContext() {
-  if (!window._dishEditorContext) return null;
-
-  const categoryIndex = Number(window._dishEditorContext.categoryIndex);
-  const itemIndex = Number(window._dishEditorContext.itemIndex);
-
-  if (Number.isNaN(categoryIndex) || Number.isNaN(itemIndex)) return null;
-
-  return { categoryIndex, itemIndex };
-}
-
-function returnToMenuEditorWorkspace() {
-  closeDishEditorFlow();
-  closeDishEditorScreen();
-
-  if (editorSection && editorSection.classList.contains('hidden')) {
-    openMenuEditor({ scroll: false });
-  }
-
-  showMenuEditorWorkspace();
-}
-
-function scrollToDishEditorCard(categoryIndex, itemIndex, openTranslations = false) {
-  requestAnimationFrame(() => {
-    const card = document.querySelector(
-      `[data-menu-item-card="true"][data-menu-category-index="${categoryIndex}"][data-menu-item-index="${itemIndex}"]`
-    );
-
-    if (!card) return;
-
-    if (openTranslations) {
-      const details = card.querySelector('details');
-      if (details) details.open = true;
-    }
-
-    card.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    });
-  });
-}
-
-function translateCurrentDishNow() {
-  const context = getCurrentDishEditorContext();
-  if (!context) return;
-
-  closeDishEditorFlow();
-  closeDishEditorScreen();
-
-  if (editorSection && editorSection.classList.contains('hidden')) {
-    openMenuEditor({ scroll: false });
-  }
-
-  showMenuEditorWorkspace();
-  renderRestaurantMenuEditor();
-
-  requestAnimationFrame(() => {
-    const card = document.querySelector(
-      `[data-menu-item-card="true"][data-menu-category-index="${context.categoryIndex}"][data-menu-item-index="${context.itemIndex}"]`
-    );
-
-    if (!card) return;
-
-    const details = card.querySelector('details');
-    if (details) details.open = true;
-
-    details?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center'
-    });
-  });
-}
-
-function translateCurrentDishLater() {
-  returnToMenuEditorWorkspace();
-}
-
-function addAnotherDishFromFlow() {
-  const context = getCurrentDishEditorContext();
-  if (!context) return;
-
-  closeDishEditorFlow();
-  closeDishEditorScreen();
-
-  if (editorSection && editorSection.classList.contains('hidden')) {
-    openMenuEditor({ scroll: false });
-  }
-
-  showMenuEditorWorkspace();
-
-  addRestaurantItemToCategory(context.categoryIndex);
-  updateMenuEditorDirtyUi();
-
-  openDishEditorScreen(context.categoryIndex, 0);
-}
-
-function addCategoryFromDishFlow() {
-  closeDishEditorFlow();
-  closeDishEditorScreen();
-
-  if (editorSection && editorSection.classList.contains('hidden')) {
-    openMenuEditor({ scroll: false });
-  }
-
-  showMenuEditorWorkspace();
-
-  markMenuEditorDirty();
-  addRestaurantCategory();
-  updateMenuEditorDirtyUi();
-}
-
 let menuSaveInProgress = false;
 
 async function finishDishEditorFlow() {
   if (menuSaveInProgress) return;
 
-  const confirmed = await showRestaurantConfirmDialog({
-    title:
-      currentLang === 'es'
-        ? 'Validar los cambios del menú'
-        : currentLang === 'en'
-          ? 'Validate menu changes'
-          : currentLang === 'nl'
-            ? 'Menuwijzigingen bevestigen'
-            : 'Valider les modifications du menu',
-    message:
-      currentLang === 'es'
-        ? 'Esta acción guardará definitivamente los cambios realizados en este plato y en el menú.'
-        : currentLang === 'en'
-          ? 'This action will permanently save the changes made to this dish and the menu.'
-          : currentLang === 'nl'
-            ? 'Deze actie slaat de wijzigingen aan dit gerecht en het menu definitief op.'
-            : 'Cette action enregistrera définitivement les modifications apportées à ce plat et au menu.',
-    confirmLabel:
-      currentLang === 'es'
-        ? 'Confirmar y validar los cambios'
-        : currentLang === 'en'
-          ? 'Confirm and validate changes'
-          : currentLang === 'nl'
-            ? 'Bevestigen en wijzigingen valideren'
-            : 'Confirmer et valider les modifications',
-    cancelLabel:
-      currentLang === 'es'
-        ? 'Cancelar'
-        : currentLang === 'en'
-          ? 'Cancel'
-          : currentLang === 'nl'
-            ? 'Annuleren'
-            : 'Annuler'
-  });
-
-  if (!confirmed) return;
-
   const saved = await exportRestaurantJson();
 
   if (saved) {
-    resetMenuEditorDirty();
     closeDishEditorFlow();
     closeDishEditorScreen();
-    closeMenuEditor({ force: true });
   }
 }
 
@@ -10682,10 +10448,6 @@ async function exportRestaurantJson() {
   }
 }
 
-  const menuPreviewBtn = document.getElementById('restaurant-menu-preview-btn');
-  const menuPreviewSection = document.getElementById('restaurant-menu-preview-section');
-  const menuPreviewContent = document.getElementById('restaurant-menu-preview-content');
-  const menuPreviewCloseBtn = document.getElementById('restaurant-menu-preview-close-btn');
   const editorToggleBtn = document.getElementById('restaurant-menu-editor-toggle');
   const editorSection = document.getElementById('restaurant-menu-editor-section');
   const editorHome = document.getElementById('restaurant-menu-editor-home');
@@ -10736,130 +10498,6 @@ async function exportRestaurantJson() {
     saveMenuEditorUiState(isEditorOpen);
   }
 
-  function renderRestaurantMenuReadonlyPreview() {
-    if (!menuPreviewContent) return;
-
-    ensureRestaurantMenuShape();
-
-    const categories = activeRestaurantData?.menu?.categories || [];
-    const visibleCategories = categories
-      .filter((category) => category.visible !== false)
-      .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-    if (!visibleCategories.length) {
-      menuPreviewContent.innerHTML = `
-        <div class="rounded-2xl border border-white/10 bg-black/20 px-4 py-5 text-sm text-cream/65">
-          ${currentLang === 'es'
-            ? 'No hay categorías visibles en el menú.'
-            : currentLang === 'en'
-              ? 'No visible categories in the menu.'
-              : currentLang === 'nl'
-                ? 'Geen zichtbare categorieën in het menu.'
-                : 'Aucune catégorie visible dans le menu.'}
-        </div>
-      `;
-      return;
-    }
-
-    menuPreviewContent.innerHTML = visibleCategories.map((category) => {
-      const visibleItems = Array.isArray(category.items)
-        ? category.items
-            .filter((item) => {
-              if (item.visible === false) return false;
-
-              const itemName = String(item.name || '').trim().toLowerCase();
-              const itemPrice = Number(item.price || 0);
-
-              const isDraftNewDish =
-                itemPrice === 0 &&
-                ['nouveau plat', 'nuevo plato', 'new dish', 'nieuw gerecht'].includes(itemName);
-
-              return !isDraftNewDish;
-            })
-            .sort((a, b) => (a.order || 0) - (b.order || 0))
-        : [];
-
-      return `
-        <div class="rounded-2xl border border-white/10 bg-black/18 p-4 md:p-5">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-9 h-9 rounded-xl bg-gold/10 border border-gold/25 flex items-center justify-center">
-              <i data-lucide="utensils-crossed" class="w-4 h-4 text-gold"></i>
-            </div>
-            <h4 class="font-display text-lg md:text-xl font-bold text-cream">${escapeRequestDetailsHtml(category.name || '-')}</h4>
-          </div>
-
-          <div class="space-y-2">
-            ${visibleItems.length
-              ? visibleItems.map((item) => `
-                <div class="rounded-xl border border-white/8 bg-black/18 px-4 py-3 flex items-start justify-between gap-4">
-                  <div class="min-w-0">
-                    <div class="text-sm font-semibold text-cream">${escapeRequestDetailsHtml(item.name || '-')}</div>
-                    ${item.subtitle ? `<div class="text-xs text-cream/55 mt-1">${escapeRequestDetailsHtml(item.subtitle)}</div>` : ''}
-                    ${item.available === false ? `
-                      <div class="text-[11px] font-bold text-red-200 mt-2">
-                        ${currentLang === 'es'
-                          ? 'No disponible'
-                          : currentLang === 'en'
-                            ? 'Unavailable'
-                            : currentLang === 'nl'
-                              ? 'Niet beschikbaar'
-                              : 'Indisponible'}
-                      </div>
-                    ` : ''}
-                  </div>
-
-                  <div class="text-sm font-bold text-gold whitespace-nowrap">
-                    ${typeof item.price === 'number'
-                      ? `${item.price.toFixed(2).replace('.', ',')} €`
-                      : ''}
-                  </div>
-                </div>
-              `).join('')
-              : `
-                <div class="rounded-xl border border-white/8 bg-black/18 px-4 py-3 text-sm text-cream/55">
-                  ${currentLang === 'es'
-                    ? 'Ningún plato visible en esta categoría.'
-                    : currentLang === 'en'
-                      ? 'No visible dish in this category.'
-                      : currentLang === 'nl'
-                        ? 'Geen zichtbaar gerecht in deze categorie.'
-                        : 'Aucun plat visible dans cette catégorie.'}
-                </div>
-              `}
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    if (window.lucide) {
-      requestAnimationFrame(() => {
-        lucide.createIcons();
-      });
-    }
-  }
-
-  function openRestaurantMenuReadonlyPreview() {
-    if (!menuPreviewSection) return;
-
-    if (editorSection && !editorSection.classList.contains('hidden')) {
-      closeMenuEditor({ force: true });
-    }
-
-    renderRestaurantMenuReadonlyPreview();
-    menuPreviewSection.classList.remove('hidden');
-
-    requestAnimationFrame(() => {
-      menuPreviewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
-
-  function closeRestaurantMenuReadonlyPreview() {
-    if (!menuPreviewSection) return;
-
-    menuPreviewSection.classList.add('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
   function showMenuEditorHome() {
     if (editorHome) editorHome.classList.remove('hidden');
     if (editorWorkspace) editorWorkspace.classList.add('hidden');
@@ -10894,21 +10532,13 @@ async function exportRestaurantJson() {
     }
   }
 
-  function closeMenuEditor({ force = false } = {}) {
+  function closeMenuEditor() {
     if (!editorSection || editorSection.classList.contains('hidden')) return;
-    if (!force && !confirmLeaveMenuEditorIfDirty()) return;
+    if (!confirmLeaveMenuEditorIfDirty()) return;
 
     editorSection.classList.add('hidden');
     syncMenuEditorUiState();
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  if (menuPreviewBtn) {
-    menuPreviewBtn.addEventListener('click', openRestaurantMenuReadonlyPreview);
-  }
-
-  if (menuPreviewCloseBtn) {
-    menuPreviewCloseBtn.addEventListener('click', closeRestaurantMenuReadonlyPreview);
   }
 
   if (editorToggleBtn && editorSection) {
@@ -10983,83 +10613,7 @@ const dishSaveBtn = document.getElementById('dishEditorSaveBtn');
 if (dishSaveBtn) {
   dishSaveBtn.addEventListener('click', saveDishEditorScreen);
 }
-const dishBackToDishBtn = document.getElementById('dishBackToDishBtn');
-if (dishBackToDishBtn) {
-  dishBackToDishBtn.addEventListener('click', () => {
-    closeDishEditorFlow();
-  });
-}
-
-const dishOpenAllTranslationsBtn = document.getElementById('dishOpenAllTranslationsBtn');
-if (dishOpenAllTranslationsBtn) {
-  dishOpenAllTranslationsBtn.addEventListener('click', () => {
-    closeDishEditorFlow();
-    closeDishEditorScreen();
-
-    if (editorSection && editorSection.classList.contains('hidden')) {
-      openMenuEditor({ scroll: false });
-    }
-
-    showMenuEditorWorkspace();
-    renderRestaurantMenuEditor();
-    updateDishFlowCustomLabels();
-
-    const exitBar = document.getElementById('restaurant-translation-exit-bar');
-    if (exitBar) exitBar.classList.remove('hidden');
-
-    requestAnimationFrame(() => {
-      document.querySelectorAll('[data-menu-item-card="true"] details').forEach((details) => {
-        details.open = true;
-      });
-
-      const firstOpenDetails = document.querySelector('[data-menu-item-card="true"] details');
-      if (firstOpenDetails) {
-        firstOpenDetails.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-      }
-    });
-  });
-}
-
-const dishTranslateNowBtn = document.getElementById('dishTranslateNowBtn');
-if (dishTranslateNowBtn) {
-  dishTranslateNowBtn.addEventListener('click', translateCurrentDishNow);
-}
-
-const dishTranslateLaterBtn = document.getElementById('dishTranslateLaterBtn');
-if (dishTranslateLaterBtn) {
-  dishTranslateLaterBtn.addEventListener('click', translateCurrentDishLater);
-}
-
-const dishAddAnotherBtn = document.getElementById('dishAddAnotherBtn');
-if (dishAddAnotherBtn) {
-  dishAddAnotherBtn.addEventListener('click', addAnotherDishFromFlow);
-}
-
-const dishAddCategoryBtn = document.getElementById('dishAddCategoryBtn');
-if (dishAddCategoryBtn) {
-  dishAddCategoryBtn.addEventListener('click', addCategoryFromDishFlow);
-}
-const dishExitSafeBtn = document.getElementById('dishExitSafeBtn');
-if (dishExitSafeBtn) {
-  dishExitSafeBtn.addEventListener('click', () => {
-    closeDishEditorScreen();
-  });
-}
-
-const closeAllTranslationsBtn = document.getElementById('closeAllTranslationsBtn');
-if (closeAllTranslationsBtn) {
-  closeAllTranslationsBtn.addEventListener('click', () => {
-    document.querySelectorAll('[data-menu-item-card="true"] details').forEach((d) => {
-      d.open = false;
-    });
-
-    const exitBar = document.getElementById('restaurant-translation-exit-bar');
-    if (exitBar) exitBar.classList.add('hidden');
-  });
-}
+const dishFinishBtn = document.getElementById('dishFinishBtn');
 if (dishFinishBtn) {
   dishFinishBtn.addEventListener('click', finishDishEditorFlow);
 }
@@ -11220,7 +10774,7 @@ if (dishFinishBtn) {
 
       if (
         itemCard &&
-        !e.target.closest('button, select, details, summary')
+        !e.target.closest('button, select, label')
       ) {
         const categoryIndex = Number(itemCard.dataset.menuCategoryIndex);
         const itemIndex = Number(itemCard.dataset.menuItemIndex);
@@ -11439,11 +10993,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <span data-i18n="dish.flow.translate_now">Traduire maintenant</span>
           </button>
 
-          <button id="dishBackToDishBtn" class="dish-flow-btn">
-            <span id="dishBackToDishLabel">Retour au plat</span>
-          </button>
-
-<button id="dishTranslateLaterBtn" class="dish-flow-btn">
+          <button id="dishTranslateLaterBtn" class="dish-flow-btn">
             <span data-i18n="dish.flow.translate_later">Traduire plus tard</span>
           </button>
 
@@ -11451,11 +11001,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         <div class="dish-editor-flow-secondary">
 
-          <button id="dishOpenAllTranslationsBtn" class="dish-flow-btn">
-            <span id="dishOpenAllTranslationsLabel">Voir toutes les traductions</span>
-          </button>
-
-<button id="dishAddAnotherBtn" class="dish-flow-link">
+          <button id="dishAddAnotherBtn" class="dish-flow-link">
             <span data-i18n="dish.flow.add_another">Ajouter un autre plat</span>
           </button>
 
@@ -11474,9 +11020,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     </div>
 
     <div class="dish-editor-header">
-      <button id="dishEditorBackBtn" class="dish-editor-back" type="button" aria-label="Retour">
-        <i data-lucide="arrow-left" class="w-5 h-5"></i>
-      </button>
+      <button id="dishEditorBackBtn" class="dish-editor-back">←</button>
       <div class="dish-editor-title" data-i18n="dish.editor.title">Édition du plat</div>
       <div class="dish-editor-actions">
         <button id="dishEditorSaveBtn" class="dish-editor-save" data-i18n="dish.editor.save">Valider</button>
@@ -11486,13 +11030,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     <div class="dish-editor-content">
 
       <div class="dish-editor-panel">
-  <div class="flex justify-center mb-4">
-    <button id="dishExitSafeBtn"
-      class="btn-action inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gold bg-gold/10 text-sm font-bold text-gold hover:bg-gold/20 transition-all">
-      <i data-lucide="arrow-left" class="w-5 h-5"></i>
-      <span>Retour à la gestion du menu</span>
-    </button>
-  </div>
 
         <div class="dish-editor-grid">
           <div class="dish-editor-field">
