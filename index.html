@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.20';
+            const APP_VERSION = 'V1.2.16.21';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9327,7 +9327,15 @@ function renderRequestRow(item, displayMode = 'active') {
               </div>
             </div>
 
-            <div id="restaurant-menu-editor-workspace" class="hidden">
+            <div id="restaurant-menu-editor-workspace">
+
+  <div id="restaurant-translation-exit-bar" class="hidden mb-4">
+    <button id="closeAllTranslationsBtn"
+      class="btn-action inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gold/30 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      <span id="closeAllTranslationsLabel">Revenir au menu</span>
+    </button>
+  </div> class="hidden">
               <div id="restaurant-translation-exit-bar" class="hidden mb-4">
   <button id="closeAllTranslationsBtn"
     class="btn-action inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gold/30 text-sm font-semibold text-gold hover:bg-gold/10 transition-all">
@@ -10348,7 +10356,17 @@ function saveDishEditorScreen() {
   if (flow) flow.classList.add('hidden');
 }
 
-function updateDishFlowCustomLabels() {
+  const closeAllTranslationsLabel = document.getElementById('closeAllTranslationsLabel');
+  if (closeAllTranslationsLabel) {
+    closeAllTranslationsLabel.textContent =
+      currentLang === 'es'
+        ? 'Volver al menú'
+        : currentLang === 'en'
+          ? 'Back to menu'
+          : currentLang === 'nl'
+            ? 'Terug naar menu'
+            : 'Revenir au menu';
+  }
   const backLabel = document.getElementById('dishBackToDishLabel');
   if (backLabel) {
     backLabel.textContent =
@@ -11030,6 +11048,26 @@ if (dishOpenAllTranslationsBtn) {
     });
   });
 }
+    closeDishEditorFlow();
+    closeDishEditorScreen();
+
+    if (editorSection && editorSection.classList.contains('hidden')) {
+      openMenuEditor({ scroll: false });
+    }
+
+    showMenuEditorWorkspace();
+    renderRestaurantMenuEditor();
+
+    const exitBar = document.getElementById('restaurant-translation-exit-bar');
+    if (exitBar) exitBar.classList.remove('hidden');
+
+    requestAnimationFrame(() => {
+      document.querySelectorAll('[data-menu-item-card="true"] details').forEach((d) => {
+        d.open = true;
+      });
+    });
+  });
+}
 if (dishOpenAllTranslationsBtn) {
   dishOpenAllTranslationsBtn.addEventListener('click', () => {
     closeDishEditorFlow();
@@ -11088,7 +11126,17 @@ if (closeAllTranslationsBtn) {
     if (exitBar) exitBar.classList.add('hidden');
   });
 }
-const dishFinishBtn = document.getElementById('dishFinishBtn');
+const closeAllTranslationsBtn = document.getElementById('closeAllTranslationsBtn');
+if (closeAllTranslationsBtn) {
+  closeAllTranslationsBtn.addEventListener('click', () => {
+    document.querySelectorAll('[data-menu-item-card="true"] details').forEach((d) => {
+      d.open = false;
+    });
+
+    const exitBar = document.getElementById('restaurant-translation-exit-bar');
+    if (exitBar) exitBar.classList.add('hidden');
+  });
+}
 if (dishFinishBtn) {
   dishFinishBtn.addEventListener('click', finishDishEditorFlow);
 }
