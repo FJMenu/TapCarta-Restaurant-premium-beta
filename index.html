@@ -10326,6 +10326,67 @@ let dishEditorState = null;
   }
 
   function addRestaurantCategory() {
+  showAddCategoryDialog().then((categoryName) => {
+    if (!categoryName) return;
+
+    const menu = activeRestaurantData?.menu;
+    if (!menu) return;
+
+    if (!menu.categories) {
+      menu.categories = [];
+    }
+
+    const normalized = categoryName.trim().toLowerCase();
+
+    const alreadyExists = menu.categories.some(cat =>
+      (cat.name || '').trim().toLowerCase() === normalized
+    );
+
+    if (alreadyExists) {
+      showConfirmDialog(
+        getDishText('addCategory'),
+        currentLang === 'es'
+          ? 'Esta categoría ya existe. ¿Desea crearla igualmente?'
+          : currentLang === 'en'
+            ? 'This category already exists. Do you want to create it anyway?'
+            : currentLang === 'nl'
+              ? 'Deze categorie bestaat al. Wilt u ze toch aanmaken?'
+              : 'Cette catégorie existe déjà. Voulez-vous la créer quand même ?'
+      ).then((confirm) => {
+        if (confirm) {
+          createCategory(categoryName);
+        }
+      });
+    } else {
+      createCategory(categoryName);
+    }
+  });
+}
+
+function createCategory(categoryName) {
+  const menu = activeRestaurantData.menu;
+
+  const newCategory = {
+    id: 'cat_' + Date.now(),
+    name: categoryName,
+    items: []
+  };
+
+  menu.categories.push(newCategory);
+
+  markMenuEditorDirty();
+  renderMenu();
+
+  showTapCartaToast(
+    currentLang === 'es'
+      ? 'Categoría añadida'
+      : currentLang === 'en'
+        ? 'Category added'
+        : currentLang === 'nl'
+          ? 'Categorie toegevoegd'
+          : 'Catégorie ajoutée'
+  );
+}
     ensureRestaurantMenuShape();
 
     const canonicalCategories = [
@@ -10660,6 +10721,66 @@ function showDishSavedAutoDialog() {
       overlay.remove();
       resolve();
     }, 3000);
+  });
+}
+
+function showAddCategoryDialog() {
+  return new Promise((resolve) => {
+    document.getElementById('add-category-dialog')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'add-category-dialog';
+    overlay.className = 'fixed inset-0 z-[10080] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4';
+
+    overlay.innerHTML = `
+      <div class="w-full max-w-md rounded-[28px] border border-gold/35 bg-[#12110d] p-6">
+        <div class="font-display text-xl font-bold text-cream mb-4">
+          ${getDishText('addCategory')}
+        </div>
+
+        <input id="new-category-input"
+          class="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/20 text-white mb-4"
+          placeholder="${
+            currentLang === 'es'
+              ? 'Nombre de la categoría'
+              : currentLang === 'en'
+                ? 'Category name'
+                : currentLang === 'nl'
+                  ? 'Categorienaam'
+                  : 'Nom de la catégorie'
+          }"
+        />
+
+        <div class="grid gap-2">
+          <button id="confirm-add-category"
+            class="btn-action w-full px-4 py-3 rounded-xl bg-gold text-black font-bold">
+            ${getDishText('validate')}
+          </button>
+
+          <button id="cancel-add-category"
+            class="btn-action w-full px-4 py-3 rounded-xl border border-white/20 text-white">
+            ${getDishText('back')}
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const input = overlay.querySelector('#new-category-input');
+
+    overlay.querySelector('#confirm-add-category').onclick = () => {
+      const value = input.value.trim();
+      overlay.remove();
+      resolve(value || null);
+    };
+
+    overlay.querySelector('#cancel-add-category').onclick = () => {
+      overlay.remove();
+      resolve(null);
+    };
+
+    input.focus();
   });
 }
 
