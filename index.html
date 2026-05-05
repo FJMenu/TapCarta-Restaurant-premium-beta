@@ -10388,42 +10388,6 @@ function createCategory(categoryName) {
   );
 }
 
-    const canonicalCategories = [
-      { id: 'snacks', name: 'Snacks' },
-      { id: 'entrees', name: 'Entrées' },
-      { id: 'plats', name: 'Plats' },
-      { id: 'moules', name: 'Moules' },
-      { id: 'desserts', name: 'Desserts' },
-      { id: 'crepes', name: 'Crêpes' },
-      { id: 'suggestions', name: 'Suggestions' },
-      { id: 'supplements', name: 'Suppléments' },
-      { id: 'boissons', name: 'Boissons' }
-    ];
-
-    const existingIds = new Set(
-      activeRestaurantData.menu.categories.map((category) => category.id)
-    );
-
-    const nextCategory = canonicalCategories.find((category) => !existingIds.has(category.id));
-
-    if (!nextCategory) {
-      alert(t.restaurantStandardCategoriesAlreadyCreated);
-      return;
-    }
-
-    activeRestaurantData.menu.categories.unshift({
-      id: nextCategory.id,
-      name: nextCategory.name,
-      order: 1,
-      visible: true,
-      items: []
-    });
-
-    markMenuTranslationWarningNeeded();
-    syncRestaurantCategoryOrder();
-    renderRestaurantMenuEditor();
-  }
-
   function scrollToMenuEditorAction(action, categoryIndex, itemIndex = null) {
     requestAnimationFrame(() => {
       let selector = `[data-action="${action}"][data-category-index="${categoryIndex}"]`;
