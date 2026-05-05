@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.24';
+            const APP_VERSION = 'V1.2.16.25';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9206,7 +9206,24 @@ function renderRequestRow(item, displayMode = 'active') {
           <article class="rounded-[28px] border-2 border-amber-400/55 bg-gradient-to-br from-amber-500/[0.18] via-amber-950/30 to-black shadow-[0_28px_80px_rgba(245,158,11,0.18)] p-5 md:p-7">
 
             <div id="restaurant-menu-editor-home">
-              <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+              <div class="mb-6">
+                <div class="mb-5 flex justify-center">
+                  <button
+                    id="restaurant-close-menu-editor-btn"
+                    type="button"
+                    class="btn-action inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border-2 border-gold bg-gold/15 text-sm font-bold text-gold hover:bg-gold/25 transition-all shadow-[0_18px_45px_rgba(242,199,68,0.20)]"
+                  >
+                    <i data-lucide="arrow-left" class="w-5 h-5 text-gold"></i>
+                    <span>${currentLang === 'es'
+                      ? 'Volver al menú'
+                      : currentLang === 'en'
+                        ? 'Back to menu'
+                        : currentLang === 'nl'
+                          ? 'Terug naar menu'
+                          : 'Revenir au menu'}</span>
+                  </button>
+                </div>
+
                 <div>
                   <h3 class="inline-flex items-center gap-3 rounded-2xl border border-amber-300/35 bg-amber-500/18 px-4 py-3 font-display text-2xl md:text-3xl font-bold text-cream shadow-[0_12px_32px_rgba(245,158,11,0.12)]">${currentLang === 'es'
                     ? 'Modo edición del menú'
@@ -9235,21 +9252,6 @@ function renderRequestRow(item, displayMode = 'active') {
         : 'ATTENTION : vous êtes en mode édition. Cet espace modifie le menu. Pour seulement le consulter, utilisez “Voir mon menu”.'}</span>
 </div>
                 </div>
-
-                <button
-                  id="restaurant-close-menu-editor-btn"
-                  type="button"
-                  class="btn-action inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-white/15 text-sm font-semibold text-cream hover:bg-white/5 transition-all"
-                >
-                  <i data-lucide="arrow-left" class="w-4 h-4 text-cream"></i>
-                  <span>${currentLang === 'es'
-                    ? 'Volver al inicio'
-                    : currentLang === 'en'
-                      ? 'Back to home'
-                      : currentLang === 'nl'
-                        ? 'Terug naar start'
-                        : 'Retour à l’accueil'}</span>
-                </button>
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
