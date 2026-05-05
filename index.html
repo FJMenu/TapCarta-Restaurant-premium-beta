@@ -11109,7 +11109,7 @@ if (dishTranslateLaterBtn) {
 const dishAddAnotherBtn = document.getElementById('dishAddAnotherBtn');
 if (dishAddAnotherBtn) {
   dishAddAnotherBtn.addEventListener('click', () => {
-    const categoryIndex = currentDishEditorState?.categoryIndex;
+    const categoryIndex = window._dishEditorContext?.categoryIndex;
 
     if (typeof categoryIndex !== 'number') return;
 
