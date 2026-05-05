@@ -11071,17 +11071,6 @@ if (closeAllTranslationsBtn) {
     if (exitBar) exitBar.classList.add('hidden');
   });
 }
-const closeAllTranslationsBtn = document.getElementById('closeAllTranslationsBtn');
-if (closeAllTranslationsBtn) {
-  closeAllTranslationsBtn.addEventListener('click', () => {
-    document.querySelectorAll('[data-menu-item-card="true"] details').forEach((d) => {
-      d.open = false;
-    });
-
-    const exitBar = document.getElementById('restaurant-translation-exit-bar');
-    if (exitBar) exitBar.classList.add('hidden');
-  });
-}
 if (dishFinishBtn) {
   dishFinishBtn.addEventListener('click', finishDishEditorFlow);
 }
