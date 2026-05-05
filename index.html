@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.12';
+            const APP_VERSION = 'V1.2.16.13';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10351,8 +10351,66 @@ async function handleDishTranslateLaterFlow() {
 
 let menuSaveInProgress = false;
 
+function showDishFinishConfirmDialog() {
+  return new Promise((resolve) => {
+    document.getElementById('dish-finish-confirm-dialog')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'dish-finish-confirm-dialog';
+    overlay.className = 'fixed inset-0 z-[10080] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4';
+
+    overlay.innerHTML = `
+      <div class="w-full max-w-md rounded-[28px] border border-gold/35 bg-[#12110d] shadow-[0_28px_90px_rgba(0,0,0,0.55)] p-6">
+        <div class="flex items-start gap-4 mb-5">
+          <div class="w-11 h-11 rounded-2xl bg-gold/15 border border-gold/30 flex items-center justify-center shrink-0">
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-gold"></i>
+          </div>
+          <div>
+            <div class="font-display text-xl font-bold text-cream">
+              Terminer les modifications
+            </div>
+            <p class="text-sm text-cream/70 mt-2 leading-relaxed">
+              Confirmez-vous l’enregistrement final de ce plat dans votre menu ?
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 mt-6">
+          <button type="button" data-confirm-dish-finish class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all">
+            Confirmer et enregistrer
+          </button>
+
+          <button type="button" data-cancel-dish-finish class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
+            Retour
+          </button>
+        </div>
+      </div>
+    `;
+
+    const close = (result) => {
+      overlay.remove();
+      resolve(result);
+    };
+
+    overlay.querySelector('[data-confirm-dish-finish]')?.addEventListener('click', () => close(true));
+    overlay.querySelector('[data-cancel-dish-finish]')?.addEventListener('click', () => close(false));
+
+    document.body.appendChild(overlay);
+
+    if (window.lucide) {
+      requestAnimationFrame(() => lucide.createIcons());
+    }
+  });
+}
+
 async function finishDishEditorFlow() {
   if (menuSaveInProgress) return;
+
+  const confirmed = await showDishFinishConfirmDialog();
+
+  if (!confirmed) {
+    return;
+  }
 
   const saved = await exportRestaurantJson();
 
