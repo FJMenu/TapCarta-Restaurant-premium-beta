@@ -11170,7 +11170,7 @@ if (dishFinishBtn) {
 
       if (
         itemCard &&
-        !e.target.closest('button, select, label, input, textarea, details, summary')
+        !e.target.closest('button, select, details, summary')
       ) {
         const categoryIndex = Number(itemCard.dataset.menuCategoryIndex);
         const itemIndex = Number(itemCard.dataset.menuItemIndex);
