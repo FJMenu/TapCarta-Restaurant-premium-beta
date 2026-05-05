@@ -10960,7 +10960,7 @@ if (dishFinishBtn) {
 
       if (
         itemCard &&
-        !e.target.closest('button, select, label, input, textarea')
+        !e.target.closest('button, select, label, [data-field="item-translation-name"], [data-field="item-translation-subtitle"]')
       ) {
         const categoryIndex = Number(itemCard.dataset.menuCategoryIndex);
         const itemIndex = Number(itemCard.dataset.menuItemIndex);
