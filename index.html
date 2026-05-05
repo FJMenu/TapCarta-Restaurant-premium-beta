@@ -10374,10 +10374,10 @@ function createCategory(categoryName) {
 
   menu.categories.push(newCategory);
 
-  markMenuEditorDirty();
-  renderMenu();
+  markMenuTranslationWarningNeeded();
+  renderRestaurantMenuEditor();
 
-  showTapCartaToast(
+  showTapCartaMessage(
     currentLang === 'es'
       ? 'Categoría añadida'
       : currentLang === 'en'
@@ -10387,7 +10387,6 @@ function createCategory(categoryName) {
           : 'Catégorie ajoutée'
   );
 }
-    ensureRestaurantMenuShape();
 
     const canonicalCategories = [
       { id: 'snacks', name: 'Snacks' },
