@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.16';
+            const APP_VERSION = 'V1.2.16.17';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9172,7 +9172,7 @@ function renderRequestRow(item, displayMode = 'active') {
 
                   <div class="mt-5 flex items-start gap-4 rounded-[24px] border-2 border-amber-300/70 bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-black px-5 py-5 text-amber-50 shadow-[0_18px_46px_rgba(245,158,11,0.22)]">
                     <div class="w-12 h-12 rounded-2xl bg-amber-300/20 border border-amber-200/50 flex items-center justify-center shrink-0">
-                      <i data-lucide="triangle-alert" class="w-6 h-6 text-amber-200"></i>
+                      <span class="text-3xl leading-none text-amber-100 font-black">!</span>
                     </div>
                     <div>
                       <div class="text-base md:text-lg font-black text-amber-100 uppercase tracking-wide">
@@ -10960,7 +10960,7 @@ if (dishFinishBtn) {
 
       if (
         itemCard &&
-        !e.target.closest('button, select, label, input, textarea, details, summary')
+        !e.target.closest('button, select, label, input, textarea')
       ) {
         const categoryIndex = Number(itemCard.dataset.menuCategoryIndex);
         const itemIndex = Number(itemCard.dataset.menuItemIndex);
@@ -11206,7 +11206,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     </div>
 
     <div class="dish-editor-header">
-      <button id="dishEditorBackBtn" class="dish-editor-back">←</button>
+      <button id="dishEditorBackBtn" class="dish-editor-back" aria-label="Retour">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+      </button>
       <div class="dish-editor-title" data-i18n="dish.editor.title">Édition du plat</div>
       <div class="dish-editor-actions">
         <button id="dishEditorSaveBtn" class="dish-editor-save" data-i18n="dish.editor.save">Valider</button>
