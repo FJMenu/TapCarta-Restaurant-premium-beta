@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.24';
+            const APP_VERSION = 'V1.2.16.25';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -9301,30 +9301,6 @@ function renderRequestRow(item, displayMode = 'active') {
                       : currentLang === 'nl'
                         ? 'Naam, prijs, beschikbaarheid en vertalingen wijzigen.'
                         : 'Modifier nom, prix, disponibilité et traductions.'}</div>
-                </button>
-
-                <button
-                  id="restaurant-menu-editor-home-back-btn"
-                  type="button"
-                  class="btn-action group rounded-[24px] border-2 border-white/18 bg-black/35 hover:bg-white/8 transition-all p-5 text-left min-h-[150px]"
-                >
-                  <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-                    <i data-lucide="home" class="w-6 h-6 text-cream"></i>
-                  </div>
-                  <div class="text-xl font-bold text-cream">${currentLang === 'es'
-                    ? 'Volver'
-                    : currentLang === 'en'
-                      ? 'Go back'
-                      : currentLang === 'nl'
-                        ? 'Terug'
-                        : 'Retour'}</div>
-                  <div class="text-sm text-cream/60 mt-2">${currentLang === 'es'
-                    ? 'Salir sin entrar en la edición.'
-                    : currentLang === 'en'
-                      ? 'Leave without entering edit mode.'
-                      : currentLang === 'nl'
-                        ? 'Verlaten zonder te bewerken.'
-                        : 'Quitter sans entrer dans l’édition.'}</div>
                 </button>
               </div>
             </div>
