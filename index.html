@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.16';
+            const APP_VERSION = 'V1.2.16.17';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -836,15 +836,25 @@
       letter-spacing: -0.01em;
     }
 
-    .dish-editor-back {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      border: 1px solid rgba(248, 245, 235, 0.14);
-      background: rgba(255, 255, 255, 0.035);
-      color: #f8f5eb;
-      font-size: 22px;
+       .dish-editor-back {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      border: 1px solid rgba(242, 199, 68, 0.32);
+      background: linear-gradient(135deg, rgba(242, 199, 68, 0.16), rgba(255, 255, 255, 0.035));
+      color: #f2c744;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .dish-editor-back:hover {
+      transform: translateY(-1px);
+      border-color: rgba(242, 199, 68, 0.55);
+      background: linear-gradient(135deg, rgba(242, 199, 68, 0.22), rgba(255, 255, 255, 0.055));
     }
 
     .dish-editor-save {
@@ -10375,8 +10385,31 @@ function translateCurrentDishNow() {
   const context = getCurrentDishEditorContext();
   if (!context) return;
 
-  returnToMenuEditorWorkspace();
-  scrollToDishEditorCard(context.categoryIndex, context.itemIndex, true);
+  closeDishEditorFlow();
+  closeDishEditorScreen();
+
+  if (editorSection && editorSection.classList.contains('hidden')) {
+    openMenuEditor({ scroll: false });
+  }
+
+  showMenuEditorWorkspace();
+  renderRestaurantMenuEditor();
+
+  requestAnimationFrame(() => {
+    const card = document.querySelector(
+      `[data-menu-item-card="true"][data-menu-category-index="${context.categoryIndex}"][data-menu-item-index="${context.itemIndex}"]`
+    );
+
+    if (!card) return;
+
+    const details = card.querySelector('details');
+    if (details) details.open = true;
+
+    details?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    });
+  });
 }
 
 function translateCurrentDishLater() {
@@ -10938,11 +10971,20 @@ if (dishOpenAllTranslationsBtn) {
     }
 
     showMenuEditorWorkspace();
+    renderRestaurantMenuEditor();
 
     requestAnimationFrame(() => {
-      document.querySelectorAll('[data-translation-block]').forEach(block => {
-        block.open = true;
+      document.querySelectorAll('[data-menu-item-card="true"] details').forEach((details) => {
+        details.open = true;
       });
+
+      const firstOpenDetails = document.querySelector('[data-menu-item-card="true"] details');
+      if (firstOpenDetails) {
+        firstOpenDetails.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
     });
   });
 }
@@ -11400,7 +11442,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     </div>
 
     <div class="dish-editor-header">
-      <button id="dishEditorBackBtn" class="dish-editor-back">←</button>
+      <button id="dishEditorBackBtn" class="dish-editor-back" type="button" aria-label="Retour">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+      </button>
       <div class="dish-editor-title" data-i18n="dish.editor.title">Édition du plat</div>
       <div class="dish-editor-actions">
         <button id="dishEditorSaveBtn" class="dish-editor-save" data-i18n="dish.editor.save">Valider</button>
