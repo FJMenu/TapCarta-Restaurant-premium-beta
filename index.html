@@ -6,7 +6,7 @@
       <title>TapCarta Resto</title>
       
         <script>
-            const APP_VERSION = 'V1.2.16.11';
+            const APP_VERSION = 'V1.2.16.12';
 
     function getBasePath() {
       const path = window.location.pathname;
@@ -10285,6 +10285,70 @@ function closeDishEditorFlow() {
   if (flow) flow.classList.add('hidden');
 }
 
+function showDishTranslationLaterDialog() {
+  return new Promise((resolve) => {
+    document.getElementById('dish-translation-later-dialog')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'dish-translation-later-dialog';
+    overlay.className = 'fixed inset-0 z-[180] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4';
+
+    overlay.innerHTML = `
+      <div class="w-full max-w-md rounded-[28px] border border-gold/35 bg-[#12110d] shadow-[0_28px_90px_rgba(0,0,0,0.55)] p-6">
+        <div class="flex items-start gap-4 mb-5">
+          <div class="w-11 h-11 rounded-2xl bg-gold/15 border border-gold/30 flex items-center justify-center shrink-0">
+            <i data-lucide="languages" class="w-5 h-5 text-gold"></i>
+          </div>
+          <div>
+            <div class="font-display text-xl font-bold text-cream">
+              Traduction du plat
+            </div>
+            <p class="text-sm text-cream/70 mt-2 leading-relaxed">
+              Vos clients parlant une autre langue risquent de ne pas comprendre votre plat.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 mt-6">
+          <button type="button" data-validate-without-translation class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-gold bg-gold text-black text-sm font-extrabold hover:bg-gold/90 transition-all">
+            Valider sans traduction
+          </button>
+
+          <button type="button" data-translate-now class="btn-action w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-white/12 text-sm font-semibold text-cream hover:bg-white/5 transition-all">
+            Traduire maintenant
+          </button>
+        </div>
+      </div>
+    `;
+
+    const close = (result) => {
+      overlay.remove();
+      resolve(result);
+    };
+
+    overlay.querySelector('[data-validate-without-translation]')?.addEventListener('click', () => close(true));
+    overlay.querySelector('[data-translate-now]')?.addEventListener('click', () => close(false));
+
+    document.body.appendChild(overlay);
+
+    if (window.lucide) {
+      requestAnimationFrame(() => lucide.createIcons());
+    }
+  });
+}
+
+async function handleDishTranslateLaterFlow() {
+  if (menuSaveInProgress) return;
+
+  const validateWithoutTranslation = await showDishTranslationLaterDialog();
+
+  if (!validateWithoutTranslation) {
+    return;
+  }
+
+  await finishDishEditorFlow();
+}
+
 let menuSaveInProgress = false;
 
 async function finishDishEditorFlow() {
@@ -10613,6 +10677,11 @@ const dishSaveBtn = document.getElementById('dishEditorSaveBtn');
 if (dishSaveBtn) {
   dishSaveBtn.addEventListener('click', saveDishEditorScreen);
 }
+const dishTranslateLaterBtn = document.getElementById('dishTranslateLaterBtn');
+if (dishTranslateLaterBtn) {
+  dishTranslateLaterBtn.addEventListener('click', handleDishTranslateLaterFlow);
+}
+
 const dishFinishBtn = document.getElementById('dishFinishBtn');
 if (dishFinishBtn) {
   dishFinishBtn.addEventListener('click', finishDishEditorFlow);
